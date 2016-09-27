@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Frances Hu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="如何在MAC上搭建博客——hexo+github环境配置准备工作1、git——git-scm官网git-scm下载mac版
+2、node.js——直接到node.js官网下载安装 
+3、markdown编辑器——mac下推荐mou或者macDown 本人下载mou时其还未支持macOS sierra
+4、域名——阿里云购买即可
+安装和初始化mac下在命令行下安装hexo
+sudo npm inst">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Frances Hu's Blog">
+<meta property="og:url" content="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="如何在MAC上搭建博客——hexo+github环境配置准备工作1、git——git-scm官网git-scm下载mac版
+2、node.js——直接到node.js官网下载安装 
+3、markdown编辑器——mac下推荐mou或者macDown 本人下载mou时其还未支持macOS sierra
+4、域名——阿里云购买即可
+安装和初始化mac下在命令行下安装hexo
+sudo npm inst">
+<meta property="og:updated_time" content="2016-09-27T04:35:10.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Frances Hu's Blog">
+<meta name="twitter:description" content="如何在MAC上搭建博客——hexo+github环境配置准备工作1、git——git-scm官网git-scm下载mac版
+2、node.js——直接到node.js官网下载安装 
+3、markdown编辑器——mac下推荐mou或者macDown 本人下载mou时其还未支持macOS sierra
+4、域名——阿里云购买即可
+安装和初始化mac下在命令行下安装hexo
+sudo npm inst">
+  
+    <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Frances Hu&#39;s Blog</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">技术迷，本命李宇春</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://xiaozhazi.win"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-如何在MAC上搭建博客——hexo-github" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/09/27/如何在MAC上搭建博客——hexo-github/" class="article-date">
+  <time datetime="2016-09-27T03:08:23.000Z" itemprop="datePublished">2016-09-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="如何在MAC上搭建博客——hexo-github"><a href="#如何在MAC上搭建博客——hexo-github" class="headerlink" title="如何在MAC上搭建博客——hexo+github"></a>如何在MAC上搭建博客——hexo+github</h1><h2 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h2><h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>1、git——git-scm官网<a href="http://git-scm.com" target="_blank" rel="external">git-scm</a>下载mac版</p>
+<p>2、node.js——直接到<a href="https://nodejs.org" target="_blank" rel="external">node.js官网</a>下载安装 </p>
+<p>3、markdown编辑器——mac下推荐<a href="25.io/mou/">mou</a>或者<a href="http://macdown.uranusjr.com/" target="_blank" rel="external">macDown</a> 本人下载mou时其还未支持macOS sierra</p>
+<p>4、域名——阿里云购买即可</p>
+<h3 id="安装和初始化"><a href="#安装和初始化" class="headerlink" title="安装和初始化"></a>安装和初始化</h3><p>mac下在命令行下安装hexo</p>
+<pre><code>sudo npm install hexo -g
+hexo init blog
+cd blog
+sudo npm install
+hexo server
+</code></pre><h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>配置站点文件_config.yml,主要修改Site部分，URL部分，deploy部分</p>
+<pre><code>#Site
+title: Frances Hu&apos;s Blog
+subtitle: 技术迷，本命李宇春
+author: Frances Hu
+...
+language: zh_CN
+
+#URL
+url: http://xiaozhazi.win
+
+deploy:
+    type: git
+    repository: https://github.com/xiaozhazi/xiaozhazi.github.io.git
+    branch: master
+</code></pre><h3 id="部署网页"><a href="#部署网页" class="headerlink" title="部署网页"></a>部署网页</h3><p>在blog文件夹目录下执行生成静态页面的命令：</p>
+<pre><code>hexo generate
+hexo deploy
+</code></pre><p>如果出错，无法识别git，则执行如下命令来安装hexo-deployer-git</p>
+<pre><code>sudo npm install hexo-deployer-git --save
+</code></pre><h3 id="绑定个人域名"><a href="#绑定个人域名" class="headerlink" title="绑定个人域名"></a>绑定个人域名</h3><p>在/blog/themes/landscape/source目录下新建CNAME文件，将自己的域名 xiaozhazi.win写入即可</p>
+<p>重新部署</p>
+<pre><code>hexo clean
+hexo d -g
+</code></pre><p>###安装主题<br>在blog目录下执行如下命令</p>
+<pre><code>git clone https://github.com/iissnan/hexo-theme-next themes/next
+</code></pre><p>将blog目录下的_config.yml里theme的名称改为next即可</p>
+<p>也可以到<a href="http://hexo.io.themes" target="_blank" rel="external">hexo官网主题页</a>下载自己喜欢的主题</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/" data-id="citl0dqx8000015o3cripv5yu" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/09/27/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Hello World</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2016/09/27/如何在MAC上搭建博客——hexo-github/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/2016/09/27/hello-world/">Hello World</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2016 Frances Hu<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
