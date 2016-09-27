@@ -88,24 +88,27 @@
 2、node.js——直接到node.js官网下载安装 
 3、markdown编辑器——mac下推荐mou或者macDown 本人下载mou时其还未支持macOS sierra
 4、域名——阿里云购买即可
-安装和初始化">
+安装和初始化mac下在命令行下安装hexo
+sudo npm inst">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="Frances Hu's Blog">
 <meta property="og:url" content="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/index.html">
-<meta property="og:site_name" content="Hexo">
+<meta property="og:site_name" content="Frances Hu's Blog">
 <meta property="og:description" content="如何在MAC上搭建博客——hexo+github环境配置准备工作1、git——git-scm官网git-scm下载mac版
 2、node.js——直接到node.js官网下载安装 
 3、markdown编辑器——mac下推荐mou或者macDown 本人下载mou时其还未支持macOS sierra
 4、域名——阿里云购买即可
-安装和初始化">
-<meta property="og:updated_time" content="2016-09-27T03:34:06.000Z">
+安装和初始化mac下在命令行下安装hexo
+sudo npm inst">
+<meta property="og:updated_time" content="2016-09-27T04:35:10.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hexo">
+<meta name="twitter:title" content="Frances Hu's Blog">
 <meta name="twitter:description" content="如何在MAC上搭建博客——hexo+github环境配置准备工作1、git——git-scm官网git-scm下载mac版
 2、node.js——直接到node.js官网下载安装 
 3、markdown编辑器——mac下推荐mou或者macDown 本人下载mou时其还未支持macOS sierra
 4、域名——阿里云购买即可
-安装和初始化">
+安装和初始化mac下在命令行下安装hexo
+sudo npm inst">
 
 
 
@@ -128,7 +131,7 @@
 
   <link rel="canonical" href="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/"/>
 
-  <title>  | Hexo </title>
+  <title>  | Frances Hu's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
@@ -159,11 +162,11 @@
   <div class="custom-logo-site-title">
     <a href="/"  class="brand" rel="start">
       <span class="logo-line-before"><i></i></span>
-      <span class="site-title">Hexo</span>
+      <span class="site-title">Frances Hu's Blog</span>
       <span class="logo-line-after"><i></i></span>
     </a>
   </div>
-  <p class="site-subtitle"></p>
+  <p class="site-subtitle">技术迷，本命李宇春</p>
 </div>
 
 <div class="site-nav-toggle">
@@ -292,7 +295,41 @@
 <p>2、node.js——直接到<a href="https://nodejs.org" target="_blank" rel="external">node.js官网</a>下载安装 </p>
 <p>3、markdown编辑器——mac下推荐<a href="25.io/mou/">mou</a>或者<a href="http://macdown.uranusjr.com/" target="_blank" rel="external">macDown</a> 本人下载mou时其还未支持macOS sierra</p>
 <p>4、域名——阿里云购买即可</p>
-<h3 id="安装和初始化"><a href="#安装和初始化" class="headerlink" title="安装和初始化"></a>安装和初始化</h3>
+<h3 id="安装和初始化"><a href="#安装和初始化" class="headerlink" title="安装和初始化"></a>安装和初始化</h3><p>mac下在命令行下安装hexo</p>
+<pre><code>sudo npm install hexo -g
+hexo init blog
+cd blog
+sudo npm install
+hexo server
+</code></pre><h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>配置站点文件_config.yml,主要修改Site部分，URL部分，deploy部分</p>
+<pre><code>#Site
+title: Frances Hu&apos;s Blog
+subtitle: 技术迷，本命李宇春
+author: Frances Hu
+...
+language: zh_CN
+
+#URL
+url: http://xiaozhazi.win
+
+deploy:
+    type: git
+    repository: https://github.com/xiaozhazi/xiaozhazi.github.io.git
+    branch: master
+</code></pre><h3 id="部署网页"><a href="#部署网页" class="headerlink" title="部署网页"></a>部署网页</h3><p>在blog文件夹目录下执行生成静态页面的命令：</p>
+<pre><code>hexo generate
+hexo deploy
+</code></pre><p>如果出错，无法识别git，则执行如下命令来安装hexo-deployer-git</p>
+<pre><code>sudo npm install hexo-deployer-git --save
+</code></pre><h3 id="绑定个人域名"><a href="#绑定个人域名" class="headerlink" title="绑定个人域名"></a>绑定个人域名</h3><p>在/blog/themes/landscape/source目录下新建CNAME文件，将自己的域名 xiaozhazi.win写入即可</p>
+<p>重新部署</p>
+<pre><code>hexo clean
+hexo d -g
+</code></pre><p>###安装主题<br>在blog目录下执行如下命令</p>
+<pre><code>git clone https://github.com/iissnan/hexo-theme-next themes/next
+</code></pre><p>将blog目录下的_config.yml里theme的名称改为next即可</p>
+<p>也可以到<a href="http://hexo.io.themes" target="_blank" rel="external">hexo官网主题页</a>下载自己喜欢的主题</p>
+
       
     </div>
 
@@ -423,7 +460,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#如何在MAC上搭建博客——hexo-github"><span class="nav-number">1.</span> <span class="nav-text">如何在MAC上搭建博客——hexo+github</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#环境配置"><span class="nav-number">1.1.</span> <span class="nav-text">环境配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#准备工作"><span class="nav-number">1.1.1.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装和初始化"><span class="nav-number">1.1.2.</span> <span class="nav-text">安装和初始化</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#如何在MAC上搭建博客——hexo-github"><span class="nav-number">1.</span> <span class="nav-text">如何在MAC上搭建博客——hexo+github</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#环境配置"><span class="nav-number">1.1.</span> <span class="nav-text">环境配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#准备工作"><span class="nav-number">1.1.1.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装和初始化"><span class="nav-number">1.1.2.</span> <span class="nav-text">安装和初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置"><span class="nav-number">1.1.3.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署网页"><span class="nav-number">1.1.4.</span> <span class="nav-text">部署网页</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#绑定个人域名"><span class="nav-number">1.1.5.</span> <span class="nav-text">绑定个人域名</span></a></li></ol></li></ol></li></ol></div>
             
           </div>
         </section>
