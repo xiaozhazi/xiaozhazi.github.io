@@ -107,11 +107,33 @@ If α is too large: J(θ) may be not decrease on
             every interation, may not converge.
 </code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/12.png" alt="12"></p>
 <p>3、Computing Parameters Analytically    </p>
+<p>正态方程<br><img src="http://ofacak8l3.bkt.clouddn.com/13.png" alt="13"></p>
+<p>Octave: pinv(X’ <em> X) </em> X’ * Y   (X’ 即XT)</p>
+<p>什么时候用梯度下降？什么时候用正态方程？</p>
+<pre><code>m training examples, n features.
 
+Gradient Descent
+* Need to choose α.
+* Need many iterations.
+* Work well even when n is large.
+
+Normal Equation
+* No need to choose α.
+* Don&apos;t need to iterate.
+* Need to cumpute (XTX)-1.   O(n3) 
+* Slow if n is very large.
+</code></pre><p>如果XTX是不可逆的怎么办？</p>
+<pre><code>Octave 有两种计算矩阵逆的函数——pinv、inv
+如果使用pinv计算的话都会得到实际的结果，不管矩阵是否可逆。
+
+* Redundant features(linearly dependent).
+* Too many features(eg. m &lt;= n)
+    delete some features,or use regularization.
+</code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciunth8hl00009lo3xqj8k538" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciunuoqa40000duo30kl4myyo" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
@@ -169,7 +191,7 @@ take smaller steps. So, no need to decrease a over time.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/18/AI入门笔记一/" data-id="ciunth8hr00019lo3nr629oci" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/18/AI入门笔记一/" data-id="ciunuoqa90001duo3j19vhs97" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
@@ -245,7 +267,7 @@ hexo d -g
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/" data-id="ciunth8i200049lo3ew7dop6f" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/" data-id="ciunuoqad0003duo3lwsdlplq" class="article-share-link">Share</a>
       
       
     </footer>
@@ -290,7 +312,7 @@ hexo d -g
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/09/27/hello-world/" data-id="ciunth8hz00039lo3f87kp3cw" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/09/27/hello-world/" data-id="ciunuoqaf0004duo3umsa0a3z" class="article-share-link">Share</a>
       
       
     </footer>
