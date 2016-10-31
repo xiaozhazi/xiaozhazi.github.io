@@ -3,21 +3,45 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Hello World | Frances Hu&#39;s Blog</title>
+  <title>Machine Learning编程作业1——Linear Regression | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+  <meta name="description" content="作业源码warmUpExercise.m   ____basic functionfprintf(‘Running warmUpExercise …\n’);
+fprintf(‘5*5 Identity Matrix: \n”);
+warmUpExercise()
+function A = warmUpExercise()
+
+A = [];
+A = eye(5);
+
+end
+plotData.m">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://xiaozhazi.win/2016/09/27/hello-world/index.html">
+<meta property="og:title" content="Machine Learning编程作业1——Linear Regression">
+<meta property="og:url" content="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
-<meta property="og:updated_time" content="2016-09-27T02:23:49.000Z">
+<meta property="og:description" content="作业源码warmUpExercise.m   ____basic functionfprintf(‘Running warmUpExercise …\n’);
+fprintf(‘5*5 Identity Matrix: \n”);
+warmUpExercise()
+function A = warmUpExercise()
+
+A = [];
+A = eye(5);
+
+end
+plotData.m">
+<meta property="og:updated_time" content="2016-10-31T03:30:50.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello World">
-<meta name="twitter:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick">
+<meta name="twitter:title" content="Machine Learning编程作业1——Linear Regression">
+<meta name="twitter:description" content="作业源码warmUpExercise.m   ____basic functionfprintf(‘Running warmUpExercise …\n’);
+fprintf(‘5*5 Identity Matrix: \n”);
+warmUpExercise()
+function A = warmUpExercise()
+
+A = [];
+A = eye(5);
+
+end
+plotData.m">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -70,10 +94,10 @@ Quick">
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-Machine-Learning编程作业1——Linear-Regression" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2016/09/27/hello-world/" class="article-date">
-  <time datetime="2016-09-27T02:23:49.000Z" itemprop="datePublished">2016-09-27</time>
+    <a href="/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" class="article-date">
+  <time datetime="2016-10-31T02:50:02.000Z" itemprop="datePublished">2016-10-31</time>
 </a>
     
   </div>
@@ -84,7 +108,7 @@ Quick">
         
   
     <h1 class="article-title" itemprop="name">
-      Hello World
+      Machine Learning编程作业1——Linear Regression
     </h1>
   
 
@@ -92,37 +116,90 @@ Quick">
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+        <h2 id="作业源码"><a href="#作业源码" class="headerlink" title="作业源码"></a>作业源码</h2><h3 id="warmUpExercise-m-basic-function"><a href="#warmUpExercise-m-basic-function" class="headerlink" title="warmUpExercise.m   ____basic function"></a>warmUpExercise.m   ____basic function</h3><p>fprintf(‘Running warmUpExercise …\n’);</p>
+<p>fprintf(‘5*5 Identity Matrix: \n”);</p>
+<p>warmUpExercise()</p>
+<pre><code>function A = warmUpExercise()
 
+A = [];
+A = eye(5);
+
+end
+</code></pre><h3 id="plotData-m-Plotting"><a href="#plotData-m-Plotting" class="headerlink" title="plotData.m ____Plotting"></a>plotData.m ____Plotting</h3><p>fprintf(‘Plotting Data…\n’)</p>
+<p>data = load(‘ex1data1.txt’);</p>
+<p>X = data(:,1); y = data(;,2);</p>
+<p>m = length(y); %num of training examples</p>
+<p>plotData(X,y)</p>
+<pre><code>function plotData(x,y)
+
+figure;
+plot(x,y,&apos;rx&apos;,&apos;MarkerSize&apos;,10);
+ylabel(&apos;Profit in $10,000s&apos;);
+xlabel(&apos;Poputation of City in 10,000s&apos;);
+
+end
+</code></pre><h3 id="gradientDescent-m-Gradient-Descent"><a href="#gradientDescent-m-Gradient-Descent" class="headerlink" title="gradientDescent.m ____Gradient Descent"></a>gradientDescent.m ____Gradient Descent</h3><p>fprintf(‘Running Gradient Descent …\n’)</p>
+<p>X = [ones[m,1],data(;,1)];</p>
+<p>theta = zeros(2,1);</p>
+<p>iterations = 1500;</p>
+<p>alpha = 0.01;</p>
+<p>computeCost(X,y,theta);</p>
+<h4 id="computeCost-m-compute-initial-cost"><a href="#computeCost-m-compute-initial-cost" class="headerlink" title="computeCost.m ____compute initial cost"></a>computeCost.m ____compute initial cost</h4><pre><code>function J = computeCost(X,y,theta)
+
+m = length(y);
+J = 0;
+cost = 0;
+for i = 1 : m
+    cost += (theta(1,1) * X(i,1) + theta(2,1) * X(i,2)
+            - y(i))^2;
+end
+
+J = 1/(2*m) * cost;
+
+end
+</code></pre><p>theta = gradientDescent(X,y,theta,alpha,iterations);</p>
+<pre><code>function [theta,J_history] = gradientDescent(X,y,theta,
+                alpha,num_iters)
+
+m = length(y);
+J_history = zeros(num_iters,1);
+
+for iter = 1 : num_iters
+    cost_theta1 = 0;
+    cost_theta2 = 0;
+    for i = 1 : m
+        cost_theta1 += (theta(1,1) * X(i,1) + 
+            theta(2,1) * X(i,2) - y(i)) * X(i,1);
+        cost_theta2 += (theta(1,1) * X(i,1) +
+            theta(2,1) * X(i,2) - y(i)) * X(i,2);
+    end
+    new_theta1 = theta(1,1) - alpha*cost_theta1 * 1/m;
+    new_theta2 = theta(2,1) - alpha*cost_theta2 * 1/m;
+    theta(1,1) = new_theta1;
+    theta(2,1) = new_theta2;
+
+    J_history(iter) = computeCost(X,y,theta);
+    J_history(iter) 
+</code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/09/27/hello-world/" data-id="ciuxierda0004plo3sauwebha" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="ciuxiercx0000plo358bq0fbv" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
+
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/2016/09/27/如何在MAC上搭建博客——hexo-github/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          如何在MAC上搭建博客——hexo+github
-        
-      </div>
-    </a>
   
+    <a href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周</div>
+    </a>
   
 </nav>
 
