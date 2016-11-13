@@ -3,14 +3,38 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Tag: octave, program | Frances Hu&#39;s Blog</title>
+  <title>AI入门之——Andrew Ng “Machine Learning”课程学习笔记第四周 | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Frances Hu's Blog">
-<meta property="og:url" content="http://xiaozhazi.win/tags/octave-program/index.html">
+  <meta name="description" content="4、Neural Networks4.1 MotivationsNeural Networks
+Origins: Algorithms that try to mimic the brain.
+Was very widely used in 80s and early 90s;
+popularity diminished in late 90s.
+Recent resurgence: 
+    s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第四周">
+<meta property="og:url" content="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="4、Neural Networks4.1 MotivationsNeural Networks
+Origins: Algorithms that try to mimic the brain.
+Was very widely used in 80s and early 90s;
+popularity diminished in late 90s.
+Recent resurgence: 
+    s">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/4_1.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/4_2.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/4_3.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/4_4.png">
+<meta property="og:updated_time" content="2016-11-13T08:03:30.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Frances Hu's Blog">
+<meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第四周">
+<meta name="twitter:description" content="4、Neural Networks4.1 MotivationsNeural Networks
+Origins: Algorithms that try to mimic the brain.
+Was very widely used in 80s and early 90s;
+popularity diminished in late 90s.
+Recent resurgence: 
+    s">
+<meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/4_1.png">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -63,58 +87,66 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2016" class="archive-year">2016</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" class="archive-article-date">
-  <time datetime="2016-11-07T02:31:30.000Z" itemprop="datePublished">11月 7</time>
+        <section id="main"><article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" class="article-date">
+  <time datetime="2016-11-13T07:48:54.000Z" itemprop="datePublished">2016-11-13</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/">Machine Learning编程作业2——Logistic Regression</a>
+    <h1 class="article-title" itemprop="name">
+      AI入门之——Andrew Ng “Machine Learning”课程学习笔记第四周
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" class="archive-article-date">
-  <time datetime="2016-10-31T02:50:02.000Z" itemprop="datePublished">10月 31</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/10/31/Machine-Learning编程作业1——Linear-Regression/">Machine Learning编程作业1——Linear Regression</a>
-    </h1>
-  
+        <h2 id="4、Neural-Networks"><a href="#4、Neural-Networks" class="headerlink" title="4、Neural Networks"></a>4、Neural Networks</h2><h3 id="4-1-Motivations"><a href="#4-1-Motivations" class="headerlink" title="4.1 Motivations"></a>4.1 Motivations</h3><pre><code>Neural Networks
+Origins: Algorithms that try to mimic the brain.
+Was very widely used in 80s and early 90s;
+popularity diminished in late 90s.
+Recent resurgence: 
+    state-of-the-art technique for many applications. 
+</code></pre><h3 id="4-2-Neural-Networks"><a href="#4-2-Neural-Networks" class="headerlink" title="4.2 Neural Networks"></a>4.2 Neural Networks</h3><h4 id="4-2-1-Model-Representation-I"><a href="#4-2-1-Model-Representation-I" class="headerlink" title="4.2.1 Model Representation I"></a>4.2.1 Model Representation I</h4><p>Sigmoid(logistic) activation function.<br><img src="http://ofacak8l3.bkt.clouddn.com/4_1.png" alt="4_1"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/4_2.png" alt="4_2"></p>
+<h4 id="4-2-2-Model-Representation-II"><a href="#4-2-2-Model-Representation-II" class="headerlink" title="4.2.2 Model Representation II"></a>4.2.2 Model Representation II</h4><pre><code>input层
+hidden层
+output层
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/4_3.png" alt="4_3"></p>
+<p>###4.3 Multiple output units:One-vs-all.<br><img src="http://ofacak8l3.bkt.clouddn.com/4_4.png" alt="4_4"></p>
 
-    </header>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="civgcu7im0001r4o3nhjt8nua" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li></ul>
+
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Machine Learning编程作业2——Logistic Regression</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
 
 </section>
         
