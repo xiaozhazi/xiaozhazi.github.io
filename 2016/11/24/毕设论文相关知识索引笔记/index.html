@@ -3,45 +3,33 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Machine Learning编程作业1——Linear Regression | Frances Hu&#39;s Blog</title>
+  <title>毕设论文相关知识索引笔记 | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="作业源码warmUpExercise.m   ____basic functionfprintf(‘Running warmUpExercise …\n’);
-fprintf(‘5*5 Identity Matrix: \n”);
-warmUpExercise()
-function A = warmUpExercise()
-
-A = [];
-A = eye(5);
-
-end
-plotData.m">
+  <meta name="description" content="Cgroup介绍、应用实例及原理描述Cgroup介绍、应用实例及原理描述
+Cgroup设计原理分析Linux中，管理进程的数据结构是task_struct
+#ifdef CONFIG_CGROUPS
+/*Control Group info protected by css_set_lock*/
+struct css_set *cgroups;
+/*cg_list protected by css">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Machine Learning编程作业1——Linear Regression">
-<meta property="og:url" content="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/index.html">
+<meta property="og:title" content="毕设论文相关知识索引笔记">
+<meta property="og:url" content="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
-<meta property="og:description" content="作业源码warmUpExercise.m   ____basic functionfprintf(‘Running warmUpExercise …\n’);
-fprintf(‘5*5 Identity Matrix: \n”);
-warmUpExercise()
-function A = warmUpExercise()
-
-A = [];
-A = eye(5);
-
-end
-plotData.m">
-<meta property="og:updated_time" content="2016-11-01T07:21:49.000Z">
+<meta property="og:description" content="Cgroup介绍、应用实例及原理描述Cgroup介绍、应用实例及原理描述
+Cgroup设计原理分析Linux中，管理进程的数据结构是task_struct
+#ifdef CONFIG_CGROUPS
+/*Control Group info protected by css_set_lock*/
+struct css_set *cgroups;
+/*cg_list protected by css">
+<meta property="og:updated_time" content="2016-11-24T06:20:16.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Machine Learning编程作业1——Linear Regression">
-<meta name="twitter:description" content="作业源码warmUpExercise.m   ____basic functionfprintf(‘Running warmUpExercise …\n’);
-fprintf(‘5*5 Identity Matrix: \n”);
-warmUpExercise()
-function A = warmUpExercise()
-
-A = [];
-A = eye(5);
-
-end
-plotData.m">
+<meta name="twitter:title" content="毕设论文相关知识索引笔记">
+<meta name="twitter:description" content="Cgroup介绍、应用实例及原理描述Cgroup介绍、应用实例及原理描述
+Cgroup设计原理分析Linux中，管理进程的数据结构是task_struct
+#ifdef CONFIG_CGROUPS
+/*Control Group info protected by css_set_lock*/
+struct css_set *cgroups;
+/*cg_list protected by css">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -94,10 +82,10 @@ plotData.m">
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-Machine-Learning编程作业1——Linear-Regression" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-毕设论文相关知识索引笔记" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" class="article-date">
-  <time datetime="2016-10-31T02:50:02.000Z" itemprop="datePublished">2016-10-31</time>
+    <a href="/2016/11/24/毕设论文相关知识索引笔记/" class="article-date">
+  <time datetime="2016-11-24T06:14:40.000Z" itemprop="datePublished">2016-11-24</time>
 </a>
     
   </div>
@@ -108,7 +96,7 @@ plotData.m">
         
   
     <h1 class="article-title" itemprop="name">
-      Machine Learning编程作业1——Linear Regression
+      毕设论文相关知识索引笔记
     </h1>
   
 
@@ -116,99 +104,31 @@ plotData.m">
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="作业源码"><a href="#作业源码" class="headerlink" title="作业源码"></a>作业源码</h2><h3 id="warmUpExercise-m-basic-function"><a href="#warmUpExercise-m-basic-function" class="headerlink" title="warmUpExercise.m   ____basic function"></a>warmUpExercise.m   ____basic function</h3><p>fprintf(‘Running warmUpExercise …\n’);</p>
-<p>fprintf(‘5*5 Identity Matrix: \n”);</p>
-<p>warmUpExercise()</p>
-<pre><code>function A = warmUpExercise()
-
-A = [];
-A = eye(5);
-
-end
-</code></pre><h3 id="plotData-m-Plotting"><a href="#plotData-m-Plotting" class="headerlink" title="plotData.m ____Plotting"></a>plotData.m ____Plotting</h3><p>fprintf(‘Plotting Data…\n’)</p>
-<p>data = load(‘ex1data1.txt’);</p>
-<p>X = data(:,1); y = data(;,2);</p>
-<p>m = length(y); %num of training examples</p>
-<p>plotData(X,y)</p>
-<pre><code>function plotData(x,y)
-
-figure;
-plot(x,y,&apos;rx&apos;,&apos;MarkerSize&apos;,10);
-ylabel(&apos;Profit in $10,000s&apos;);
-xlabel(&apos;Poputation of City in 10,000s&apos;);
-
-end
-</code></pre><h3 id="gradientDescent-m-Gradient-Descent"><a href="#gradientDescent-m-Gradient-Descent" class="headerlink" title="gradientDescent.m ____Gradient Descent"></a>gradientDescent.m ____Gradient Descent</h3><p>fprintf(‘Running Gradient Descent …\n’)</p>
-<p>X = [ones[m,1],data(;,1)];</p>
-<p>theta = zeros(2,1);</p>
-<p>iterations = 1500;</p>
-<p>alpha = 0.01;</p>
-<p>computeCost(X,y,theta);</p>
-<h4 id="computeCost-m-compute-initial-cost"><a href="#computeCost-m-compute-initial-cost" class="headerlink" title="computeCost.m ____compute initial cost"></a>computeCost.m ____compute initial cost</h4><pre><code>function J = computeCost(X,y,theta)
-
-m = length(y);
-J = 0;
-cost = 0;
-for i = 1 : m
-    cost += (theta(1,1) * X(i,1) + theta(2,1) * X(i,2)
-            - y(i))^2;
-end
-
-J = 1/(2*m) * cost;
-
-end
-</code></pre><p>theta = gradientDescent(X,y,theta,alpha,iterations);</p>
-<pre><code>function [theta,J_history] = gradientDescent(X,y,theta,
-                alpha,num_iters)
-
-m = length(y);
-J_history = zeros(num_iters,1);
-
-for iter = 1 : num_iters
-    cost_theta1 = 0;
-    cost_theta2 = 0;
-    for i = 1 : m
-        cost_theta1 += (theta(1,1) * X(i,1) + 
-            theta(2,1) * X(i,2) - y(i)) * X(i,1);
-        cost_theta2 += (theta(1,1) * X(i,1) +
-            theta(2,1) * X(i,2) - y(i)) * X(i,2);
-    end
-    new_theta1 = theta(1,1) - alpha*cost_theta1 * 1/m;
-    new_theta2 = theta(2,1) - alpha*cost_theta2 * 1/m;
-    theta(1,1) = new_theta1;
-    theta(2,1) = new_theta2;
-
-    J_history(iter) = computeCost(X,y,theta);
-end
-end
+        <h2 id="Cgroup介绍、应用实例及原理描述"><a href="#Cgroup介绍、应用实例及原理描述" class="headerlink" title="Cgroup介绍、应用实例及原理描述"></a>Cgroup介绍、应用实例及原理描述</h2><p><a href="http://www.ibm.com/developerworks/cn/linux/1506_cgroup/index.html" target="_blank" rel="external">Cgroup介绍、应用实例及原理描述</a></p>
+<h3 id="Cgroup设计原理分析"><a href="#Cgroup设计原理分析" class="headerlink" title="Cgroup设计原理分析"></a>Cgroup设计原理分析</h3><p>Linux中，管理进程的数据结构是task_struct</p>
+<pre><code>#ifdef CONFIG_CGROUPS
+/*Control Group info protected by css_set_lock*/
+struct css_set *cgroups;
+/*cg_list protected by css_set_lock and tsk-&gt;alloc_lock*/
+struct list_head cg_list;
+#endif
 </code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="civvyzwli0004s7o3vrxygmyq" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="civvyzwlt0009s7o37suv7t54" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
-
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          AI入门之——Andrew Ng “Machine Learning”课程学习笔记第三周
-        
-      </div>
-    </a>
   
-  
-    <a href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周</div>
+      <div class="article-nav-title">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第四周</div>
     </a>
   
 </nav>
