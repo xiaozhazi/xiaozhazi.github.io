@@ -21,7 +21,7 @@ Cgroup设计原理分析Linux中，管理进程的数据结构是task_struct
 /*Control Group info protected by css_set_lock*/
 struct css_set *cgroups;
 /*cg_list protected by css">
-<meta property="og:updated_time" content="2016-11-24T06:20:16.000Z">
+<meta property="og:updated_time" content="2016-11-24T06:36:58.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="毕设论文相关知识索引笔记">
 <meta name="twitter:description" content="Cgroup介绍、应用实例及原理描述Cgroup介绍、应用实例及原理描述
@@ -112,11 +112,31 @@ struct css_set *cgroups;
 /*cg_list protected by css_set_lock and tsk-&gt;alloc_lock*/
 struct list_head cg_list;
 #endif
+</code></pre><p>其中*cgroups指向css_set结构，css_set存储了与进程相关的cgroups信息。cg_list是一个嵌入式的list_head结构，将链到同一个css_set的进程组织成一个链表。</p>
+<pre><code>struct css_set{
+  atomic_t refcount;
+  struct hlist_node hlist;
+  struct list_head tasks;
+  struct list_head cg_links;
+  struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
+  struct rcu_head ruc_head;
+};
+</code></pre><p>其中，refcount是该css_set的引用数，因为一个css_set可以被多个进程公用，只要这些进程的cgroups信息相同。</p>
+<p>hlist是嵌入的hlist_node，用于把所有css_set组成一个hash表，这样内核可以快速定位css_set。</p>
+<p>tasks指向所有连到此css_set的进程指向的链表。</p>
+<p>cg_links指向一个由struct_cg_group_link连城的链表。</p>
+<p>subsys是一个指针数组，存储一组指向cgroup_subsys_state的指针，一个cgroup_subsys_state就是进程与一个特定子系统相关的信息。通过这个数组，进程可以获得相应的cgroup控制信息了。</p>
+<pre><code>struct cgroup_subsys_state{
+  struct cgroup *cgroup;
+  atomic_t refcnt;
+  unsigned long flags;
+  struct css_id *id;
+};
 </code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="civvyzwlt0009s7o37suv7t54" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="civvzl7ra0009t1o300iw5p9x" class="article-share-link">Share</a>
       
       
     </footer>
