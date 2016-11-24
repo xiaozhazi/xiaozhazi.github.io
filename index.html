@@ -147,11 +147,18 @@ struct list_head cg_list;
   struct list_head cg_link_list;
   struct css_set *cg;
 };
-</code></pre>
+</code></pre><p>cgrp_link_list连入到 cgroup-&gt;css_set链表，cgrp指向此cg_group_link相关的cgroup。</p>
+<p>cg_link_list连入到css_set-&gt;cg_links指向的链表，cg指向此cg_group_link相关的css_set。</p>
+<p>cgroup和css_set是一个多对多的关系，必须添加一个中间结构来将两者联系起来，这既是cg_cgroup_link的作用。cgrp和cg为此结构体的联合主键，cgrp_link_list和cg_link_list分别连入cgroup和css_set，使后两者都可以尽心遍历查询。</p>
+<p>####为什么cgroup和css_set是多对多的关系？<br>一个进程对应一个css_set，一个css_set存储了一组进程跟各个子系统相关的信息，但是这些信息由可能不是从一个cgroup那里获得的，因为一个进程可以同时属于多个cgroup，只要这些cgroup不在同一个层级。</p>
+<pre><code>eg：
+我们创建一个层级A，A上面附加了CPU和memory两个子系统，进程a属于A的根cgroup；创建一个层级B，B上面附加了ns和blkio两个子系统，进程a也属于B的根cgroup；那么进程a对应的CPU和memory是从A的根cgroup获得的，ns和blkio则是从B的根cgroup获得。因此一个css_set存储的cgroup_subsys_state可以对应多个cgroup。另一方面cgroup也存储了一组cgroup_subsys_state，这一组则是cgroup从所在的层级附加的子系统获得的。一个cgroup可以有多个进程，这些进程的css_set不一定都相同，因为有些进程可能还加入了其他cgroup，但是同一个cgroup中的进程与该cgroup关联的cgroup_subsys_state都受到该cgroup的管理，所以一个cgroup也可以对应多个css_set。
+</code></pre><p>从前面的分析，我们可以看出从 task 到 cgroup 是很容易定位的，但是从 cgroup 获取此 cgroup 的所有的 task 就必须通过这个结构了。每个进程都回指向一个 css_set，而与这个 css_set 关联的所有进程都会链入到 css_set-&gt;tasks 链表，而 cgroup 又通过一个中间结构 cg_cgroup_link 来寻找所有与之关联的所有 css_set，从而可以得到与 cgroup 关联的所有进程。    </p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="civw06o8r000dtto394w9o1f3" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="civw0qclb000bv1o3u6qgnqd0" class="article-share-link">Share</a>
       
       
     </footer>
@@ -200,7 +207,7 @@ output层
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="civw06o850001tto3ie4iobj2" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="civw0qckv0003v1o3cx4vwxdu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li></ul>
@@ -323,7 +330,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="civw06o8k0008tto3o0b392ue" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="civw0qcl40008v1o3qa7bhmh7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -388,7 +395,7 @@ but fail to generalize to new examples.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="civw06o800000tto3dpkvvrkr" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="civw0qckj0000v1o3dwxcx44p" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li></ul>
@@ -491,7 +498,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="civw06o8h0005tto3pi807qfd" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="civw0qcl10005v1o33n961l9l" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -576,7 +583,7 @@ Normal Equation
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="civw06o8c0003tto3clp3qr8l" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="civw0qckp0001v1o3x73um0dd" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
@@ -634,7 +641,7 @@ take smaller steps. So, no need to decrease a over time.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/18/AI入门笔记一/" data-id="civw06o8d0004tto3g0hl3ylb" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/18/AI入门笔记一/" data-id="civw0qckx0004v1o33lm1d0r5" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
@@ -710,7 +717,7 @@ hexo d -g
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/" data-id="civw06o8q000btto32dcf6mum" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/" data-id="civw0qclc000dv1o3xd7k85ja" class="article-share-link">Share</a>
       
       
     </footer>
@@ -755,7 +762,7 @@ hexo d -g
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/09/27/hello-world/" data-id="civw06o8l0009tto30whmt5i3" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/09/27/hello-world/" data-id="civw0qcl70009v1o30rwzbn17" class="article-share-link">Share</a>
       
       
     </footer>
