@@ -3,14 +3,36 @@
 <head>
   <meta charset="utf-8">
   
-  <title>归档: 2016/9 | Frances Hu&#39;s Blog</title>
+  <title>AI入门之——Andrew Ng “Machine Learning”课程学习笔记第五周 | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Frances Hu's Blog">
-<meta property="og:url" content="http://xiaozhazi.win/archives/2016/09/index.html">
+  <meta name="description" content="5、Neural Networks：Learning5.1、Cost Function and Backpropagation
+5.2、Backprogation algorithm
+5.3、Gradient checking
+Important:
+Be sure to disable your gradient checking code before training your claaifi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第五周">
+<meta property="og:url" content="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="5、Neural Networks：Learning5.1、Cost Function and Backpropagation
+5.2、Backprogation algorithm
+5.3、Gradient checking
+Important:
+Be sure to disable your gradient checking code before training your claaifi">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/5_1.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/5_2.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/5_3.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/5_4.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/5_5.png">
+<meta property="og:updated_time" content="2016-11-24T07:31:29.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Frances Hu's Blog">
+<meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第五周">
+<meta name="twitter:description" content="5、Neural Networks：Learning5.1、Cost Function and Backpropagation
+5.2、Backprogation algorithm
+5.3、Gradient checking
+Important:
+Be sure to disable your gradient checking code before training your claaifi">
+<meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/5_1.png">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -63,58 +85,58 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2016" class="archive-year">2016</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2016/09/27/如何在MAC上搭建博客——hexo-github/" class="archive-article-date">
-  <time datetime="2016-09-27T03:08:23.000Z" itemprop="datePublished">9月 27</time>
+        <section id="main"><article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" class="article-date">
+  <time datetime="2016-11-24T07:10:34.000Z" itemprop="datePublished">2016-11-24</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/09/27/如何在MAC上搭建博客——hexo-github/">如何在MAC上搭建博客——hexo+github</a>
+    <h1 class="article-title" itemprop="name">
+      AI入门之——Andrew Ng “Machine Learning”课程学习笔记第五周
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2016/09/27/hello-world/" class="archive-article-date">
-  <time datetime="2016-09-27T02:23:49.000Z" itemprop="datePublished">9月 27</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/09/27/hello-world/">Hello World</a>
-    </h1>
-  
+        <h2 id="5、Neural-Networks：Learning"><a href="#5、Neural-Networks：Learning" class="headerlink" title="5、Neural Networks：Learning"></a>5、Neural Networks：Learning</h2><h3 id="5-1、Cost-Function-and-Backpropagation"><a href="#5-1、Cost-Function-and-Backpropagation" class="headerlink" title="5.1、Cost Function and Backpropagation"></a>5.1、Cost Function and Backpropagation</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/5_1.png" alt="5_1"></p>
+<h3 id="5-2、Backprogation-algorithm"><a href="#5-2、Backprogation-algorithm" class="headerlink" title="5.2、Backprogation algorithm"></a>5.2、Backprogation algorithm</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/5_2.png" alt="5_2"></p>
+<h3 id="5-3、Gradient-checking"><a href="#5-3、Gradient-checking" class="headerlink" title="5.3、Gradient checking"></a>5.3、Gradient checking</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/5_3.png" alt="5_3"></p>
+<pre><code>Important:
+Be sure to disable your gradient checking code before training your claaifier. otherwise code will be very slow.
+</code></pre><h3 id="5-4-Random-initialization"><a href="#5-4-Random-initialization" class="headerlink" title="5.4 Random initialization"></a>5.4 Random initialization</h3><pre><code>initial each initialtheta to a random value in[-EPSILON,EPSILON]
+</code></pre><h3 id="5-5-Put-it-together"><a href="#5-5-Put-it-together" class="headerlink" title="5.5 Put it together"></a>5.5 Put it together</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/5_4.png" alt="5_4"><br><img src="http://ofacak8l3.bkt.clouddn.com/5_5.png" alt="5_5"></p>
 
-    </header>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="civw1jin10004yko3pkhnvq79" class="article-share-link">Share</a>
+      
+      
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/11/24/毕设论文相关知识索引笔记/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">毕设论文相关知识索引笔记</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
 
 </section>
         
