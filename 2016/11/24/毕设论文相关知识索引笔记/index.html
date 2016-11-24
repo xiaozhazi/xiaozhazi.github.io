@@ -21,7 +21,7 @@ Cgroup设计原理分析Linux中，管理进程的数据结构是task_struct
 /*Control Group info protected by css_set_lock*/
 struct css_set *cgroups;
 /*cg_list protected by css">
-<meta property="og:updated_time" content="2016-11-24T06:36:58.000Z">
+<meta property="og:updated_time" content="2016-11-24T06:53:39.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="毕设论文相关知识索引笔记">
 <meta name="twitter:description" content="Cgroup介绍、应用实例及原理描述Cgroup介绍、应用实例及原理描述
@@ -132,11 +132,43 @@ struct list_head cg_list;
   unsigned long flags;
   struct css_id *id;
 };
+</code></pre><p>*cgroup指向一个cgroup结构，也就是进程属于的cgroup。</p>
+<pre><code>task_struct--&gt;css_set--&gt;cgroup_subsys_state--&gt;cgroup
+</code></pre><p>这样进程就和cgroup连接起来了。</p>
+<pre><code>struct cgroup{
+  unsigned long flags;
+  atomic_t count;
+  struct list_head sibling;
+  struct list_head children;
+  struct cgroup *parent;
+  struct dentry *dentry;
+  struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT]
+  struct cgroupfs_root *root;
+  struct cgroup *top_cgroup;
+  struct list_head css_sets;
+  struct list_head release_list;
+  struct list_head pidlists;
+  struct mutex pidlist_mutex;
+  struct rcu_head rcu_head;
+  struct list_head event_list;
+  spinlock_t event_list_lock;
+};
+</code></pre><p>sibling,children,parent三个嵌入的list_head负责将同一层级的cgroup连接成一颗cgroup树。</p>
+<p>subsys指针数组，存储一组指向cgroup_subsys_state的指针。这组指针指向了此cgroup跟各个子系统相关的信息。类似css_set中。</p>
+<p>root指向一个cgroupfs_root结构，就是cgroup所在层级对应的结构体。</p>
+<p>top_cgroup指向了所在层级的根cgroup，即创建层级时自动创建的那个cgroup。</p>
+<p>css_set指向一个由struct_cg_cgroup_link连成的链表。</p>
+<pre><code>struct cg_cgroup_link{
+  struct list_head cgrp_link_list;
+  struct cgroup *cgrp;
+  struct list_head cg_link_list;
+  struct css_set *cg;
+};
 </code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="civvzl7ra0009t1o300iw5p9x" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="civw06o8r000dtto394w9o1f3" class="article-share-link">Share</a>
       
       
     </footer>
