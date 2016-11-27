@@ -13,11 +13,18 @@ A. It’s hard to tell what wi">
 <meta property="og:site_name" content="Frances Hu's Blog">
 <meta property="og:description" content="6、Advice for Applying Machine Learning6.1、Evaluating a learning Algorithm6.1.1、Deciding What to Try NextWhich of the following statements about diagnostics are true? (BCD)
 A. It’s hard to tell what wi">
-<meta property="og:updated_time" content="2016-11-27T10:06:10.000Z">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/6_1.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/6_2.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/6_3.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/6_4.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/6_5.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/6_6.png">
+<meta property="og:updated_time" content="2016-11-27T11:03:31.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周">
 <meta name="twitter:description" content="6、Advice for Applying Machine Learning6.1、Evaluating a learning Algorithm6.1.1、Deciding What to Try NextWhich of the following statements about diagnostics are true? (BCD)
 A. It’s hard to tell what wi">
+<meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/6_1.png">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -111,18 +118,37 @@ A. It’s hard to tell what wi">
 <p>我们使用交叉验证集来选择模型，看这些假设在交叉验证集表现如何。选择最小交叉验证集误差的模型。</p>
 <p>Consider the model selection procedure where we choose the degree of polynomial using a cross validation set. For the final model, we might generally expect Jcv to be lower than Jtest because:</p>
 <p>An extra parameter(d,the degree of the polynomial) has been fit to the cross validation set.</p>
-<h3 id="6-2、Bias-vs-Variance-偏差和方差"><a href="#6-2、Bias-vs-Variance-偏差和方差" class="headerlink" title="6.2、Bias vs. Variance(偏差和方差)"></a>6.2、Bias vs. Variance(偏差和方差)</h3><h4 id="6-2-1、Diagnosing-Bias-vs-Variance"><a href="#6-2-1、Diagnosing-Bias-vs-Variance" class="headerlink" title="6.2.1、Diagnosing Bias vs. Variance"></a>6.2.1、Diagnosing Bias vs. Variance</h4><p>High Bias Overfitting<br>High Variance Underfitting</p>
-<h4 id="6-2-2、Regularization-and-Bias-Variance"><a href="#6-2-2、Regularization-and-Bias-Variance" class="headerlink" title="6.2.2、Regularization and Bias/Variance"></a>6.2.2、Regularization and Bias/Variance</h4><h4 id="6-2-3、Learning-Curves"><a href="#6-2-3、Learning-Curves" class="headerlink" title="6.2.3、Learning Curves"></a>6.2.3、Learning Curves</h4><p>判断一个假设是否存在偏差方差问题</p>
+<h3 id="6-2、Bias-vs-Variance-偏差和方差"><a href="#6-2、Bias-vs-Variance-偏差和方差" class="headerlink" title="6.2、Bias vs. Variance(偏差和方差)"></a>6.2、Bias vs. Variance(偏差和方差)</h3><h4 id="6-2-1、Diagnosing-Bias-vs-Variance"><a href="#6-2-1、Diagnosing-Bias-vs-Variance" class="headerlink" title="6.2.1、Diagnosing Bias vs. Variance"></a>6.2.1、Diagnosing Bias vs. Variance</h4><p>High Bias Overfitting</p>
+<p>High Variance Underfitting</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/6_1.png" alt="6_1"></p>
+<h4 id="6-2-2、Regularization-and-Bias-Variance"><a href="#6-2-2、Regularization-and-Bias-Variance" class="headerlink" title="6.2.2、Regularization and Bias/Variance"></a>6.2.2、Regularization and Bias/Variance</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_2.png" alt="6_2"></p>
+<h4 id="6-2-3、Learning-Curves"><a href="#6-2-3、Learning-Curves" class="headerlink" title="6.2.3、Learning Curves"></a>6.2.3、Learning Curves</h4><p>判断一个假设是否存在偏差方差问题</p>
 <pre><code>High Bias
 If a learning algorithm is suffering from high bias, getting more training data will not help much.
-</code></pre><p>因此知道自己的假设是否存在高偏差/方差问题，非常有用。</p>
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_3.png" alt="6_3"><br>因此知道自己的假设是否存在高偏差/方差问题，非常有用。</p>
 <pre><code>High variance
 If a learning algorithm is suffering from high variance, getting more training data is likely to help.
-</code></pre>
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_4.png" alt="6_4"></p>
+<h4 id="6-2-4、Deciding-What-to-Do-Next-Revisited"><a href="#6-2-4、Deciding-What-to-Do-Next-Revisited" class="headerlink" title="6.2.4、Deciding What to Do Next Revisited"></a>6.2.4、Deciding What to Do Next Revisited</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_5.png" alt="6_5"></p>
+<h3 id="6-3、Machine-Learning-system-design"><a href="#6-3、Machine-Learning-system-design" class="headerlink" title="6.3、Machine Learning system design"></a>6.3、Machine Learning system design</h3><h4 id="6-3-1、Priorityzing-what-to-work-on"><a href="#6-3-1、Priorityzing-what-to-work-on" class="headerlink" title="6.3.1、Priorityzing what to work on"></a>6.3.1、Priorityzing what to work on</h4><h4 id="6-3-2、Error-Analysis"><a href="#6-3-2、Error-Analysis" class="headerlink" title="6.3.2、Error Analysis"></a>6.3.2、Error Analysis</h4><p>建议的方法：</p>
+<p>1、尽快的实现一个最基本的算法，然后在交叉验证数据集上进行验证；</p>
+<p>2、画出learning curves，看是否更多的数据、更多的features能提升正确性；</p>
+<p>3、Error Analysis：主要分析那些算法预测出错的例子，看能否发现一些系统趋势。</p>
+<pre><code>Error analysis may not be helpful for deciding is this is likely to improve performance, only solution is to try it and say if it works.
+</code></pre><h4 id="6-3-3-Error-Metrics-for-Skewed-Classes"><a href="#6-3-3-Error-Metrics-for-Skewed-Classes" class="headerlink" title="6.3.3 Error Metrics for Skewed Classes"></a>6.3.3 Error Metrics for Skewed Classes</h4><p>不能仅仅依靠错误率来判断算法的性能，还需要利用Precision 和 Recall<br><img src="http://ofacak8l3.bkt.clouddn.com/6_6.png" alt="6_6"></p>
+<h4 id="6-3-4-Trading-off-precision-and-recall"><a href="#6-3-4-Trading-off-precision-and-recall" class="headerlink" title="6.3.4 Trading off precision and recall"></a>6.3.4 Trading off precision and recall</h4><p>我们可以通过计算F1来自动选择性能较高的算法。</p>
+<pre><code>F1 = 2*(P*R)/(P+R);
+</code></pre><h4 id="6-3-5-Data-for-Machine-Learning"><a href="#6-3-5-Data-for-Machine-Learning" class="headerlink" title="6.3.5 Data for Machine Learning"></a>6.3.5 Data for Machine Learning</h4><p>Banko anf Brill 在2001年提出了一个观点：</p>
+<pre><code>It&apos;s not who has the best algorithm that wins, 
+It&apos;s who has the most data.
+</code></pre><p>这个观点有时候不一定正确：</p>
+<p>当feature很少不足以预测时（例，预测房价时仅知道尺寸），此时再多的数据可能也无法提升算法的性能； </p>
+<p>当算法参数很多时（例，逻辑回归和线性回归有很多的feature，或者神经网络有很多的隐藏单元），更大的测试集可以尽可能的减少过拟合。</p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ciw0hdqez0005o3o3lpned8n9" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ciw0jflia0001ulo3qsavf04v" class="article-share-link">Share</a>
       
       
     </footer>
