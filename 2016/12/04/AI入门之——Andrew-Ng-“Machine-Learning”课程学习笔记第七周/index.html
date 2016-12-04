@@ -3,51 +3,38 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Machine Learning编程作业2——Logistic Regression | Frances Hu&#39;s Blog</title>
+  <title>AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周 | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="##ex2.m=============plotting================
-data = load(‘ex2data1.txt’);
-X = data(:,[1,2]);
-y = data(:,3);
-plotData(X,y);
-plotData.m
-
-function plotData(X,y)
-figure;hold on;
-
-pos = find(y==1);
-neg = f">
+  <meta name="description" content="7、Support Vector Machines###7.1 Optimization objective
+###7.2 Large Margin Intuition
+C如果越大，两个分类的间距越小。
+###7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
+SVM Dec">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Machine Learning编程作业2——Logistic Regression">
-<meta property="og:url" content="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/index.html">
+<meta property="og:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周">
+<meta property="og:url" content="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
-<meta property="og:description" content="##ex2.m=============plotting================
-data = load(‘ex2data1.txt’);
-X = data(:,[1,2]);
-y = data(:,3);
-plotData(X,y);
-plotData.m
-
-function plotData(X,y)
-figure;hold on;
-
-pos = find(y==1);
-neg = f">
-<meta property="og:updated_time" content="2016-11-07T03:23:08.000Z">
+<meta property="og:description" content="7、Support Vector Machines###7.1 Optimization objective
+###7.2 Large Margin Intuition
+C如果越大，两个分类的间距越小。
+###7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
+SVM Dec">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_1.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_2.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_3.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_4.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_5.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_6.png">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_7.png">
+<meta property="og:updated_time" content="2016-12-04T09:38:25.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Machine Learning编程作业2——Logistic Regression">
-<meta name="twitter:description" content="##ex2.m=============plotting================
-data = load(‘ex2data1.txt’);
-X = data(:,[1,2]);
-y = data(:,3);
-plotData(X,y);
-plotData.m
-
-function plotData(X,y)
-figure;hold on;
-
-pos = find(y==1);
-neg = f">
+<meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周">
+<meta name="twitter:description" content="7、Support Vector Machines###7.1 Optimization objective
+###7.2 Large Margin Intuition
+C如果越大，两个分类的间距越小。
+###7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
+SVM Dec">
+<meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/7_1.png">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -100,10 +87,10 @@ neg = f">
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-Machine-Learning编程作业2——Logistic-Regression" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" class="article-date">
-  <time datetime="2016-11-07T02:31:30.000Z" itemprop="datePublished">2016-11-07</time>
+    <a href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" class="article-date">
+  <time datetime="2016-12-04T08:41:16.000Z" itemprop="datePublished">2016-12-04</time>
 </a>
     
   </div>
@@ -114,7 +101,7 @@ neg = f">
         
   
     <h1 class="article-title" itemprop="name">
-      Machine Learning编程作业2——Logistic Regression
+      AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周
     </h1>
   
 
@@ -122,119 +109,61 @@ neg = f">
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>##ex2.m<br>=============plotting================</p>
-<p>data = load(‘ex2data1.txt’);</p>
-<p>X = data(:,[1,2]);</p>
-<p>y = data(:,3);</p>
-<p>plotData(X,y);</p>
-<pre><code>plotData.m
+        <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><p>###7.1 Optimization objective<br><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
+<p>###7.2 Large Margin Intuition<br><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
+<p>C如果越大，两个分类的间距越小。</p>
+<p>###7.3 The Mathematics behind large margin classification<br>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/7_4.png" alt="7_4"><br>SVM Decision Boundary 计算时可以利用这个特性。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/7_5.png" alt="7_5"></p>
+<p>###7.4 Kernels</p>
+<p>####7.4.1 Kernels I<br>Gaussian Kernel.</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/7_6.png" alt="7_6"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_7.png" alt="7_7"></p>
+<p>####7.5 Kernels II<br>SVM parameters:<br>Large C: Lower bias, high variance</p>
+<p>Small C: High bias, low variance</p>
+<p>Large segma*segma: more smoothly. High bias, low variance.</p>
+<p>Small segma*segma: less smoothly. Lower bias, higher variance.</p>
+<p>###7.6 Using an SVM<br>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
+<p>Need to specify:</p>
+<pre><code>Choice of parameter C.
+Choice of Kernel(similarity function):
+    No Kernel(&apos;Linear Kernel&apos;)
+    Gaussian Kernel.(need to choose segma)
+</code></pre><p>Note:</p>
+<pre><code>Do not perform feature scaling before using the Gaussian kernel.
+</code></pre><p>Other Choice of kernel:</p>
+<pre><code>Not all similarity functions similarity(x,l) make valid kernels. 
+(Need to satisfy &apos;mercer&apos;s Theorem&apos; to make sure SVM package&apos;s optimications run correctly, and do not diverge)    
+</code></pre><p>Multi-class classification:</p>
+<p>Train K SVMs, 需要对K个类进行分类，而非k-1。</p>
+<p>Logistic regression vs SVM:</p>
+<p>n= number of features, m =number of training examples</p>
+<pre><code>if n is large（相对于m）:
+    using Logistic regression, or SVM without kernel.
+if n is small, m is intermediate:
+    use SVM with Gaussian Kernel.
+if n is small, m is large:
+    create/add more features,
+    then use logistic regression or SVM without kernel.
 
-function plotData(X,y)
-figure;hold on;
-
-pos = find(y==1);
-neg = find(y==0);
-plot(X(pos,1),X(pos,2),&apos;k+&apos;,&apos;LineWidth&apos;,2,...
-    &apos;MarkerSize&apos;,7);
-plot(X(neg,1),X(neg,2),&apos;ko&apos;,&apos;MarkerFaceColor&apos;,&apos;y&apos;,...
-    &apos;MarkerSize&apos;,7);
-
-hold off;
-end
-</code></pre><p>=============compute cost and gradient===========</p>
-<p>[m,n] = size(X);</p>
-<p>X = [ones(m,1) X];</p>
-<p>initial_theta = zeros(n+1,1);</p>
-<p>[cost,grad] = costFunction(initial_theta,X,y);</p>
-<pre><code>costFunction.m
-
-function [J,grad] = costFunction(theta,X,y)
-m = length(y);
-J = 0;
-grad = zeros(size(theta));
-
-J = (-1)/m *(log(sigmoid(X*theta))&apos;*y +
-            log(1-sigmoid(X*theta))&apos;*(1-y));
-for i = 1: size(X,2)
-  grad(i) = 1/m * sum((sigmoid(X*theta)-y) .* X(:,i));
-end
-end
-</code></pre><p>plotDecisionBoundary(theta,X,y);</p>
-<p>=============predict and accuracies===============</p>
-<p>prob = sigmoid([1 45 85] * theta);</p>
-<p>p = predict(theta,X);</p>
-<pre><code>predict.m
-
-function p = predict(theta,X)
-
-m = size(X,1);
-p = zeros(m,1);
-
-for i = 1:m
-    if(sigmoid(X(i,:) * theta)) &gt;= 0.5
-        p(i) = 1;
-    else
-        p(i) = 0;
-    end
-end
-end
-</code></pre><h2 id="ex2-reg-m"><a href="#ex2-reg-m" class="headerlink" title="ex2_reg.m"></a>ex2_reg.m</h2><p>clear;</p>
-<p>data = load(‘ex2data2.txt’);</p>
-<p>X = data(:,[1,2]);</p>
-<p>y = data(:,3);</p>
-<p>plotData(X,y);</p>
-<p>=====================regularized Logistic Regression======</p>
-<p>X = mapFeature(X(:,1),X(:,2));</p>
-<p>initial_theta = zeros(size(X,2),1);</p>
-<p>lambda = 1;</p>
-<p>[cost,grad] = costFunctionReg(initial_theta,X,y,lambda);</p>
-<pre><code>costFunctionReg.m
-
-function [J,grad] = costFunctionReg(theta,X,y,lambda)
-m = length(y);
-J = 0;
-grad = zeros(size(theta));
-
-temp = theta(2:size(theta,1),:) .^2;
-value = sum(temp);
-J = (-1)/m * (log(sigmoid(X*theta))&apos;*y +
-            log(1-sigmoid(X*theta))&apos;*(1-y))
-        +lambda/(2*m) * value;
-grad(1) = 1/m*sum((sigmoid(X*theta) - y) .* X(:,1));
-
-for i = 2: size(X,2)
-    grad(i) = 1 / m *sum((sigmoid(X*theta) -y).*X(:,i))
-     +lambda/m * theta(i);
-end
-end
+Neural network likely to work well for most od these settings,
+but many slower to train.
 </code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="ciwaggyzv0007r9o3pdpnkilw" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciwaggyz70000r9o3lh3c5ji2" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
-
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          AI入门之——Andrew Ng “Machine Learning”课程学习笔记第四周
-        
-      </div>
-    </a>
   
-  
-    <a href="/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第三周</div>
+      <div class="article-nav-title">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周</div>
     </a>
   
 </nav>

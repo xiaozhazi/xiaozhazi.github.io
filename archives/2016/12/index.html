@@ -3,51 +3,14 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Machine Learning编程作业2——Logistic Regression | Frances Hu&#39;s Blog</title>
+  <title>归档: 2016/12 | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="##ex2.m=============plotting================
-data = load(‘ex2data1.txt’);
-X = data(:,[1,2]);
-y = data(:,3);
-plotData(X,y);
-plotData.m
-
-function plotData(X,y)
-figure;hold on;
-
-pos = find(y==1);
-neg = f">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Machine Learning编程作业2——Logistic Regression">
-<meta property="og:url" content="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Frances Hu's Blog">
+<meta property="og:url" content="http://xiaozhazi.win/archives/2016/12/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
-<meta property="og:description" content="##ex2.m=============plotting================
-data = load(‘ex2data1.txt’);
-X = data(:,[1,2]);
-y = data(:,3);
-plotData(X,y);
-plotData.m
-
-function plotData(X,y)
-figure;hold on;
-
-pos = find(y==1);
-neg = f">
-<meta property="og:updated_time" content="2016-11-07T03:23:08.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Machine Learning编程作业2——Logistic Regression">
-<meta name="twitter:description" content="##ex2.m=============plotting================
-data = load(‘ex2data1.txt’);
-X = data(:,[1,2]);
-y = data(:,3);
-plotData(X,y);
-plotData.m
-
-function plotData(X,y)
-figure;hold on;
-
-pos = find(y==1);
-neg = f">
+<meta name="twitter:title" content="Frances Hu's Blog">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -100,147 +63,39 @@ neg = f">
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-Machine-Learning编程作业2——Logistic-Regression" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" class="article-date">
-  <time datetime="2016-11-07T02:31:30.000Z" itemprop="datePublished">2016-11-07</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+        <section id="main">
   
-    <h1 class="article-title" itemprop="name">
-      Machine Learning编程作业2——Logistic Regression
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2016" class="archive-year">2016</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" class="archive-article-date">
+  <time datetime="2016-12-04T08:41:16.000Z" itemprop="datePublished">12月 4</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>##ex2.m<br>=============plotting================</p>
-<p>data = load(‘ex2data1.txt’);</p>
-<p>X = data(:,[1,2]);</p>
-<p>y = data(:,3);</p>
-<p>plotData(X,y);</p>
-<pre><code>plotData.m
-
-function plotData(X,y)
-figure;hold on;
-
-pos = find(y==1);
-neg = find(y==0);
-plot(X(pos,1),X(pos,2),&apos;k+&apos;,&apos;LineWidth&apos;,2,...
-    &apos;MarkerSize&apos;,7);
-plot(X(neg,1),X(neg,2),&apos;ko&apos;,&apos;MarkerFaceColor&apos;,&apos;y&apos;,...
-    &apos;MarkerSize&apos;,7);
-
-hold off;
-end
-</code></pre><p>=============compute cost and gradient===========</p>
-<p>[m,n] = size(X);</p>
-<p>X = [ones(m,1) X];</p>
-<p>initial_theta = zeros(n+1,1);</p>
-<p>[cost,grad] = costFunction(initial_theta,X,y);</p>
-<pre><code>costFunction.m
-
-function [J,grad] = costFunction(theta,X,y)
-m = length(y);
-J = 0;
-grad = zeros(size(theta));
-
-J = (-1)/m *(log(sigmoid(X*theta))&apos;*y +
-            log(1-sigmoid(X*theta))&apos;*(1-y));
-for i = 1: size(X,2)
-  grad(i) = 1/m * sum((sigmoid(X*theta)-y) .* X(:,i));
-end
-end
-</code></pre><p>plotDecisionBoundary(theta,X,y);</p>
-<p>=============predict and accuracies===============</p>
-<p>prob = sigmoid([1 45 85] * theta);</p>
-<p>p = predict(theta,X);</p>
-<pre><code>predict.m
-
-function p = predict(theta,X)
-
-m = size(X,1);
-p = zeros(m,1);
-
-for i = 1:m
-    if(sigmoid(X(i,:) * theta)) &gt;= 0.5
-        p(i) = 1;
-    else
-        p(i) = 0;
-    end
-end
-end
-</code></pre><h2 id="ex2-reg-m"><a href="#ex2-reg-m" class="headerlink" title="ex2_reg.m"></a>ex2_reg.m</h2><p>clear;</p>
-<p>data = load(‘ex2data2.txt’);</p>
-<p>X = data(:,[1,2]);</p>
-<p>y = data(:,3);</p>
-<p>plotData(X,y);</p>
-<p>=====================regularized Logistic Regression======</p>
-<p>X = mapFeature(X(:,1),X(:,2));</p>
-<p>initial_theta = zeros(size(X,2),1);</p>
-<p>lambda = 1;</p>
-<p>[cost,grad] = costFunctionReg(initial_theta,X,y,lambda);</p>
-<pre><code>costFunctionReg.m
-
-function [J,grad] = costFunctionReg(theta,X,y,lambda)
-m = length(y);
-J = 0;
-grad = zeros(size(theta));
-
-temp = theta(2:size(theta,1),:) .^2;
-value = sum(temp);
-J = (-1)/m * (log(sigmoid(X*theta))&apos;*y +
-            log(1-sigmoid(X*theta))&apos;*(1-y))
-        +lambda/(2*m) * value;
-grad(1) = 1/m*sum((sigmoid(X*theta) - y) .* X(:,1));
-
-for i = 2: size(X,2)
-    grad(i) = 1 / m *sum((sigmoid(X*theta) -y).*X(:,i))
-     +lambda/m * theta(i);
-end
-end
-</code></pre>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="ciwaggyzv0007r9o3pdpnkilw" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
-    
-<nav id="article-nav">
-  
-    <a href="/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          AI入门之——Andrew Ng “Machine Learning”课程学习笔记第四周
-        
-      </div>
-    </a>
-  
-  
-    <a href="/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第三周</div>
-    </a>
-  
-</nav>
-
-  
 </article>
+  
+  
+    </div></section>
+  
 
 </section>
         
