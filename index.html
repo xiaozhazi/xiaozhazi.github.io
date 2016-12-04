@@ -87,33 +87,32 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><p>###7.1 Optimization objective<br><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
-<p>###7.2 Large Margin Intuition<br><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
+        <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><h3 id="7-1-Optimization-objective"><a href="#7-1-Optimization-objective" class="headerlink" title="7.1 Optimization objective"></a>7.1 Optimization objective</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
+<h3 id="7-2-Large-Margin-Intuition"><a href="#7-2-Large-Margin-Intuition" class="headerlink" title="7.2 Large Margin Intuition"></a>7.2 Large Margin Intuition</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
 <p>C如果越大，两个分类的间距越小。</p>
-<p>###7.3 The Mathematics behind large margin classification<br>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
+<h3 id="7-3-The-Mathematics-behind-large-margin-classification"><a href="#7-3-The-Mathematics-behind-large-margin-classification" class="headerlink" title="7.3 The Mathematics behind large margin classification"></a>7.3 The Mathematics behind large margin classification</h3><p>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
 <p><img src="http://ofacak8l3.bkt.clouddn.com/7_4.png" alt="7_4"><br>SVM Decision Boundary 计算时可以利用这个特性。</p>
 <p><img src="http://ofacak8l3.bkt.clouddn.com/7_5.png" alt="7_5"></p>
-<p>###7.4 Kernels</p>
-<p>####7.4.1 Kernels I<br>Gaussian Kernel.</p>
+<h3 id="7-4-Kernels"><a href="#7-4-Kernels" class="headerlink" title="7.4 Kernels"></a>7.4 Kernels</h3><h4 id="7-4-1-Kernels-I"><a href="#7-4-1-Kernels-I" class="headerlink" title="7.4.1 Kernels I"></a>7.4.1 Kernels I</h4><p>Gaussian Kernel.</p>
 <p><img src="http://ofacak8l3.bkt.clouddn.com/7_6.png" alt="7_6"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_7.png" alt="7_7"></p>
-<p>####7.5 Kernels II<br>SVM parameters:<br>Large C: Lower bias, high variance</p>
+<h4 id="7-5-Kernels-II"><a href="#7-5-Kernels-II" class="headerlink" title="7.5 Kernels II"></a>7.5 Kernels II</h4><p>SVM parameters:<br>Large C: Lower bias, high variance</p>
 <p>Small C: High bias, low variance</p>
 <p>Large segma*segma: more smoothly. High bias, low variance.</p>
 <p>Small segma*segma: less smoothly. Lower bias, higher variance.</p>
-<p>###7.6 Using an SVM<br>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
-<p>Need to specify:</p>
+<h3 id="7-6-Using-an-SVM"><a href="#7-6-Using-an-SVM" class="headerlink" title="7.6 Using an SVM"></a>7.6 Using an SVM</h3><p>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
+<p><strong>Need to specify:</strong></p>
 <pre><code>Choice of parameter C.
 Choice of Kernel(similarity function):
     No Kernel(&apos;Linear Kernel&apos;)
     Gaussian Kernel.(need to choose segma)
-</code></pre><p>Note:</p>
+</code></pre><p><strong>Note:</strong></p>
 <pre><code>Do not perform feature scaling before using the Gaussian kernel.
-</code></pre><p>Other Choice of kernel:</p>
+</code></pre><p><strong>Other Choice of kernel:</strong></p>
 <pre><code>Not all similarity functions similarity(x,l) make valid kernels. 
 (Need to satisfy &apos;mercer&apos;s Theorem&apos; to make sure SVM package&apos;s optimications run correctly, and do not diverge)    
-</code></pre><p>Multi-class classification:</p>
+</code></pre><p><strong>Multi-class classification:</strong></p>
 <p>Train K SVMs, 需要对K个类进行分类，而非k-1。</p>
-<p>Logistic regression vs SVM:</p>
+<p><strong>Logistic regression vs SVM:</strong></p>
 <p>n= number of features, m =number of training examples</p>
 <pre><code>if n is large（相对于m）:
     using Logistic regression, or SVM without kernel.
@@ -129,7 +128,7 @@ but many slower to train.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciwaggyz70000r9o3lh3c5ji2" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciwagjqdj0003rxo38vbcc8f4" class="article-share-link">Share</a>
       
       
     </footer>
@@ -210,7 +209,7 @@ It&apos;s who has the most data.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ciwaggyzh0003r9o3wooj4v1l" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ciwagjqe2000brxo3ni5gqvja" class="article-share-link">Share</a>
       
       
     </footer>
@@ -254,7 +253,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="ciwaggyzc0001r9o3j81pq4e4" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="ciwagjqdo0004rxo36bf8xdjo" class="article-share-link">Share</a>
       
       
     </footer>
@@ -357,7 +356,7 @@ struct list_head cg_list;
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="ciwaggz05000ir9o3df55etsd" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="ciwagjqeb000krxo38qd2agjb" class="article-share-link">Share</a>
       
       
     </footer>
@@ -406,7 +405,7 @@ output层
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="ciwaggyzs0006r9o3p5aiemkp" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="ciwagjqds0005rxo3tht621ff" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li></ul>
@@ -529,7 +528,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="ciwaggyzv0007r9o3pdpnkilw" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="ciwagjqe5000drxo37rv7le3b" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -594,7 +593,7 @@ but fail to generalize to new examples.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="ciwaggyzf0002r9o3qih5o6ls" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="ciwagjqd80000rxo34ezawwjy" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li></ul>
@@ -697,7 +696,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="ciwaggyzy000br9o3kxzgk7hm" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="ciwagjqdv0008rxo3hdqnhmcf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -782,7 +781,7 @@ Normal Equation
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciwaggyzp0005r9o3zkihjb74" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciwagjqde0001rxo3ha9ubpyb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
@@ -840,7 +839,7 @@ take smaller steps. So, no need to decrease a over time.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/18/AI入门笔记一/" data-id="ciwaggyzx000ar9o361cfs475" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/18/AI入门笔记一/" data-id="ciwagjqdy0009rxo30zwqgxat" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>

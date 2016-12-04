@@ -5,20 +5,20 @@
   
   <title>AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周 | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="7、Support Vector Machines###7.1 Optimization objective
-###7.2 Large Margin Intuition
+  <meta name="description" content="7、Support Vector Machines7.1 Optimization objective
+7.2 Large Margin Intuition
 C如果越大，两个分类的间距越小。
-###7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
-SVM Dec">
+7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
+SVM Decision Bou">
 <meta property="og:type" content="article">
 <meta property="og:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周">
 <meta property="og:url" content="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
-<meta property="og:description" content="7、Support Vector Machines###7.1 Optimization objective
-###7.2 Large Margin Intuition
+<meta property="og:description" content="7、Support Vector Machines7.1 Optimization objective
+7.2 Large Margin Intuition
 C如果越大，两个分类的间距越小。
-###7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
-SVM Dec">
+7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
+SVM Decision Bou">
 <meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_1.png">
 <meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_2.png">
 <meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_3.png">
@@ -26,14 +26,14 @@ SVM Dec">
 <meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_5.png">
 <meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_6.png">
 <meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_7.png">
-<meta property="og:updated_time" content="2016-12-04T09:38:25.000Z">
+<meta property="og:updated_time" content="2016-12-04T09:40:35.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周">
-<meta name="twitter:description" content="7、Support Vector Machines###7.1 Optimization objective
-###7.2 Large Margin Intuition
+<meta name="twitter:description" content="7、Support Vector Machines7.1 Optimization objective
+7.2 Large Margin Intuition
 C如果越大，两个分类的间距越小。
-###7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
-SVM Dec">
+7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
+SVM Decision Bou">
 <meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/7_1.png">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
@@ -109,33 +109,32 @@ SVM Dec">
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><p>###7.1 Optimization objective<br><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
-<p>###7.2 Large Margin Intuition<br><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
+        <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><h3 id="7-1-Optimization-objective"><a href="#7-1-Optimization-objective" class="headerlink" title="7.1 Optimization objective"></a>7.1 Optimization objective</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
+<h3 id="7-2-Large-Margin-Intuition"><a href="#7-2-Large-Margin-Intuition" class="headerlink" title="7.2 Large Margin Intuition"></a>7.2 Large Margin Intuition</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
 <p>C如果越大，两个分类的间距越小。</p>
-<p>###7.3 The Mathematics behind large margin classification<br>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
+<h3 id="7-3-The-Mathematics-behind-large-margin-classification"><a href="#7-3-The-Mathematics-behind-large-margin-classification" class="headerlink" title="7.3 The Mathematics behind large margin classification"></a>7.3 The Mathematics behind large margin classification</h3><p>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
 <p><img src="http://ofacak8l3.bkt.clouddn.com/7_4.png" alt="7_4"><br>SVM Decision Boundary 计算时可以利用这个特性。</p>
 <p><img src="http://ofacak8l3.bkt.clouddn.com/7_5.png" alt="7_5"></p>
-<p>###7.4 Kernels</p>
-<p>####7.4.1 Kernels I<br>Gaussian Kernel.</p>
+<h3 id="7-4-Kernels"><a href="#7-4-Kernels" class="headerlink" title="7.4 Kernels"></a>7.4 Kernels</h3><h4 id="7-4-1-Kernels-I"><a href="#7-4-1-Kernels-I" class="headerlink" title="7.4.1 Kernels I"></a>7.4.1 Kernels I</h4><p>Gaussian Kernel.</p>
 <p><img src="http://ofacak8l3.bkt.clouddn.com/7_6.png" alt="7_6"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_7.png" alt="7_7"></p>
-<p>####7.5 Kernels II<br>SVM parameters:<br>Large C: Lower bias, high variance</p>
+<h4 id="7-5-Kernels-II"><a href="#7-5-Kernels-II" class="headerlink" title="7.5 Kernels II"></a>7.5 Kernels II</h4><p>SVM parameters:<br>Large C: Lower bias, high variance</p>
 <p>Small C: High bias, low variance</p>
 <p>Large segma*segma: more smoothly. High bias, low variance.</p>
 <p>Small segma*segma: less smoothly. Lower bias, higher variance.</p>
-<p>###7.6 Using an SVM<br>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
-<p>Need to specify:</p>
+<h3 id="7-6-Using-an-SVM"><a href="#7-6-Using-an-SVM" class="headerlink" title="7.6 Using an SVM"></a>7.6 Using an SVM</h3><p>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
+<p><strong>Need to specify:</strong></p>
 <pre><code>Choice of parameter C.
 Choice of Kernel(similarity function):
     No Kernel(&apos;Linear Kernel&apos;)
     Gaussian Kernel.(need to choose segma)
-</code></pre><p>Note:</p>
+</code></pre><p><strong>Note:</strong></p>
 <pre><code>Do not perform feature scaling before using the Gaussian kernel.
-</code></pre><p>Other Choice of kernel:</p>
+</code></pre><p><strong>Other Choice of kernel:</strong></p>
 <pre><code>Not all similarity functions similarity(x,l) make valid kernels. 
 (Need to satisfy &apos;mercer&apos;s Theorem&apos; to make sure SVM package&apos;s optimications run correctly, and do not diverge)    
-</code></pre><p>Multi-class classification:</p>
+</code></pre><p><strong>Multi-class classification:</strong></p>
 <p>Train K SVMs, 需要对K个类进行分类，而非k-1。</p>
-<p>Logistic regression vs SVM:</p>
+<p><strong>Logistic regression vs SVM:</strong></p>
 <p>n= number of features, m =number of training examples</p>
 <pre><code>if n is large（相对于m）:
     using Logistic regression, or SVM without kernel.
@@ -151,7 +150,7 @@ but many slower to train.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciwaggyz70000r9o3lh3c5ji2" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciwagjqdj0003rxo38vbcc8f4" class="article-share-link">Share</a>
       
       
     </footer>
