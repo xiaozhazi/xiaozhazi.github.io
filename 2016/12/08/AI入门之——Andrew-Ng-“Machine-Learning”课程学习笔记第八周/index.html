@@ -3,14 +3,35 @@
 <head>
   <meta charset="utf-8">
   
-  <title>归档 | Frances Hu&#39;s Blog</title>
+  <title>AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周 | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Frances Hu's Blog">
-<meta property="og:url" content="http://xiaozhazi.win/archives/page/2/index.html">
+  <meta name="description" content="8、Unsupervised Learning8.1 Clustering8.1.1 Unsupervised Learning: IntroductionApplications of clustering:
+
+Market segementation
+Social network analysis
+Organize computing clusters
+Astronomical data an">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周">
+<meta property="og:url" content="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="8、Unsupervised Learning8.1 Clustering8.1.1 Unsupervised Learning: IntroductionApplications of clustering:
+
+Market segementation
+Social network analysis
+Organize computing clusters
+Astronomical data an">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/8_1.png">
+<meta property="og:updated_time" content="2016-12-05T12:22:21.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Frances Hu's Blog">
+<meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周">
+<meta name="twitter:description" content="8、Unsupervised Learning8.1 Clustering8.1.1 Unsupervised Learning: IntroductionApplications of clustering:
+
+Market segementation
+Social network analysis
+Organize computing clusters
+Astronomical data an">
+<meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/8_1.png">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -63,101 +84,100 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2016" class="archive-year">2016</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" class="archive-article-date">
-  <time datetime="2016-10-24T06:00:42.000Z" itemprop="datePublished">10月 24</time>
+        <section id="main"><article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" class="article-date">
+  <time datetime="2016-12-08T11:59:23.000Z" itemprop="datePublished">2016-12-08</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周</a>
+    <h1 class="article-title" itemprop="name">
+      AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2016/10/18/AI入门笔记一/" class="archive-article-date">
-  <time datetime="2016-10-18T02:44:48.000Z" itemprop="datePublished">10月 18</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/10/18/AI入门笔记一/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第一周</a>
-    </h1>
-  
+        <h1 id="8、Unsupervised-Learning"><a href="#8、Unsupervised-Learning" class="headerlink" title="8、Unsupervised Learning"></a>8、Unsupervised Learning</h1><h2 id="8-1-Clustering"><a href="#8-1-Clustering" class="headerlink" title="8.1 Clustering"></a>8.1 Clustering</h2><h3 id="8-1-1-Unsupervised-Learning-Introduction"><a href="#8-1-1-Unsupervised-Learning-Introduction" class="headerlink" title="8.1.1 Unsupervised Learning: Introduction"></a>8.1.1 Unsupervised Learning: Introduction</h3><p>Applications of clustering:</p>
+<ol>
+<li>Market segementation</li>
+<li>Social network analysis</li>
+<li>Organize computing clusters</li>
+<li>Astronomical data analysis</li>
+</ol>
+<p>无监督学习，数据是没有label的。</p>
+<h3 id="8-1-2-K-Means-Algorithm"><a href="#8-1-2-K-Means-Algorithm" class="headerlink" title="8.1.2 K-Means Algorithm"></a>8.1.2 K-Means Algorithm</h3><p>Input:</p>
+<pre><code>K (number of clusters)
+Training set {x1,x2,...xm}
+</code></pre><p>算法：</p>
+<p>随机初始化K个聚类簇（cluster centroids）u1,u2…uK</p>
+<p>然后repeat操作：</p>
+<ol>
+<li><p>cluster assignment step：</p>
+<pre><code>for     i = 1 to m
+  c(i):=index(from 1 to K) of cluster centroids closest to xi
+</code></pre></li>
+<li><p>Move centroid:</p>
+<pre><code>for k = 1 to K
+  uk := average(mean)of points assigned to cluster k
+</code></pre></li>
+</ol>
+<h3 id="8-1-3-Optimization-objective"><a href="#8-1-3-Optimization-objective" class="headerlink" title="8.1.3 Optimization objective"></a>8.1.3 Optimization objective</h3><p>最小化distortion：<br><img src="http://ofacak8l3.bkt.clouddn.com/8_1.png" alt="8_1"></p>
+<p>因此K-means算法也可以表示为：</p>
+<ol>
+<li>Randomly initialize K cluster centroids u1,u2,…uk</li>
+<li><p>Repeat:</p>
+<pre><code>for i = 1 to m
+    c(i):= index(from 1 to K) of cluster centroid closest to xi
+</code></pre></li>
+</ol>
+<pre><code>for k = 1 to K
+    uk:= average(mean) of points assigned to cluster k [minize J]
+</code></pre><h3 id="8-1-4-Random-initialization"><a href="#8-1-4-Random-initialization" class="headerlink" title="8.1.4 Random initialization"></a>8.1.4 Random initialization</h3><p>Random initialize:</p>
+<p>首先满足 K &lt; m；</p>
+<p>然后随机选择K个训练实例；</p>
+<p>将u1,u2,…uk等于这K个实例；</p>
+<pre><code>for i = 1 to 100{
+    Randomly initialize K-means.
+    Run K-means. Get c1,c2,...cm,u1,...uk.
+    Compute cost function(distortion)
+</code></pre><p>选择最小cost的聚类</p>
+<h3 id="8-1-5-Choosing-the-number-of-clusters"><a href="#8-1-5-Choosing-the-number-of-clusters" class="headerlink" title="8.1.5 Choosing the number of clusters"></a>8.1.5 Choosing the number of clusters</h3><p>目前最好的方法还是手动选择；</p>
+<p>Elbow cost：手肘方法，不是所有情况都能画出这样的图形，有时候会下降趋势较平滑。</p>
+<p>sometimes, you’re running K-means to get clusters to use for some later/downstream purpose.</p>
+<p>Evaluate K-means based on a metric for how well it performs for that later purpose.        </p>
 
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2016/09/27/如何在MAC上搭建博客——hexo-github/" class="archive-article-date">
-  <time datetime="2016-09-27T03:08:23.000Z" itemprop="datePublished">9月 27</time>
-</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/09/27/如何在MAC上搭建博客——hexo-github/">如何在MAC上搭建博客——hexo+github</a>
-    </h1>
-  
-
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2016/09/27/hello-world/" class="archive-article-date">
-  <time datetime="2016-09-27T02:23:49.000Z" itemprop="datePublished">9月 27</time>
-</a>
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="ciwc1rsks00015qo3qxjp8qpx" class="article-share-link">Share</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/09/27/hello-world/">Hello World</a>
-    </h1>
-  
-
-    </header>
+      
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/12/05/Go语言-学习笔记/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Go语言 学习笔记</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
 
-
-  <nav id="page-nav">
-    <a class="extend prev" rel="prev" href="/archives/">&laquo; __('prev')</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span>
-  </nav>
 </section>
         
           <aside id="sidebar">

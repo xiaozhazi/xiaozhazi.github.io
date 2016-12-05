@@ -65,6 +65,149 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" class="article-date">
+  <time datetime="2016-10-24T06:00:42.000Z" itemprop="datePublished">2016-10-24</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="课程内容简介"><a href="#课程内容简介" class="headerlink" title="课程内容简介"></a>课程内容简介</h2><p>课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：<br>i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）<br>ii）无监督学习（集群、降维、推荐系统、深度学习）<br>iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）</p>
+<h3 id="课程学习"><a href="#课程学习" class="headerlink" title="课程学习"></a>课程学习</h3><h4 id="第二周"><a href="#第二周" class="headerlink" title="第二周"></a>第二周</h4><p>1、环境搭建</p>
+<p>2、Multivariate Linear Regression，多元线性回归。 </p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9.png" alt="9"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/10.png" alt="10"></p>
+<pre><code>Feature Scaling:
+Make sure features are on a similar scale.
+
+为什么使用feature scaling？
+It speeds up gradient by making it require fewer
+iterations to get to 
+
+
+(Get every feature into approximately a -1&lt;= xi &lt;=1)
+(Mean normalization: replace xi with xi-ui to make
+ features have approximately zero mean.)
+</code></pre><p>如何保证梯度下降正确完成？</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/11.png" alt="11"></p>
+<pre><code>Making sure gradient descent is working correctly.
+如果随着迭代次数的增加J(θ)反而越来越大，应该用更小的α。
+If α is too small: slow convergence.
+If α is too large: J(θ) may be not decrease on
+            every interation, may not converge.
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/12.png" alt="12"></p>
+<p>3、Computing Parameters Analytically    </p>
+<p>正态方程<br><img src="http://ofacak8l3.bkt.clouddn.com/13.png" alt="13"></p>
+<p>Octave: pinv(X’ <em> X) </em> X’ * Y   (X’ 即XT)</p>
+<p>什么时候用梯度下降？什么时候用正态方程？</p>
+<pre><code>m training examples, n features.
+
+Gradient Descent
+* Need to choose α.
+* Need many iterations.
+* Work well even when n is large.
+
+Normal Equation
+* No need to choose α.
+* Don&apos;t need to iterate.
+* Need to cumpute (XTX)-1.   O(n3) 
+* Slow if n is very large.
+</code></pre><p>如果XTX是不可逆的怎么办？</p>
+<pre><code>Octave 有两种计算矩阵逆的函数——pinv、inv
+如果使用pinv计算的话都会得到实际的结果，不管矩阵是否可逆。
+
+* Redundant features(linearly dependent).
+* Too many features(eg. m &lt;= n)
+    delete some features,or use regularization.
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciwc1rskx00035qo3qwu3djak" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-AI入门笔记一" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/10/18/AI入门笔记一/" class="article-date">
+  <time datetime="2016-10-18T02:44:48.000Z" itemprop="datePublished">2016-10-18</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/10/18/AI入门笔记一/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第一周</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="课程内容简介"><a href="#课程内容简介" class="headerlink" title="课程内容简介"></a>课程内容简介</h2><p>课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：<br>i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）<br>ii）无监督学习（集群、降维、推荐系统、深度学习）<br>iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）</p>
+<h3 id="课程学习"><a href="#课程学习" class="headerlink" title="课程学习"></a>课程学习</h3><h4 id="第一周"><a href="#第一周" class="headerlink" title="第一周"></a>第一周</h4><p>1、10月18日学习Introduction章节。主要介绍了什么是Machine Learning及其意义，后续介绍了监督学习和无监督学习，其中监督学习主要介绍了regression和classification，无监督学习主要是cluster。(review三遍才过，对于有无监督学习理解不深刻)</p>
+<pre><code>Machine Learning is the field of study that gives computers 
+the ability to learn without being explicitly programmed.
+</code></pre><p>2、10月19日学习Model and Cost Function章节。分为四个小节，Model Representation、Cost Function、Cost Function-Intuition I、Cost Function-Intuition II。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/hypothesis_structure.png" alt="hypothsis structure"></p>
+<pre><code>Cost Function —— square error function
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/2.png" alt="2"></p>
+<p>我们的目标就是尽可能的使Cost Function值最小。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/3.png" alt="3"></p>
+<p>3、10月19日学习Parameter Learning章节。分为三个小节Gradient Descent、Gradient Descent Intuition、Gradient Descent For Linear Regression。</p>
+<p>因此采用梯度下降的方法</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/4.png" alt="4"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/5.png" alt="5"></p>
+<p>注意，上述temp0和temp1是同步变化的。</p>
+<p>参数a的选取也至关重要，不仅影响算法的效率，还对是否能寻找到局部最优解起至关重要的作用。<br><img src="http://ofacak8l3.bkt.clouddn.com/6.png" alt="6"></p>
+<pre><code>As we approach a local minimum, gradient descent will sutomatically
+take smaller steps. So, no need to decrease a over time.
+</code></pre><p>最终算法表示如下：<br><img src="http://ofacak8l3.bkt.clouddn.com/7.png" alt="7"><br><img src="http://ofacak8l3.bkt.clouddn.com/8.png" alt="8"></p>
+<p>4、10月20日学习Linear Algebra Review，主要是复习了线性代数的相关知识，矩阵计算、矩阵的逆和转置等。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.win/2016/10/18/AI入门笔记一/" data-id="ciwc1rslk000b5qo3t9slj70o" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-如何在MAC上搭建博客——hexo-github" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2016/09/27/如何在MAC上搭建博客——hexo-github/" class="article-date">
@@ -129,7 +272,7 @@ hexo d -g
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/" data-id="ciwagjqe7000grxo3xq0a6kh5" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/09/27/如何在MAC上搭建博客——hexo-github/" data-id="ciwc1rslv000k5qo369pp5wi5" class="article-share-link">Share</a>
       
       
     </footer>
@@ -174,7 +317,7 @@ hexo d -g
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/09/27/hello-world/" data-id="ciwagjqe9000irxo3vec9a6j8" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/09/27/hello-world/" data-id="ciwc1rslo000f5qo38qep0xcq" class="article-share-link">Share</a>
       
       
     </footer>
@@ -200,7 +343,7 @@ hexo d -g
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go-Golang-学习笔记/">Go, Golang, 学习笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
     </div>
   </div>
 
@@ -210,7 +353,7 @@ hexo d -g
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/AI-Machine-Learning-coursera/" style="font-size: 20px;">AI, Machine Learning, coursera</a> <a href="/tags/Machine-learning-AI-course/" style="font-size: 10px;">Machine learning, AI, course</a> <a href="/tags/course-AI-machine-Learning/" style="font-size: 10px;">course, AI, machine Learning</a> <a href="/tags/octave-program/" style="font-size: 20px;">octave, program</a>
+      <a href="/tags/AI-Machine-Learning-coursera/" style="font-size: 20px;">AI, Machine Learning, coursera</a> <a href="/tags/Go-Golang-学习笔记/" style="font-size: 10px;">Go, Golang, 学习笔记</a> <a href="/tags/Machine-learning-AI-course/" style="font-size: 10px;">Machine learning, AI, course</a> <a href="/tags/course-AI-machine-Learning/" style="font-size: 10px;">course, AI, machine Learning</a> <a href="/tags/octave-program/" style="font-size: 20px;">octave, program</a>
     </div>
   </div>
 
@@ -232,6 +375,14 @@ hexo d -g
       <ul>
         
           <li>
+            <a href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/05/Go语言-学习笔记/">Go语言 学习笔记</a>
+          </li>
+        
+          <li>
             <a href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周</a>
           </li>
         
@@ -241,14 +392,6 @@ hexo d -g
         
           <li>
             <a href="/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第五周</a>
-          </li>
-        
-          <li>
-            <a href="/2016/11/24/毕设论文相关知识索引笔记/">毕设论文相关知识索引笔记</a>
-          </li>
-        
-          <li>
-            <a href="/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第四周</a>
           </li>
         
       </ul>
