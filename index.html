@@ -150,7 +150,7 @@ Training set {x1,x2,...xm}
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="ciwdfa3uf000325o3ggzffyuk" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="ciweiogh70004xpo3h3an3ban" class="article-share-link">Share</a>
       
       
     </footer>
@@ -223,7 +223,7 @@ but many slower to train.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciwdfa3u9000125o3pdyt9ygw" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciweioggq0000xpo34o5tk3br" class="article-share-link">Share</a>
       
       
     </footer>
@@ -304,7 +304,7 @@ It&apos;s who has the most data.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ciwdfa3ut000925o3eur2jjv7" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ciweioghe0009xpo3jq9r6f4y" class="article-share-link">Share</a>
       
       
     </footer>
@@ -348,7 +348,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="ciwdfa3ug000425o37324aj9v" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="ciweiogh90005xpo3monl7ppr" class="article-share-link">Share</a>
       
       
     </footer>
@@ -381,6 +381,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
     <div class="article-entry" itemprop="articleBody">
       
         <h2 id="Cgroup介绍、应用实例及原理描述"><a href="#Cgroup介绍、应用实例及原理描述" class="headerlink" title="Cgroup介绍、应用实例及原理描述"></a>Cgroup介绍、应用实例及原理描述</h2><p><a href="http://www.ibm.com/developerworks/cn/linux/1506_cgroup/index.html" target="_blank" rel="external">Cgroup介绍、应用实例及原理描述</a></p>
+<p><a href="http://tech.meituan.com/cgroups.html" target="_blank" rel="external">Linux资源管理之cgroups简介</a></p>
 <h3 id="Cgroup设计原理分析"><a href="#Cgroup设计原理分析" class="headerlink" title="Cgroup设计原理分析"></a>Cgroup设计原理分析</h3><p>Linux中，管理进程的数据结构是task_struct</p>
 <pre><code>#ifdef CONFIG_CGROUPS
 /*Control Group info protected by css_set_lock*/
@@ -446,12 +447,15 @@ struct list_head cg_list;
 <p>####为什么cgroup和css_set是多对多的关系？<br>一个进程对应一个css_set，一个css_set存储了一组进程跟各个子系统相关的信息，但是这些信息由可能不是从一个cgroup那里获得的，因为一个进程可以同时属于多个cgroup，只要这些cgroup不在同一个层级。</p>
 <pre><code>eg：
 我们创建一个层级A，A上面附加了CPU和memory两个子系统，进程a属于A的根cgroup；创建一个层级B，B上面附加了ns和blkio两个子系统，进程a也属于B的根cgroup；那么进程a对应的CPU和memory是从A的根cgroup获得的，ns和blkio则是从B的根cgroup获得。因此一个css_set存储的cgroup_subsys_state可以对应多个cgroup。另一方面cgroup也存储了一组cgroup_subsys_state，这一组则是cgroup从所在的层级附加的子系统获得的。一个cgroup可以有多个进程，这些进程的css_set不一定都相同，因为有些进程可能还加入了其他cgroup，但是同一个cgroup中的进程与该cgroup关联的cgroup_subsys_state都受到该cgroup的管理，所以一个cgroup也可以对应多个css_set。
-</code></pre><p>从前面的分析，我们可以看出从 task 到 cgroup 是很容易定位的，但是从 cgroup 获取此 cgroup 的所有的 task 就必须通过这个结构了。每个进程都回指向一个 css_set，而与这个 css_set 关联的所有进程都会链入到 css_set-&gt;tasks 链表，而 cgroup 又通过一个中间结构 cg_cgroup_link 来寻找所有与之关联的所有 css_set，从而可以得到与 cgroup 关联的所有进程。    </p>
+</code></pre><p>从前面的分析，我们可以看出从 task 到 cgroup 是很容易定位的，但是从 cgroup 获取此 cgroup 的所有的 task 就必须通过这个结构了。每个进程都回指向一个 css_set，而与这个 css_set 关联的所有进程都会链入到 css_set-&gt;tasks 链表，而 cgroup 又通过一个中间结构 cg_cgroup_link 来寻找所有与之关联的所有 css_set，从而可以得到与 cgroup 关联的所有进程。<br><img src="http://ofacak8l3.bkt.clouddn.com/cgroups_1.png" alt="cgroups_1"></p>
+<p>上面这个图从整体结构上描述了进程与 cgroups 之间的关系。最下面的P代表一个进程。每一个进程的描述符中有一个指针指向了一个辅助数据结构css_set（cgroups subsystem set）。 指向某一个css_set的进程会被加入到当前css_set的进程链表中。一个进程只能隶属于一个css_set，一个css_set可以包含多个进程，隶属于同一css_set的进程受到同一个css_set所关联的资源限制。</p>
+<p>上图中的”M×N Linkage”说明的是css_set通过辅助数据结构可以与 cgroups 节点进行多对多的关联。但是 cgroups 的实现不允许css_set同时关联同一个cgroups层级结构下多个节点。 这是因为 cgroups 对同一种资源不允许有多个限制配置。</p>
+<p>一个css_set关联多个 cgroups 层级结构的节点时，表明需要对当前css_set下的进程进行多种资源的控制。而一个 cgroups 节点关联多个css_set时，表明多个css_set下的进程列表受到同一份资源的相同限制。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="ciwdfa3v8000i25o3qitmgbq6" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="ciweioghq000kxpo3f9zdaf6r" class="article-share-link">Share</a>
       
       
     </footer>
@@ -500,7 +504,7 @@ output层
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="ciwdfa3uw000a25o3bdp5q62f" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="ciweioghb0006xpo3mkflnc2y" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li></ul>
@@ -623,7 +627,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="ciwdfa3v4000f25o3kvz3i427" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="ciweioghh000cxpo3bmf91jcf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -688,7 +692,7 @@ but fail to generalize to new examples.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="ciwdfa3u4000025o32qhavnv2" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="ciweioggz0002xpo39pv6dbmh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li></ul>
@@ -791,7 +795,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="ciwdfa3uy000b25o327k1zp0b" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="ciweioghj000expo3ug0htj84" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -876,7 +880,7 @@ Normal Equation
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciwdfa3ul000525o3i48jye3y" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciweioggw0001xpo3yabk2emn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
