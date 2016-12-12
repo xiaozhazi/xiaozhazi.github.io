@@ -146,11 +146,47 @@ Training set {x1,x2,...xm}
 <h3 id="8-2-2-Data-Visualization"><a href="#8-2-2-Data-Visualization" class="headerlink" title="8.2.2 Data Visualization"></a>8.2.2 Data Visualization</h3><p>数据可视化，便于用户更好的观察数据，理解数据之间的含义。</p>
 <p>将数据比较相关的进行降维，原来N维的数据降低到K维</p>
 <p>k &lt;= N； 并且通常K=2或3， 便于进行可视化视图分析 </p>
+<h2 id="8-3-Principal-Component-Analysis"><a href="#8-3-Principal-Component-Analysis" class="headerlink" title="8.3 Principal Component Analysis"></a>8.3 Principal Component Analysis</h2><h3 id="8-3-1-Principal-Component-Analysis-Problem-Formulation"><a href="#8-3-1-Principal-Component-Analysis-Problem-Formulation" class="headerlink" title="8.3.1 Principal Component Analysis Problem Formulation"></a>8.3.1 Principal Component Analysis Problem Formulation</h3><p>Reduce from 2-dimension to 1-dimension:</p>
+<p>Find a direction (a vector v1) onto which to project the data so as to minimize the projection error.</p>
+<p>Reduce from n-dimension to k-dimension:</p>
+<p>Find k vectors v1,v2…vk on to which to project the data, so as to minimize the projection error.</p>
+<p>PCA 不是线性回归：线性回归是竖着映射，PCA是垂直映射。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/8_2.png" alt="8_2"></p>
+<h3 id="8-3-2-Principal-Component-Analysis-algorithm"><a href="#8-3-2-Principal-Component-Analysis-algorithm" class="headerlink" title="8.3.2 Principal Component Analysis algorithm"></a>8.3.2 Principal Component Analysis algorithm</h3><p><strong>Data Preprocessing:</strong></p>
+<p>Training set: x1,x2,…xm</p>
+<p>Preprocessing(feature scaling/mean normalization):</p>
+<pre><code>uj = 1/m(x1+x2+...+xm)
+xj&apos; = xj - uj
+</code></pre><p>If different features on different scales, scale features to have comparable range of values.</p>
+<p><strong>Principal Component Analysis (PCA) algorithm</strong></p>
+<p>Reduce data from n-dimensions to k-dimensions</p>
+<p>compute “covariance matrix”: sigma = 1/m(x1<em>x1T+…+xn</em>xnT)</p>
+<p>compute “eigenvectors” of matrix sigma: [U,S,V] = svd(sigma)</p>
+<p>Ureduce = U(:,1:k)</p>
+<p>z = Ureduce’ * x</p>
+<h3 id="8-4-Applying-PCA"><a href="#8-4-Applying-PCA" class="headerlink" title="8.4 Applying PCA"></a>8.4 Applying PCA</h3><h4 id="8-4-1-Reconstruction-from-Compressed-Representation"><a href="#8-4-1-Reconstruction-from-Compressed-Representation" class="headerlink" title="8.4.1 Reconstruction from Compressed Representation"></a>8.4.1 Reconstruction from Compressed Representation</h4><p>Xapprox = Ureduce*z</p>
+<h4 id="8-4-2-Choosing-the-number-of-principal-components"><a href="#8-4-2-Choosing-the-number-of-principal-components" class="headerlink" title="8.4.2 Choosing the number of principal components"></a>8.4.2 Choosing the number of principal components</h4><p><strong>choosing k    </strong></p>
+<p>(1)Average squared projection error: 1/m(||x1-xapprox1||2 +…)</p>
+<p>(2)Total variation in the data : 1/m(||x1||2 + … +||xm||2)</p>
+<p>Typically, choose k to be smallest value so that (1)/(2)&lt;=0.01</p>
+<p>“99% of variance is retained”    </p>
+<p><strong>Advice for applying PCA</strong></p>
+<p>Supervised learning speedup</p>
+<p>Compression:</p>
+<ol>
+<li>Reduce memory/disk needed to store data</li>
+<li>speed up learning algorithm</li>
+</ol>
+<p>Visualization</p>
+<p><strong>Bad use of PCA: To prevent overfitting</strong></p>
+<p>fewer features, less likely to overfit.</p>
+<p>This might work ok, but isn’t good way to address overfitting. Use regularization instead.</p>
+<p>Before implementing PCA, first try running whatever you want to do with the original/raw data xi. Only if that doesn’t do what you want, then implement PCA and consider using zi.</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="ciweiogh70004xpo3h3an3ban" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="ciwlfdwr00001m1o3p3djufb8" class="article-share-link">Share</a>
       
       
     </footer>
@@ -223,7 +259,7 @@ but many slower to train.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciweioggq0000xpo34o5tk3br" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciwlfdwqv0000m1o3bqd8zohm" class="article-share-link">Share</a>
       
       
     </footer>
@@ -304,7 +340,7 @@ It&apos;s who has the most data.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ciweioghe0009xpo3jq9r6f4y" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ciwlfdwrk0006m1o3bwq78u7w" class="article-share-link">Share</a>
       
       
     </footer>
@@ -348,7 +384,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="ciweiogh90005xpo3monl7ppr" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="ciwlfdwrf0005m1o307430ukp" class="article-share-link">Share</a>
       
       
     </footer>
@@ -455,7 +491,7 @@ struct list_head cg_list;
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="ciweioghq000kxpo3f9zdaf6r" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="ciwlfdws2000km1o3x7ujkjji" class="article-share-link">Share</a>
       
       
     </footer>
@@ -504,7 +540,7 @@ output层
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="ciweioghb0006xpo3mkflnc2y" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="ciwlfdwrm0007m1o3zcpnzbaq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li></ul>
@@ -627,7 +663,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="ciweioghh000cxpo3bmf91jcf" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="ciwlfdwrt000em1o3tdtah2mx" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -692,7 +728,7 @@ but fail to generalize to new examples.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="ciweioggz0002xpo39pv6dbmh" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="ciwlfdwr20002m1o31fls0d2f" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li></ul>
@@ -795,7 +831,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="ciweioghj000expo3ug0htj84" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="ciwlfdwrr000bm1o3t51oe0km" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -880,7 +916,7 @@ Normal Equation
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciweioggw0001xpo3yabk2emn" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciwlfdwr40003m1o3l5e6imyx" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
