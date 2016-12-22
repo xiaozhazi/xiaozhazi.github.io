@@ -65,6 +65,108 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" class="article-date">
+  <time datetime="2016-12-16T02:56:39.000Z" itemprop="datePublished">2016-12-16</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="9、Anomaly-detection"><a href="#9、Anomaly-detection" class="headerlink" title="9、Anomaly detection"></a>9、Anomaly detection</h1><h2 id="9-1、Density-Estimation"><a href="#9-1、Density-Estimation" class="headerlink" title="9.1、Density Estimation"></a>9.1、Density Estimation</h2><h3 id="9-1-1、Problem-motivation"><a href="#9-1-1、Problem-motivation" class="headerlink" title="9.1.1、Problem motivation"></a>9.1.1、Problem motivation</h3><p>密度估计，判断一个test实例是否为不正常的。</p>
+<p>Anomaly detection example：</p>
+<ol>
+<li><p>Fraud detection</p>
+<pre><code>xi = features of user i&apos;s ativities.
+Model p(x) from data.
+Identify unusual users by checking which have p(x)&lt;ε
+</code></pre></li>
+<li><p>Manufacturing</p>
+</li>
+<li><p>Monitoring computers in a data center.</p>
+<pre><code>xi = features of machine i.
+memory use,number of disk access/sec,cpu load...
+</code></pre></li>
+</ol>
+<h3 id="9-1-2、Gaussian-distribution"><a href="#9-1-2、Gaussian-distribution" class="headerlink" title="9.1.2、Gaussian distribution"></a>9.1.2、Gaussian distribution</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_1.png" alt="9_1"></p>
+<h3 id="9-1-3、Anomaly-detection-algorithm"><a href="#9-1-3、Anomaly-detection-algorithm" class="headerlink" title="9.1.3、Anomaly detection algorithm"></a>9.1.3、Anomaly detection algorithm</h3><ol>
+<li>Choose features xi that might be indicative of anomalous examples.</li>
+<li><p>Fit parameters μ1, … μn,σ12,…σn2</p>
+<pre><code>μj = 1/m ξxji
+σj2 = 1/m ξ(xji-μj)2
+</code></pre></li>
+<li>Given new example x, compute p(x),Anomaly if p(x)&lt;ε.</li>
+</ol>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_2.png" alt="9_2"></p>
+<h3 id="9-1-4、Developing-and-evaluating-an-anomaly-detection-system"><a href="#9-1-4、Developing-and-evaluating-an-anomaly-detection-system" class="headerlink" title="9.1.4、Developing and evaluating an anomaly detection system"></a>9.1.4、Developing and evaluating an anomaly detection system</h3><ol>
+<li>The importance of real-number evaluation</li>
+</ol>
+<p>例如 10000 good engines， 20 flawed engines，我们可以进行如下划分：</p>
+<pre><code>Training set：6000 good engines
+CV:2000 good engines,10 anomalous
+Test:2000 good engines,10 anomalous
+</code></pre><ol>
+<li>Algorithm evaluation  </li>
+</ol>
+<p>可以利用F1-score来评估算法，我们也可以用CV来选择参数ε。</p>
+<h3 id="9-1-5、Anomaly-detection-VS-supervised-learning"><a href="#9-1-5、Anomaly-detection-VS-supervised-learning" class="headerlink" title="9.1.5、Anomaly detection VS supervised learning"></a>9.1.5、Anomaly detection VS supervised learning</h3><p>Anomaly detection:</p>
+<ol>
+<li>Very small number of positive example.</li>
+<li>Large number of negative example.</li>
+<li>Many different types od anomalies. 很难通过positive实例来学习异常的特征</li>
+<li>未来和异常和目前的异常实例不相关</li>
+</ol>
+<p>Supervised Learning：</p>
+<ol>
+<li>Large number of positive and negative examples.</li>
+<li>可以根据大量的positive值推断出其特征值，未来的positive和现在的训练集非常相似</li>
+</ol>
+<h3 id="9-1-6、多元高斯分布"><a href="#9-1-6、多元高斯分布" class="headerlink" title="9.1.6、多元高斯分布"></a>9.1.6、多元高斯分布</h3><p>通过μ矩阵和ξ矩阵来对多远高斯分布进行调整。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_3.png" alt="9_3"></p>
+<h2 id="9-2-推荐系统"><a href="#9-2-推荐系统" class="headerlink" title="9.2 推荐系统"></a>9.2 推荐系统</h2><h3 id="9-3-1-基于内容的推荐"><a href="#9-3-1-基于内容的推荐" class="headerlink" title="9.3.1 基于内容的推荐"></a>9.3.1 基于内容的推荐</h3><p>问题描述：</p>
+<ol>
+<li>r(i,j)=1 if user j has rated movie i</li>
+<li>y(i,j)=rating by user j on movie i</li>
+<li>θ(j)=paramater vector for user j</li>
+<li>x(i)=feature vector for movie i</li>
+<li>For user j,movie i, predicted rating θ(j)T(x(i))</li>
+<li>m(j)=no. of movies rated by user j</li>
+</ol>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_4.png" alt="9_4"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_5.png" alt="9_5"></p>
+<h3 id="9-3-2-正交过滤"><a href="#9-3-2-正交过滤" class="headerlink" title="9.3.2 正交过滤"></a>9.3.2 正交过滤</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_6.png" alt="9_6"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_7.png" alt="9_7"></p>
+<h3 id="9-3-2-实现技巧"><a href="#9-3-2-实现技巧" class="headerlink" title="9.3.2 实现技巧"></a>9.3.2 实现技巧</h3><p>归一化，计算平均值，然后同时减去该值</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.win/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" data-id="cix03ph240000z2o30th541fo" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" class="article-date">
@@ -186,7 +288,7 @@ xj&apos; = xj - uj
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="ciwprqaeu0005qno3g17i48lh" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="cix03ph2m0008z2o3nt4b9z1k" class="article-share-link">Share</a>
       
       
     </footer>
@@ -259,7 +361,7 @@ but many slower to train.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="ciwprqaec0000qno3e7cqyv71" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="cix03ph290001z2o37iz4o44n" class="article-share-link">Share</a>
       
       
     </footer>
@@ -340,7 +442,7 @@ It&apos;s who has the most data.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ciwprqaew0006qno3x0vfgchn" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="cix03ph2s000bz2o3ochxuzqd" class="article-share-link">Share</a>
       
       
     </footer>
@@ -384,7 +486,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="ciwprqaes0004qno3bb5e4b0c" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="cix03ph2j0005z2o3awljupgx" class="article-share-link">Share</a>
       
       
     </footer>
@@ -495,7 +597,7 @@ struct list_head cg_list;
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="ciwprqaf9000kqno3agyudr71" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="cix03ph33000nz2o3c5s9fzn7" class="article-share-link">Share</a>
       
       
     </footer>
@@ -544,7 +646,7 @@ output层
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="ciwprqaf1000aqno3jaqydigq" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="cix03ph2o0009z2o36qx6lmlc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li></ul>
@@ -667,7 +769,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="ciwprqaf5000gqno3pn8x7wc2" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="cix03ph2u000fz2o36t67o734" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -732,7 +834,7 @@ but fail to generalize to new examples.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="ciwprqael0002qno3mxgarz5k" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="cix03ph2e0003z2o30sqjv6u7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li></ul>
@@ -835,95 +937,10 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="ciwprqaf2000cqno3m35azetr" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="cix03ph2t000dz2o3z2fy73st" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" class="article-date">
-  <time datetime="2016-10-24T06:00:42.000Z" itemprop="datePublished">2016-10-24</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="课程内容简介"><a href="#课程内容简介" class="headerlink" title="课程内容简介"></a>课程内容简介</h2><p>课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：<br>i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）<br>ii）无监督学习（集群、降维、推荐系统、深度学习）<br>iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）</p>
-<h3 id="课程学习"><a href="#课程学习" class="headerlink" title="课程学习"></a>课程学习</h3><h4 id="第二周"><a href="#第二周" class="headerlink" title="第二周"></a>第二周</h4><p>1、环境搭建</p>
-<p>2、Multivariate Linear Regression，多元线性回归。 </p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9.png" alt="9"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/10.png" alt="10"></p>
-<pre><code>Feature Scaling:
-Make sure features are on a similar scale.
-
-为什么使用feature scaling？
-It speeds up gradient by making it require fewer
-iterations to get to 
-
-
-(Get every feature into approximately a -1&lt;= xi &lt;=1)
-(Mean normalization: replace xi with xi-ui to make
- features have approximately zero mean.)
-</code></pre><p>如何保证梯度下降正确完成？</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/11.png" alt="11"></p>
-<pre><code>Making sure gradient descent is working correctly.
-如果随着迭代次数的增加J(θ)反而越来越大，应该用更小的α。
-If α is too small: slow convergence.
-If α is too large: J(θ) may be not decrease on
-            every interation, may not converge.
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/12.png" alt="12"></p>
-<p>3、Computing Parameters Analytically    </p>
-<p>正态方程<br><img src="http://ofacak8l3.bkt.clouddn.com/13.png" alt="13"></p>
-<p>Octave: pinv(X’ <em> X) </em> X’ * Y   (X’ 即XT)</p>
-<p>什么时候用梯度下降？什么时候用正态方程？</p>
-<pre><code>m training examples, n features.
-
-Gradient Descent
-* Need to choose α.
-* Need many iterations.
-* Work well even when n is large.
-
-Normal Equation
-* No need to choose α.
-* Don&apos;t need to iterate.
-* Need to cumpute (XTX)-1.   O(n3) 
-* Slow if n is very large.
-</code></pre><p>如果XTX是不可逆的怎么办？</p>
-<pre><code>Octave 有两种计算矩阵逆的函数——pinv、inv
-如果使用pinv计算的话都会得到实际的结果，不管矩阵是否可逆。
-
-* Redundant features(linearly dependent).
-* Too many features(eg. m &lt;= n)
-    delete some features,or use regularization.
-</code></pre>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="ciwprqaeh0001qno39ouyl51g" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
 
     </footer>
   </div>
@@ -948,7 +965,7 @@ Normal Equation
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/octave-program/">octave, program</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a></li></ul>
     </div>
   </div>
 
@@ -958,7 +975,7 @@ Normal Equation
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/AI-Machine-Learning-coursera/" style="font-size: 20px;">AI, Machine Learning, coursera</a> <a href="/tags/Machine-learning-AI-course/" style="font-size: 10px;">Machine learning, AI, course</a> <a href="/tags/course-AI-machine-Learning/" style="font-size: 10px;">course, AI, machine Learning</a> <a href="/tags/octave-program/" style="font-size: 20px;">octave, program</a>
+      <a href="/tags/AI-Machine-Learning-coursera/" style="font-size: 20px;">AI, Machine Learning, coursera</a> <a href="/tags/Machine-learning-AI-course/" style="font-size: 10px;">Machine learning, AI, course</a> <a href="/tags/course-AI-machine-Learning/" style="font-size: 10px;">course, AI, machine Learning</a> <a href="/tags/octave-program/" style="font-size: 20px;">octave, program</a> <a href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/" style="font-size: 10px;">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a>
     </div>
   </div>
 
@@ -980,6 +997,10 @@ Normal Equation
       <ul>
         
           <li>
+            <a href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周</a>
+          </li>
+        
+          <li>
             <a href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周</a>
           </li>
         
@@ -993,10 +1014,6 @@ Normal Equation
         
           <li>
             <a href="/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第五周</a>
-          </li>
-        
-          <li>
-            <a href="/2016/11/24/毕设论文相关知识索引笔记/">毕设论文相关知识索引笔记</a>
           </li>
         
       </ul>
