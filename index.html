@@ -65,6 +65,103 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/" class="article-date">
+  <time datetime="2016-12-31T07:54:03.000Z" itemprop="datePublished">2016-12-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="11、Application-Example-Photo-OCR"><a href="#11、Application-Example-Photo-OCR" class="headerlink" title="11、Application Example: Photo OCR"></a>11、Application Example: Photo OCR</h1><h2 id="11-1、Photo-OCR"><a href="#11-1、Photo-OCR" class="headerlink" title="11.1、Photo OCR"></a>11.1、Photo OCR</h2><h3 id="11-1-1、problem-description-and-pipeline"><a href="#11-1-1、problem-description-and-pipeline" class="headerlink" title="11.1.1、problem description and pipeline"></a>11.1.1、problem description and pipeline</h3><p>photo OCR pipeline </p>
+<ol>
+<li>Text detection</li>
+<li>Character segmentation</li>
+<li>Character classification</li>
+</ol>
+<h3 id="11-1-2、sliding-window"><a href="#11-1-2、sliding-window" class="headerlink" title="11.1.2、sliding window"></a>11.1.2、sliding window</h3><p>对整个图片进行分别窗口化检测</p>
+<h3 id="11-1-3、Getting-lots-of-data-Artificial-data-synthesis"><a href="#11-1-3、Getting-lots-of-data-Artificial-data-synthesis" class="headerlink" title="11.1.3、Getting lots of data: Artificial data synthesis"></a>11.1.3、Getting lots of data: Artificial data synthesis</h3><p>Synthesizing data by introducing distortions</p>
+<ol>
+<li>Distortion introduced should be representation of the type of noise/distortions in the test set.</li>
+<li>Usually does not help to add purely random/meaningless noise to your data. </li>
+</ol>
+<h3 id="11-1-4、What-part-of-the-pipeline-to-work-on-next"><a href="#11-1-4、What-part-of-the-pipeline-to-work-on-next" class="headerlink" title="11.1.4、What part of the pipeline to work on next"></a>11.1.4、What part of the pipeline to work on next</h3><p>进行分块处理的目的是，我们可以很容易的分析出那一步骤是系统性能瓶颈，需要在那一步骤上投入更多的精力。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/11_1.png" alt="11_1"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/11_2.png" alt="11_2"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.win/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/" data-id="cixcyzm5v0005q8o3b6vjsn61" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/" class="article-date">
+  <time datetime="2016-12-23T07:53:56.000Z" itemprop="datePublished">2016-12-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="10、Large-Scale-Machine-Learning"><a href="#10、Large-Scale-Machine-Learning" class="headerlink" title="10、Large Scale Machine Learning"></a>10、Large Scale Machine Learning</h1><h2 id="10-1、Gradient-Descent-with-Large-Datasets"><a href="#10-1、Gradient-Descent-with-Large-Datasets" class="headerlink" title="10.1、Gradient Descent with Large Datasets"></a>10.1、Gradient Descent with Large Datasets</h2><h3 id="10-1-1、Learning-with-large-dataset"><a href="#10-1-1、Learning-with-large-dataset" class="headerlink" title="10.1.1、Learning with large dataset"></a>10.1.1、Learning with large dataset</h3><p>It’s not who has the best algorithm that wins.<br>It’s who has the most data.</p>
+<h3 id="10-1-2、Stochastic-gradient-descent"><a href="#10-1-2、Stochastic-gradient-descent" class="headerlink" title="10.1.2、Stochastic gradient descent"></a>10.1.2、Stochastic gradient descent</h3><p>不像Batch gradient descent每次迭代时都需要将数据集代入计算。</p>
+<p>当数据集大的时候我们需要随机shuffle数据集，<br>然后选取第一个数据进行计算，然后进行梯度下降，再接着使用接下来的数据依次进行此过程。</p>
+<h3 id="10-1-3、Mini-batch-gradient-descent"><a href="#10-1-3、Mini-batch-gradient-descent" class="headerlink" title="10.1.3、Mini-batch gradient descent"></a>10.1.3、Mini-batch gradient descent</h3><p>batch 和  stochastic的结合。每次选一组数据进行计算，然后再接着使用下一组重复此过程。</p>
+<h3 id="10-1-4、Stochastic-gradient-descent-convergence"><a href="#10-1-4、Stochastic-gradient-descent-convergence" class="headerlink" title="10.1.4、Stochastic gradient descent convergence"></a>10.1.4、Stochastic gradient descent convergence</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/10_1.png" alt="10_1"></p>
+<p>Learning rate α is tapically held constant. Can slowly descrease α over time if we want θ to converge.</p>
+<h2 id="10-2、Online-Learning"><a href="#10-2、Online-Learning" class="headerlink" title="10.2、Online Learning"></a>10.2、Online Learning</h2><p>上述方法可以应用在实时在线学习上，数据集大小不固定，以数据流的形式出现。</p>
+<h2 id="10-3、Map-reduce-and-data-parallelism"><a href="#10-3、Map-reduce-and-data-parallelism" class="headerlink" title="10.3、Map-reduce and data parallelism"></a>10.3、Map-reduce and data parallelism</h2><p>在进行梯度下降计算时，中间有步骤需要求和，我们可以利用Map-reduce和并行计算来缩短处理时间。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.win/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/" data-id="cixcyzm5x0008q8o3c30iskon" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" class="article-date">
@@ -155,11 +252,9 @@ Test:2000 good engines,10 anomalous
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" data-id="cix03ph240000z2o30th541fo" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" data-id="cixcyzm5m0003q8o3vrbhynjk" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a></li></ul>
-
     </footer>
   </div>
   
@@ -288,7 +383,7 @@ xj&apos; = xj - uj
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="cix03ph2m0008z2o3nt4b9z1k" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="cixcyzm600009q8o32ot0wsox" class="article-share-link">Share</a>
       
       
     </footer>
@@ -361,7 +456,7 @@ but many slower to train.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="cix03ph290001z2o37iz4o44n" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="cixcyzm5h0001q8o3guc4ded1" class="article-share-link">Share</a>
       
       
     </footer>
@@ -442,7 +537,7 @@ It&apos;s who has the most data.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="cix03ph2s000bz2o3ochxuzqd" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="cixcyzm65000dq8o3r4vjdibv" class="article-share-link">Share</a>
       
       
     </footer>
@@ -486,7 +581,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="cix03ph2j0005z2o3awljupgx" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="cixcyzm64000aq8o3thvdvlcc" class="article-share-link">Share</a>
       
       
     </footer>
@@ -597,7 +692,7 @@ struct list_head cg_list;
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="cix03ph33000nz2o3c5s9fzn7" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/24/毕设论文相关知识索引笔记/" data-id="cixcyzm6o000pq8o3prnbmzhg" class="article-share-link">Share</a>
       
       
     </footer>
@@ -646,7 +741,7 @@ output层
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="cix03ph2o0009z2o36qx6lmlc" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" data-id="cixcyzm67000eq8o3uxk5vssa" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li></ul>
@@ -769,175 +864,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="cix03ph2u000fz2o36t67o734" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" class="article-date">
-  <time datetime="2016-11-01T07:30:52.000Z" itemprop="datePublished">2016-11-01</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第三周</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="3、Logistic-Regression"><a href="#3、Logistic-Regression" class="headerlink" title="3、Logistic Regression"></a>3、Logistic Regression</h2><p>主要分为三部分：Classification and Representation、Logistic Regression Model、Multiclass Classfication</p>
-<h3 id="3-1-Classification-and-Representation"><a href="#3-1-Classification-and-Representation" class="headerlink" title="3.1 Classification and Representation"></a>3.1 Classification and Representation</h3><h4 id="3-1-1-Classification"><a href="#3-1-1-Classification" class="headerlink" title="3.1.1 Classification"></a>3.1.1 Classification</h4><p>Y ∈ {0，1} 0：‘Negative Class’ 1：‘Positive Class’<br><img src="http://ofacak8l3.bkt.clouddn.com/3_1.png" alt="3_1"></p>
-<p>Classification: hθ(x)可以 &gt;1 or &lt;0</p>
-<p>Logistic Regression:  0&lt;= hθ(x) &lt;=1</p>
-<h4 id="3-1-2-Hypothesis-Representation"><a href="#3-1-2-Hypothesis-Representation" class="headerlink" title="3.1.2 Hypothesis Representation"></a>3.1.2 Hypothesis Representation</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/3_2.png" alt="3_2"></p>
-<pre><code>hθ(x) = estimated probability that y=1 on input x
-</code></pre><h4 id="3-1-3-Decision-Boundary"><a href="#3-1-3-Decision-Boundary" class="headerlink" title="3.1.3 Decision Boundary"></a>3.1.3 Decision Boundary</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/3_3.png" alt="3_3"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/3_4.png" alt="3_4"></p>
-<h3 id="3-2-Logistic-Regression-Model"><a href="#3-2-Logistic-Regression-Model" class="headerlink" title="3.2 Logistic Regression Model"></a>3.2 Logistic Regression Model</h3><h4 id="3-2-1-Cost-Function"><a href="#3-2-1-Cost-Function" class="headerlink" title="3.2.1 Cost Function"></a>3.2.1 Cost Function</h4><pre><code>Cost(hθ(x),y) = -log(hθ(x))    if y=1
-                -log(1-hθ(x))  if y=0
-</code></pre><h4 id="3-2-2-Simplified-Cost-Function-and-Gradient-Descent"><a href="#3-2-2-Simplified-Cost-Function-and-Gradient-Descent" class="headerlink" title="3.2.2 Simplified Cost Function and Gradient Descent"></a>3.2.2 Simplified Cost Function and Gradient Descent</h4><pre><code>Cost(hθ(x),y) = -ylog(hθ(x)) - (1-y)log(1-hθ(x))
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/3_5.png" alt="3_5"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/3_6.png" alt="3_6"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/3_7.png" alt="3_7"></p>
-<h3 id="3-3-Multiclass-Classification"><a href="#3-3-Multiclass-Classification" class="headerlink" title="3.3 Multiclass Classification"></a>3.3 Multiclass Classification</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/3_8.png" alt="3_8"></p>
-<h3 id="3-4-Solving-the-Problem-of-Overfitting"><a href="#3-4-Solving-the-Problem-of-Overfitting" class="headerlink" title="3.4 Solving the Problem of Overfitting"></a>3.4 Solving the Problem of Overfitting</h3><pre><code>Overfitting: If we have too many features, the 
-learning hypoyhesis may fit the training set very well,
-but fail to generalize to new examples.
-</code></pre><p>Addressing overfitting:</p>
-<p>Options:</p>
-<pre><code>1. Reduce number of features.
-    --Manually select which features to keep.
-    --Model selection algorithm.
-2. Regularization.
-    --Keep all the features,but reduce magnitude
-      /values of parameters θj.
-    --Works well when we have a lo
-</code></pre>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="cix03ph2e0003z2o30sqjv6u7" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-Machine-Learning编程作业1——Linear-Regression" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" class="article-date">
-  <time datetime="2016-10-31T02:50:02.000Z" itemprop="datePublished">2016-10-31</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/10/31/Machine-Learning编程作业1——Linear-Regression/">Machine Learning编程作业1——Linear Regression</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="作业源码"><a href="#作业源码" class="headerlink" title="作业源码"></a>作业源码</h2><h3 id="warmUpExercise-m-basic-function"><a href="#warmUpExercise-m-basic-function" class="headerlink" title="warmUpExercise.m   ____basic function"></a>warmUpExercise.m   ____basic function</h3><p>fprintf(‘Running warmUpExercise …\n’);</p>
-<p>fprintf(‘5*5 Identity Matrix: \n”);</p>
-<p>warmUpExercise()</p>
-<pre><code>function A = warmUpExercise()
-
-A = [];
-A = eye(5);
-
-end
-</code></pre><h3 id="plotData-m-Plotting"><a href="#plotData-m-Plotting" class="headerlink" title="plotData.m ____Plotting"></a>plotData.m ____Plotting</h3><p>fprintf(‘Plotting Data…\n’)</p>
-<p>data = load(‘ex1data1.txt’);</p>
-<p>X = data(:,1); y = data(;,2);</p>
-<p>m = length(y); %num of training examples</p>
-<p>plotData(X,y)</p>
-<pre><code>function plotData(x,y)
-
-figure;
-plot(x,y,&apos;rx&apos;,&apos;MarkerSize&apos;,10);
-ylabel(&apos;Profit in $10,000s&apos;);
-xlabel(&apos;Poputation of City in 10,000s&apos;);
-
-end
-</code></pre><h3 id="gradientDescent-m-Gradient-Descent"><a href="#gradientDescent-m-Gradient-Descent" class="headerlink" title="gradientDescent.m ____Gradient Descent"></a>gradientDescent.m ____Gradient Descent</h3><p>fprintf(‘Running Gradient Descent …\n’)</p>
-<p>X = [ones[m,1],data(;,1)];</p>
-<p>theta = zeros(2,1);</p>
-<p>iterations = 1500;</p>
-<p>alpha = 0.01;</p>
-<p>computeCost(X,y,theta);</p>
-<h4 id="computeCost-m-compute-initial-cost"><a href="#computeCost-m-compute-initial-cost" class="headerlink" title="computeCost.m ____compute initial cost"></a>computeCost.m ____compute initial cost</h4><pre><code>function J = computeCost(X,y,theta)
-
-m = length(y);
-J = 0;
-cost = 0;
-for i = 1 : m
-    cost += (theta(1,1) * X(i,1) + theta(2,1) * X(i,2)
-            - y(i))^2;
-end
-
-J = 1/(2*m) * cost;
-
-end
-</code></pre><p>theta = gradientDescent(X,y,theta,alpha,iterations);</p>
-<pre><code>function [theta,J_history] = gradientDescent(X,y,theta,
-                alpha,num_iters)
-
-m = length(y);
-J_history = zeros(num_iters,1);
-
-for iter = 1 : num_iters
-    cost_theta1 = 0;
-    cost_theta2 = 0;
-    for i = 1 : m
-        cost_theta1 += (theta(1,1) * X(i,1) + 
-            theta(2,1) * X(i,2) - y(i)) * X(i,1);
-        cost_theta2 += (theta(1,1) * X(i,1) +
-            theta(2,1) * X(i,2) - y(i)) * X(i,2);
-    end
-    new_theta1 = theta(1,1) - alpha*cost_theta1 * 1/m;
-    new_theta2 = theta(2,1) - alpha*cost_theta2 * 1/m;
-    theta(1,1) = new_theta1;
-    theta(2,1) = new_theta2;
-
-    J_history(iter) = computeCost(X,y,theta);
-end
-end
-</code></pre>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="cix03ph2t000dz2o3z2fy73st" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="cixcyzm6i000lq8o3t5bse7ye" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -997,6 +924,14 @@ end
       <ul>
         
           <li>
+            <a href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周</a>
+          </li>
+        
+          <li>
             <a href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周</a>
           </li>
         
@@ -1006,14 +941,6 @@ end
         
           <li>
             <a href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周</a>
-          </li>
-        
-          <li>
-            <a href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周</a>
-          </li>
-        
-          <li>
-            <a href="/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第五周</a>
           </li>
         
       </ul>

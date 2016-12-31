@@ -3,30 +3,23 @@
 <head>
   <meta charset="utf-8">
   
-  <title>AI入门之——Andrew Ng “Machine Learning”课程学习笔记第一周 | Frances Hu&#39;s Blog</title>
+  <title>AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周 | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="课程内容简介课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）ii）无监督学习（集群、降维、推荐系统、深度学习）iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）
-课程学习第一周1、10月18日学习Introduction章节。主要介绍了什么是Machine Learning及其意义，后续介绍了监督学习和无">
+  <meta name="description" content="10、Large Scale Machine Learning10.1、Gradient Descent with Large Datasets10.1.1、Learning with large datasetIt’s not who has the best algorithm that wins.It’s who has the most data.
+10.1.2、Stochastic gr">
 <meta property="og:type" content="article">
-<meta property="og:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第一周">
-<meta property="og:url" content="http://xiaozhazi.win/2016/10/18/AI入门笔记一/index.html">
+<meta property="og:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周">
+<meta property="og:url" content="http://xiaozhazi.win/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
-<meta property="og:description" content="课程内容简介课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）ii）无监督学习（集群、降维、推荐系统、深度学习）iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）
-课程学习第一周1、10月18日学习Introduction章节。主要介绍了什么是Machine Learning及其意义，后续介绍了监督学习和无">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/hypothesis_structure.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/2.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/3.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/4.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/5.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/6.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/8.png">
-<meta property="og:updated_time" content="2016-10-24T06:03:12.000Z">
+<meta property="og:description" content="10、Large Scale Machine Learning10.1、Gradient Descent with Large Datasets10.1.1、Learning with large datasetIt’s not who has the best algorithm that wins.It’s who has the most data.
+10.1.2、Stochastic gr">
+<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/10_1.png">
+<meta property="og:updated_time" content="2016-12-31T08:19:47.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第一周">
-<meta name="twitter:description" content="课程内容简介课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）ii）无监督学习（集群、降维、推荐系统、深度学习）iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）
-课程学习第一周1、10月18日学习Introduction章节。主要介绍了什么是Machine Learning及其意义，后续介绍了监督学习和无">
-<meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/hypothesis_structure.png">
+<meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周">
+<meta name="twitter:description" content="10、Large Scale Machine Learning10.1、Gradient Descent with Large Datasets10.1.1、Learning with large datasetIt’s not who has the best algorithm that wins.It’s who has the most data.
+10.1.2、Stochastic gr">
+<meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/10_1.png">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -79,10 +72,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-AI入门笔记一" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2016/10/18/AI入门笔记一/" class="article-date">
-  <time datetime="2016-10-18T02:44:48.000Z" itemprop="datePublished">2016-10-18</time>
+    <a href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/" class="article-date">
+  <time datetime="2016-12-23T07:53:56.000Z" itemprop="datePublished">2016-12-23</time>
 </a>
     
   </div>
@@ -93,7 +86,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      AI入门之——Andrew Ng “Machine Learning”课程学习笔记第一周
+      AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周
     </h1>
   
 
@@ -101,54 +94,40 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="课程内容简介"><a href="#课程内容简介" class="headerlink" title="课程内容简介"></a>课程内容简介</h2><p>课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：<br>i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）<br>ii）无监督学习（集群、降维、推荐系统、深度学习）<br>iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）</p>
-<h3 id="课程学习"><a href="#课程学习" class="headerlink" title="课程学习"></a>课程学习</h3><h4 id="第一周"><a href="#第一周" class="headerlink" title="第一周"></a>第一周</h4><p>1、10月18日学习Introduction章节。主要介绍了什么是Machine Learning及其意义，后续介绍了监督学习和无监督学习，其中监督学习主要介绍了regression和classification，无监督学习主要是cluster。(review三遍才过，对于有无监督学习理解不深刻)</p>
-<pre><code>Machine Learning is the field of study that gives computers 
-the ability to learn without being explicitly programmed.
-</code></pre><p>2、10月19日学习Model and Cost Function章节。分为四个小节，Model Representation、Cost Function、Cost Function-Intuition I、Cost Function-Intuition II。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/hypothesis_structure.png" alt="hypothsis structure"></p>
-<pre><code>Cost Function —— square error function
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/2.png" alt="2"></p>
-<p>我们的目标就是尽可能的使Cost Function值最小。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/3.png" alt="3"></p>
-<p>3、10月19日学习Parameter Learning章节。分为三个小节Gradient Descent、Gradient Descent Intuition、Gradient Descent For Linear Regression。</p>
-<p>因此采用梯度下降的方法</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/4.png" alt="4"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/5.png" alt="5"></p>
-<p>注意，上述temp0和temp1是同步变化的。</p>
-<p>参数a的选取也至关重要，不仅影响算法的效率，还对是否能寻找到局部最优解起至关重要的作用。<br><img src="http://ofacak8l3.bkt.clouddn.com/6.png" alt="6"></p>
-<pre><code>As we approach a local minimum, gradient descent will sutomatically
-take smaller steps. So, no need to decrease a over time.
-</code></pre><p>最终算法表示如下：<br><img src="http://ofacak8l3.bkt.clouddn.com/7.png" alt="7"><br><img src="http://ofacak8l3.bkt.clouddn.com/8.png" alt="8"></p>
-<p>4、10月20日学习Linear Algebra Review，主要是复习了线性代数的相关知识，矩阵计算、矩阵的逆和转置等。</p>
+        <h1 id="10、Large-Scale-Machine-Learning"><a href="#10、Large-Scale-Machine-Learning" class="headerlink" title="10、Large Scale Machine Learning"></a>10、Large Scale Machine Learning</h1><h2 id="10-1、Gradient-Descent-with-Large-Datasets"><a href="#10-1、Gradient-Descent-with-Large-Datasets" class="headerlink" title="10.1、Gradient Descent with Large Datasets"></a>10.1、Gradient Descent with Large Datasets</h2><h3 id="10-1-1、Learning-with-large-dataset"><a href="#10-1-1、Learning-with-large-dataset" class="headerlink" title="10.1.1、Learning with large dataset"></a>10.1.1、Learning with large dataset</h3><p>It’s not who has the best algorithm that wins.<br>It’s who has the most data.</p>
+<h3 id="10-1-2、Stochastic-gradient-descent"><a href="#10-1-2、Stochastic-gradient-descent" class="headerlink" title="10.1.2、Stochastic gradient descent"></a>10.1.2、Stochastic gradient descent</h3><p>不像Batch gradient descent每次迭代时都需要将数据集代入计算。</p>
+<p>当数据集大的时候我们需要随机shuffle数据集，<br>然后选取第一个数据进行计算，然后进行梯度下降，再接着使用接下来的数据依次进行此过程。</p>
+<h3 id="10-1-3、Mini-batch-gradient-descent"><a href="#10-1-3、Mini-batch-gradient-descent" class="headerlink" title="10.1.3、Mini-batch gradient descent"></a>10.1.3、Mini-batch gradient descent</h3><p>batch 和  stochastic的结合。每次选一组数据进行计算，然后再接着使用下一组重复此过程。</p>
+<h3 id="10-1-4、Stochastic-gradient-descent-convergence"><a href="#10-1-4、Stochastic-gradient-descent-convergence" class="headerlink" title="10.1.4、Stochastic gradient descent convergence"></a>10.1.4、Stochastic gradient descent convergence</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/10_1.png" alt="10_1"></p>
+<p>Learning rate α is tapically held constant. Can slowly descrease α over time if we want θ to converge.</p>
+<h2 id="10-2、Online-Learning"><a href="#10-2、Online-Learning" class="headerlink" title="10.2、Online Learning"></a>10.2、Online Learning</h2><p>上述方法可以应用在实时在线学习上，数据集大小不固定，以数据流的形式出现。</p>
+<h2 id="10-3、Map-reduce-and-data-parallelism"><a href="#10-3、Map-reduce-and-data-parallelism" class="headerlink" title="10.3、Map-reduce and data parallelism"></a>10.3、Map-reduce and data parallelism</h2><p>在进行梯度下降计算时，中间有步骤需要求和，我们可以利用Map-reduce和并行计算来缩短处理时间。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.win/2016/10/18/AI入门笔记一/" data-id="cixcyzm69000fq8o3fa94ceuv" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.win/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/" data-id="cixcyzm5x0008q8o3c30iskon" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
-
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周
+          AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周
         
       </div>
     </a>
   
   
-    <a href="/2016/09/27/如何在MAC上搭建博客——hexo-github/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">如何在MAC上搭建博客——hexo+github</div>
+      <div class="article-nav-title">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周</div>
     </a>
   
 </nav>
