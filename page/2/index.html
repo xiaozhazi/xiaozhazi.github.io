@@ -47,6 +47,14 @@
         
           <a class="main-nav-link" href="/">Home</a>
         
+          <a class="main-nav-link" href="/tags/life">Life</a>
+        
+          <a class="main-nav-link" href="/tags/go">GO</a>
+        
+          <a class="main-nav-link" href="/tags/kubernetes">K8S</a>
+        
+          <a class="main-nav-link" href="/tags/algorithm">Algorithm</a>
+        
           <a class="main-nav-link" href="/archives">Archives</a>
         
       </nav>
@@ -64,6 +72,129 @@
 </header>
       <div class="outer">
         <section id="main">
+  
+    <article id="post-Machine-Learning编程作业2——Logistic-Regression" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" class="article-date">
+  <time datetime="2016-11-07T02:31:30.000Z" itemprop="datePublished">2016-11-07</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/">Machine Learning编程作业2——Logistic Regression</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>##ex2.m<br>=============plotting================</p>
+<p>data = load(‘ex2data1.txt’);</p>
+<p>X = data(:,[1,2]);</p>
+<p>y = data(:,3);</p>
+<p>plotData(X,y);</p>
+<pre><code>plotData.m
+
+function plotData(X,y)
+figure;hold on;
+
+pos = find(y==1);
+neg = find(y==0);
+plot(X(pos,1),X(pos,2),&apos;k+&apos;,&apos;LineWidth&apos;,2,...
+    &apos;MarkerSize&apos;,7);
+plot(X(neg,1),X(neg,2),&apos;ko&apos;,&apos;MarkerFaceColor&apos;,&apos;y&apos;,...
+    &apos;MarkerSize&apos;,7);
+
+hold off;
+end
+</code></pre><p>=============compute cost and gradient===========</p>
+<p>[m,n] = size(X);</p>
+<p>X = [ones(m,1) X];</p>
+<p>initial_theta = zeros(n+1,1);</p>
+<p>[cost,grad] = costFunction(initial_theta,X,y);</p>
+<pre><code>costFunction.m
+
+function [J,grad] = costFunction(theta,X,y)
+m = length(y);
+J = 0;
+grad = zeros(size(theta));
+
+J = (-1)/m *(log(sigmoid(X*theta))&apos;*y +
+            log(1-sigmoid(X*theta))&apos;*(1-y));
+for i = 1: size(X,2)
+  grad(i) = 1/m * sum((sigmoid(X*theta)-y) .* X(:,i));
+end
+end
+</code></pre><p>plotDecisionBoundary(theta,X,y);</p>
+<p>=============predict and accuracies===============</p>
+<p>prob = sigmoid([1 45 85] * theta);</p>
+<p>p = predict(theta,X);</p>
+<pre><code>predict.m
+
+function p = predict(theta,X)
+
+m = size(X,1);
+p = zeros(m,1);
+
+for i = 1:m
+    if(sigmoid(X(i,:) * theta)) &gt;= 0.5
+        p(i) = 1;
+    else
+        p(i) = 0;
+    end
+end
+end
+</code></pre><h2 id="ex2-reg-m"><a href="#ex2-reg-m" class="headerlink" title="ex2_reg.m"></a>ex2_reg.m</h2><p>clear;</p>
+<p>data = load(‘ex2data2.txt’);</p>
+<p>X = data(:,[1,2]);</p>
+<p>y = data(:,3);</p>
+<p>plotData(X,y);</p>
+<p>=====================regularized Logistic Regression======</p>
+<p>X = mapFeature(X(:,1),X(:,2));</p>
+<p>initial_theta = zeros(size(X,2),1);</p>
+<p>lambda = 1;</p>
+<p>[cost,grad] = costFunctionReg(initial_theta,X,y,lambda);</p>
+<pre><code>costFunctionReg.m
+
+function [J,grad] = costFunctionReg(theta,X,y,lambda)
+m = length(y);
+J = 0;
+grad = zeros(size(theta));
+
+temp = theta(2:size(theta,1),:) .^2;
+value = sum(temp);
+J = (-1)/m * (log(sigmoid(X*theta))&apos;*y +
+            log(1-sigmoid(X*theta))&apos;*(1-y))
+        +lambda/(2*m) * value;
+grad(1) = 1/m*sum((sigmoid(X*theta) - y) .* X(:,1));
+
+for i = 2: size(X,2)
+    grad(i) = 1 / m *sum((sigmoid(X*theta) -y).*X(:,i))
+     +lambda/m * theta(i);
+end
+end
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.github.io/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" data-id="cjuld1rs6000mjpo3e46wgu5m" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
   
     <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
@@ -118,7 +249,7 @@ but fail to generalize to new examples.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="cixcyzm5b0000q8o3pkaw5fop" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.github.io/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" data-id="cjuld1rrl0002jpo3zx72u7sn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li></ul>
@@ -221,7 +352,7 @@ end
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="cixcyzm6d000iq8o3aa2a9tlq" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.github.io/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" data-id="cjuld1rs3000jjpo39o5r3r4r" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/octave-program/">octave, program</a></li></ul>
@@ -306,7 +437,7 @@ Normal Equation
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="cixcyzm5o0004q8o3xlrzhfdr" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.github.io/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" data-id="cjuld1rrn0003jpo3s1g9pylk" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
@@ -364,7 +495,7 @@ take smaller steps. So, no need to decrease a over time.
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/10/18/AI入门笔记一/" data-id="cixcyzm69000fq8o3fa94ceuv" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.github.io/2016/10/18/AI入门笔记一/" data-id="cjuld1rry000djpo30tu61zmy" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li></ul>
@@ -440,7 +571,7 @@ hexo d -g
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/09/27/如何在MAC上搭建博客——hexo-github/" data-id="cixcyzm6f000kq8o3vn7fp2kv" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.github.io/2016/09/27/如何在MAC上搭建博客——hexo-github/" data-id="cjuld1rs7000njpo335agrs36" class="article-share-link">Share</a>
       
       
     </footer>
@@ -485,7 +616,7 @@ hexo d -g
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/09/27/hello-world/" data-id="cixcyzm6k000oq8o3ev2ht9dn" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.github.io/2016/09/27/hello-world/" data-id="cjuld1rs5000ljpo3bneyyfam" class="article-share-link">Share</a>
       
       
     </footer>
@@ -511,7 +642,7 @@ hexo d -g
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/octave-program/">octave, program</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/octave-program/">octave, program</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -521,7 +652,7 @@ hexo d -g
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/AI-Machine-Learning-coursera/" style="font-size: 20px;">AI, Machine Learning, coursera</a> <a href="/tags/Machine-learning-AI-course/" style="font-size: 10px;">Machine learning, AI, course</a> <a href="/tags/course-AI-machine-Learning/" style="font-size: 10px;">course, AI, machine Learning</a> <a href="/tags/octave-program/" style="font-size: 20px;">octave, program</a> <a href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/" style="font-size: 10px;">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a>
+      <a href="/tags/AI-Machine-Learning-coursera/" style="font-size: 20px;">AI, Machine Learning, coursera</a> <a href="/tags/Machine-learning-AI-course/" style="font-size: 10px;">Machine learning, AI, course</a> <a href="/tags/course-AI-machine-Learning/" style="font-size: 10px;">course, AI, machine Learning</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/octave-program/" style="font-size: 20px;">octave, program</a> <a href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/" style="font-size: 10px;">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a>
     </div>
   </div>
 
@@ -530,7 +661,7 @@ hexo d -g
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 
@@ -541,6 +672,10 @@ hexo d -g
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2019/04/17/重归博客/">重归博客</a>
+          </li>
         
           <li>
             <a href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周</a>
@@ -556,10 +691,6 @@ hexo d -g
         
           <li>
             <a href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周</a>
-          </li>
-        
-          <li>
-            <a href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周</a>
           </li>
         
       </ul>
@@ -583,6 +714,14 @@ hexo d -g
     <nav id="mobile-nav">
   
     <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/tags/life" class="mobile-nav-link">Life</a>
+  
+    <a href="/tags/go" class="mobile-nav-link">GO</a>
+  
+    <a href="/tags/kubernetes" class="mobile-nav-link">K8S</a>
+  
+    <a href="/tags/algorithm" class="mobile-nav-link">Algorithm</a>
   
     <a href="/archives" class="mobile-nav-link">Archives</a>
   
