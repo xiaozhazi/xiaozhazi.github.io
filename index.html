@@ -130,10 +130,11 @@ There are two ways to reach the bottom-right corner:
 1. Right -&gt; Right -&gt; Down -&gt; Down
 2. Down -&gt; Down -&gt; Right -&gt; Right
 </code></pre><h4 id="Analysis-1"><a href="#Analysis-1" class="headerlink" title="Analysis"></a>Analysis</h4><p>第一感觉是可以用回溯来解决此问题。对每一个点先选择向右走，如果遇到障碍物或者右边无路说明此路径不通，回退到该点选择向下走，如果遇到障碍物或下边无路可走说明不存在任何一条路径可以经过该点走到终点。依次类推，每次递归向后走到终点时count加一。</p>
-<p>代码如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">func DFS(obstacleGrid [][]int, i, j int) &#123;</div><div class="line">    m, n := len(obstacleGrid), len(obstacleGrid[0])</div><div class="line">    if i == m - 1 &amp;&amp; j == n - 1  &amp;&amp; obstacleGrid[i][j] != 1&#123;</div><div class="line">        count++</div><div class="line">        return </div><div class="line">    &#125;</div><div class="line">    if i &lt; m - 1 &amp;&amp; obstacleGrid[i+1][j] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i + 1, j)</div><div class="line">    &#125;</div><div class="line">    if j &lt; n - 1 &amp;&amp; obstacleGrid[i][j+1] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i, j + 1)</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">var count = 0</div><div class="line"></div><div class="line">func uniquePathsWithObstacles(obstacleGrid [][]int) int &#123;</div><div class="line">    if obstacleGrid == nil || len(obstacleGrid) == 0 || obstacleGrid[0][0] == 1 &#123;</div><div class="line">        return 0</div><div class="line">    &#125;</div><div class="line">    count = 0</div><div class="line">    DFS(obstacleGrid, 0, 0)</div><div class="line">    return count</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p><strong>有一点需要注意的是要注意开始或者结束点值为1的情况</strong></p>
-<p>递推算法基本类似于暴力求解无重复又没有遗漏的穷举出所有走法。果不其然提交后TLE : (<br>下面改用DP进行分析<br>To be continued…</p>
+<p><strong>需要特别注意的是要开始OR结束点值为1的情况</strong></p>
+<p>核心代码如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">func DFS(obstacleGrid [][]int, i, j int) &#123;</div><div class="line">    m, n := len(obstacleGrid), len(obstacleGrid[0])</div><div class="line">    if i == m - 1 &amp;&amp; j == n - 1  &amp;&amp; obstacleGrid[i][j] != 1&#123;</div><div class="line">        count++</div><div class="line">        return </div><div class="line">    &#125;</div><div class="line">    if i &lt; m - 1 &amp;&amp; obstacleGrid[i+1][j] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i + 1, j)</div><div class="line">    &#125;</div><div class="line">    if j &lt; n - 1 &amp;&amp; obstacleGrid[i][j+1] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i, j + 1)</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>递推算法基本类似于暴力求解无重复又没有遗漏的穷举出所有走法。果不其然提交后TLE : (<br>下面改用DP进行分析</p>
+<p>To be continued…</p>
 
       
     </div>
@@ -141,7 +142,7 @@ There are two ways to reach the bottom-right corner:
       <a data-url="http://xiaozhazi.github.io/2019/04/18/Dynamic-Programming/" data-id="cjumu6bux000iavo3ihpikhmh" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Algorithm/">Algorithm</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/">algorithm</a></li></ul>
 
     </footer>
   </div>
@@ -235,7 +236,7 @@ There are two ways to reach the bottom-right corner:
       <a data-url="http://xiaozhazi.github.io/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/" data-id="cjumu6bur0008avo3n43l6lar" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
 
     </footer>
   </div>
@@ -281,6 +282,8 @@ There are two ways to reach the bottom-right corner:
       <a data-url="http://xiaozhazi.github.io/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/" data-id="cjumu6bus0009avo3ta6mtini" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
+
     </footer>
   </div>
   
@@ -381,6 +384,8 @@ Test:2000 good engines,10 anomalous
       <a data-url="http://xiaozhazi.github.io/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" data-id="cjumu6bup0005avo3xes25uvo" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
+
     </footer>
   </div>
   
@@ -512,6 +517,8 @@ xj&apos; = xj - uj
       <a data-url="http://xiaozhazi.github.io/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" data-id="cjumu6but000aavo36y89fyts" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
+
     </footer>
   </div>
   
@@ -585,6 +592,8 @@ but many slower to train.
       <a data-url="http://xiaozhazi.github.io/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" data-id="cjumu6buk0001avo39wduribm" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
+
     </footer>
   </div>
   
@@ -666,6 +675,8 @@ It&apos;s who has the most data.
       <a data-url="http://xiaozhazi.github.io/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="cjumu6buw000gavo3szrjug8c" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
+
     </footer>
   </div>
   
@@ -710,6 +721,8 @@ Be sure to disable your gradient checking code before training your claaifier. o
       <a data-url="http://xiaozhazi.github.io/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" data-id="cjumu6bun0003avo3oax4onpm" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
+
     </footer>
   </div>
   
@@ -822,6 +835,8 @@ struct list_head cg_list;
       <a data-url="http://xiaozhazi.github.io/2016/11/24/毕设论文相关知识索引笔记/" data-id="cjumu6bv5000tavo3iekvc4ef" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/master-degree/">master degree</a></li></ul>
+
     </footer>
   </div>
   
@@ -845,7 +860,7 @@ struct list_head cg_list;
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI-Machine-Learning-coursera/">AI, Machine Learning, coursera</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Algorithm/">Algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-learning-AI-course/">Machine learning, AI, course</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/octave-program/">octave, program</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/AI-machine-learning-coursera/">AI, machine learning, coursera</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/course-AI-machine-Learning/">course, AI, machine Learning</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning-AI-course/">machine learning, AI, course</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/octave-machine-learning/">octave, machine learning</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/octave-program/">octave, program</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -855,7 +870,7 @@ struct list_head cg_list;
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/AI-Machine-Learning-coursera/" style="font-size: 20px;">AI, Machine Learning, coursera</a> <a href="/tags/Algorithm/" style="font-size: 10px;">Algorithm</a> <a href="/tags/Machine-learning-AI-course/" style="font-size: 10px;">Machine learning, AI, course</a> <a href="/tags/course-AI-machine-Learning/" style="font-size: 10px;">course, AI, machine Learning</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/octave-program/" style="font-size: 20px;">octave, program</a> <a href="/tags/α-β-δ-ε-η-θ-ξ-μ-λ-ν-ξ-ο-π-ρ-σ-τ-υ-φ-χ-ψ-ω/" style="font-size: 10px;">α β δ ε η θ ξ μ λ ν ξ ο π ρ σ τ υ φ χ ψ ω</a>
+      <a href="/tags/AI-machine-learning-coursera/" style="font-size: 15px;">AI, machine learning, coursera</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/course-AI-machine-Learning/" style="font-size: 10px;">course, AI, machine Learning</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/machine-learning-AI-course/" style="font-size: 10px;">machine learning, AI, course</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a> <a href="/tags/octave-machine-learning/" style="font-size: 10px;">octave, machine learning</a> <a href="/tags/octave-program/" style="font-size: 10px;">octave, program</a>
     </div>
   </div>
 
