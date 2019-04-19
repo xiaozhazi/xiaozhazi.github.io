@@ -108,36 +108,32 @@
 Output: 7
 Explanation: Because the path 1→3→1→1→1 minimizes the sum. 
 </code></pre><h4 id="Analysis"><a href="#Analysis" class="headerlink" title="Analysis"></a>Analysis</h4><p>从（0，0）走到（m-1，n-1）每个阶段只能选择向右或向下两种决策，且每个阶段都会对应一个状态集合。我们把状态定义为dp[i][j]表示从起点走到（i，j）位置时的最短路径长度。 因此它是一个多阶段最优解问题符合动态规划模型。</p>
-<pre><code>dp[i][j] = min(dp[i-1][j],dp[i][j-1]) + grid[i][j]
-</code></pre><p>直接动手代码</p>
-<pre><code>func minPathSum(grid [][]int) int {
-    if grid == nil || len(grid) == 0 {
-        return 0
-    }
-    m := len(grid)
-    n := len(grid[0])
-    dp := make([][]int, m)
-
-    for i := 0; i &lt; m; i++ {
-        dp[i] = make([]int, n)
-    }
-
-    dp[0][0] = grid[0][0]
-    for i := 1; i &lt; m; i++ {
-        dp[i][0] = dp[i-1][0] + grid[i][0]
-    }
-    for i := 1; i &lt; n; i++ {
-        dp[0][i] = dp[0][i-1] + grid[0][i]
-    }
-    for i := 1; i &lt; m; i++ {
-        for j := 1; j &lt; n; j++ {
-            dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + grid[i][j]
-        }
-    }
-    return dp[m-1][n-1]
-}
-</code></pre><p>提交后发现 Runtime: 12 ms, faster than 28.57% of Go online submissions.<br>Memory Usage: 4.4 MB, less than 13.64% of Go online submissions for Minimum Path Sum. 效率太低了，想办法来优化下。</p>
-<p>continue…</p>
+<p><code>dp[i][j] = min(dp[i-1][j],dp[i][j-1]) + grid[i][j]</code><br>直接动手上代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">func minPathSum(grid [][]int) int &#123;</div><div class="line">  if grid == nil || len(grid) == 0 &#123;</div><div class="line">	return 0</div><div class="line">  &#125;</div><div class="line">  m, n := len(grid), len(grid[0])</div><div class="line">  dp := make([][]int, m)</div><div class="line">	</div><div class="line">  for i := 0; i &lt; m; i++ &#123;</div><div class="line">	dp[i] = make([]int, n)</div><div class="line">  &#125;</div><div class="line">	</div><div class="line">  dp[0][0] = grid[0][0]</div><div class="line">  for i := 1; i &lt; m; i++ &#123;</div><div class="line">	dp[i][0] = dp[i-1][0] + grid[i][0]</div><div class="line">  &#125;</div><div class="line">  for i := 1; i &lt; n; i++ &#123;</div><div class="line">	dp[0][i] = dp[0][i-1] + grid[0][i]</div><div class="line">  &#125;</div><div class="line">  for i := 1; i &lt; m; i++ &#123;</div><div class="line">	for j := 1; j &lt; n; j++ &#123;</div><div class="line">	  dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + grid[i][j]</div><div class="line">	&#125;</div><div class="line">  &#125;</div><div class="line">  return dp[m-1][n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>提交后发现 <em>Runtime: 12 ms, faster than 28.57% of Go online submissions.<br>Memory Usage: 4.4 MB, less than 13.64% of Go online submissions for Minimum Path Sum</em>. 效率太低了，想办法来优化下。</p>
+<p>实际上我们只需要一个长度为n-1的一维数组来存储状态集合，状态转移的过程都可以基于这个一维数组来操作。继续上代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">func minPathSum(grid [][]int) int &#123;</div><div class="line">  if grid == nil || len(grid) == 0 &#123;</div><div class="line">    return 0</div><div class="line">  &#125;</div><div class="line">  m, n := len(grid), len(grid[0])</div><div class="line">  dp := make([]int, n)</div><div class="line">   </div><div class="line">  for j, _ := range dp &#123;</div><div class="line">    dp[j] = math.MaxInt32</div><div class="line">  &#125;</div><div class="line">  dp[0] = 0</div><div class="line">  for i := 0; i &lt; m; i++ &#123;</div><div class="line">    for j := 0; j &lt; n; j++ &#123;</div><div class="line">      if j == 0 &#123;</div><div class="line">        dp[j] += grid[i][j]</div><div class="line">      &#125; else &#123;</div><div class="line">        dp[j] = min(dp[j], dp[j-1]) + grid[i][j]</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  return dp[n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>再次提交后 <em>Runtime: 8 ms, faster than 100.00% of Go online submissions for Minimum Path Sum.<br>Memory Usage: 3.9 MB, less than 59.09% of Go online submissions for Minimum Path Sum.</em>  : )</p>
+<h3 id="63-Unique-Paths-II"><a href="#63-Unique-Paths-II" class="headerlink" title="63. Unique Paths II"></a>63. Unique Paths II</h3><h4 id="Question-1"><a href="#Question-1" class="headerlink" title="Question"></a>Question</h4><p>A robot is located at the top-left corner of a m x n grid (marked ‘Start’ in the diagram below).</p>
+<p>The robot can only move either down or right at any point in time. The robot is trying to reach the bottom-right corner of the grid (marked ‘Finish’ in the diagram below).</p>
+<p>Now consider if some obstacles are added to the grids. How many unique paths would there be?</p>
+<h4 id="Example-1"><a href="#Example-1" class="headerlink" title="Example:"></a>Example:</h4><pre><code>Input:
+[
+  [0,0,0],
+  [0,1,0],
+  [0,0,0]
+]
+Output: 2
+Explanation:
+There is one obstacle in the middle of the 3x3 grid above.
+There are two ways to reach the bottom-right corner:
+1. Right -&gt; Right -&gt; Down -&gt; Down
+2. Down -&gt; Down -&gt; Right -&gt; Right
+</code></pre><h4 id="Analysis-1"><a href="#Analysis-1" class="headerlink" title="Analysis"></a>Analysis</h4><p>第一感觉是可以用回溯来解决此问题。对每一个点先选择向右走，如果遇到障碍物或者右边无路说明此路径不通，回退到该点选择向下走，如果遇到障碍物或下边无路可走说明不存在任何一条路径可以经过该点走到终点。依次类推，每次递归向后走到终点时count加一。</p>
+<p>代码如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">func DFS(obstacleGrid [][]int, i, j int) &#123;</div><div class="line">    m, n := len(obstacleGrid), len(obstacleGrid[0])</div><div class="line">    if i == m - 1 &amp;&amp; j == n - 1  &amp;&amp; obstacleGrid[i][j] != 1&#123;</div><div class="line">        count++</div><div class="line">        return </div><div class="line">    &#125;</div><div class="line">    if i &lt; m - 1 &amp;&amp; obstacleGrid[i+1][j] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i + 1, j)</div><div class="line">    &#125;</div><div class="line">    if j &lt; n - 1 &amp;&amp; obstacleGrid[i][j+1] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i, j + 1)</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">var count = 0</div><div class="line"></div><div class="line">func uniquePathsWithObstacles(obstacleGrid [][]int) int &#123;</div><div class="line">    if obstacleGrid == nil || len(obstacleGrid) == 0 || obstacleGrid[0][0] == 1 &#123;</div><div class="line">        return 0</div><div class="line">    &#125;</div><div class="line">    count = 0</div><div class="line">    DFS(obstacleGrid, 0, 0)</div><div class="line">    return count</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><strong>有一点需要注意的是要注意开始或者结束点值为1的情况</strong></p>
+<p>递推算法基本类似于暴力求解无重复又没有遗漏的穷举出所有走法。果不其然提交后TLE : (<br>下面改用DP进行分析<br>To be continued…</p>
 
       
     </div>
