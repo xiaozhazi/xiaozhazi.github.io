@@ -73,6 +73,76 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-K8S学习之——etcd" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/06/16/K8S学习之——etcd/" class="article-date">
+  <time datetime="2019-06-16T13:21:21.000Z" itemprop="datePublished">2019-06-16</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/06/16/K8S学习之——etcd/">K8S学习之——ETCD</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          <!-- Table of Contents -->
+          
+        <h2 id="K8S学习之——ETCD"><a href="#K8S学习之——ETCD" class="headerlink" title="K8S学习之——ETCD"></a>K8S学习之——ETCD</h2><p>Etcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  </p>
+<ul>
+<li>Simple: well-defined, user-facing API (gRPC)  </li>
+<li>Secure: automatic TLS with optional client cert authentication  </li>
+<li>Fast: benchmarked 10,000 writes/sec  </li>
+<li>Reliable: properly distributed using Raft<br>简单来说etcd是kubernetes提供默认的存储系统，通过分布式KV存储来保存集群中重要的数据，因此我们使用时需要为etcd数据提供备份计划。</li>
+</ul>
+<p>Etcd is written in Go and uses the Raft consensus algorithm to manage a highly-available replicated log.<br>它通过raft一致性算法来实现可靠的分布式存储，我们上个月在team meetup中也是主要探讨了raft算法原理以及它与zookeeper的一些区别，在此通过本文记录下。  </p>
+<h3 id="Raft算法原理"><a href="#Raft算法原理" class="headerlink" title="Raft算法原理"></a>Raft算法原理</h3><p>Raft算法和zookeeper类似，都是通过大多数机制来保证一致性。在Raft算法中通过选举出来的leader节点来接收客户端的请求日志数据，然后同步到集群中其它节点进行复制，当日志已经同步到超多半数以上节点的时候，该日志状态变为committed可提交状态，即可以提交到状态机中执行。此外leader节点还要通知其他节点哪些日志已经被复制成功。</p>
+<p><em>Raft算法将要解决的一致性问题分为以下三个子问题：</em>  </p>
+<ul>
+<li>leader选举： 通过心跳机制来触发leader选举，保证集群中存在一个leader节点  </li>
+<li>日志复制： leader节点将来自客户端的请求序列化成日志数据并且同步复制到其它节点  </li>
+<li>安全性： 如果某个节点已经将一条日志数据提交到状态机中执行，那么其他节点不可能再将此条数据输入到状态机中重复执行。  </li>
+</ul>
+<p><em>Raft算法需要保证以下几个特性：</em>  </p>
+<ul>
+<li>Election Safety：在一个任期内最多只能存在一个leader节点  </li>
+<li>Leader Append-Only：leader节点只能添加日志数据，不会删除/覆盖以前的数据  </li>
+<li>Log Matching：如果两个节点的日志在某个索引上的日志数据和任期号都相同，那么在此index之前的日志数据一定也匹配  </li>
+<li>Leader Completeness：如果一条日志在某个任期被提交，那么该条日志数据在leader节点上更高任期号的日志数据中一定存在。  </li>
+<li>State Machine Safety：一条提交到raft状态机执行过的数据不可能再被其他节点提交执行。</li>
+</ul>
+<h4 id="Leader选举"><a href="#Leader选举" class="headerlink" title="Leader选举"></a>Leader选举</h4><p><em>Node节点状态</em>  </p>
+<ul>
+<li>Leader： 领导者，一个集群中只能存在一个leader  </li>
+<li>Follower：跟随者，一个客户端的操作请求发送到follower上面，会首先由follwer重定向到leader上  </li>
+<li>Candidate：参与者，在此状态的节点会发起新的选举  </li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.github.io/2019/06/16/K8S学习之——etcd/" data-id="cjwz02roe0000j2o310zi2aex" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/K8S/">K8S</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Dynamic-Programming" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2019/04/18/Dynamic-Programming/" class="article-date">
@@ -137,7 +207,7 @@ There are two ways to reach the bottom-right corner:
 <p><strong>需要特别注意的是要开始OR结束点值为1的情况</strong></p>
 <p>核心代码如下</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">func DFS(obstacleGrid [][]int, i, j int) &#123;</div><div class="line">    m, n := len(obstacleGrid), len(obstacleGrid[0])</div><div class="line">    if i == m - 1 &amp;&amp; j == n - 1  &amp;&amp; obstacleGrid[i][j] != 1&#123;</div><div class="line">        count++</div><div class="line">        return </div><div class="line">    &#125;</div><div class="line">    if i &lt; m - 1 &amp;&amp; obstacleGrid[i+1][j] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i + 1, j)</div><div class="line">    &#125;</div><div class="line">    if j &lt; n - 1 &amp;&amp; obstacleGrid[i][j+1] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i, j + 1)</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>递推算法基本类似于暴力求解无重复又没有遗漏的穷举出所有走法。果不其然提交后TLE : (</p>
+<p>递推算法基本类似于暴力求解，无重复又没有遗漏的穷举出所有走法。果不其然代码提交后TLE : (</p>
 <p>继续分析这道题，对于图中任一个非障碍点(i,j)，从起始位置走到该点的路径个数可以通过走到该点的左边位置（i-1,j)和上方位置(i,j-1)的路径个数之和计算， 即</p>
 <p><code>dp[i][j] = dp[i-1][j] + dp[i][j-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
 <p>因此可以改用DP算法来解决，同样为了优化算法效率我们通过一个一维数组在存储状态集合，此时状态方程为<br><code>dp[i] += dp[i-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
@@ -764,123 +834,6 @@ Be sure to disable your gradient checking code before training your claaifier. o
 
 
   
-    <article id="post-毕设论文相关知识索引笔记" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/11/24/毕设论文相关知识索引笔记/" class="article-date">
-  <time datetime="2016-11-24T06:14:40.000Z" itemprop="datePublished">2016-11-24</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/11/24/毕设论文相关知识索引笔记/">毕设论文相关知识索引笔记</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          <!-- Table of Contents -->
-          
-        <h2 id="压缩相关"><a href="#压缩相关" class="headerlink" title="压缩相关"></a>压缩相关</h2><p><a href="http://blog.csdn.net/zhangskd/article/details/17009111" target="_blank" rel="external">速度之王-lz4压缩算法</a></p>
-<p><a href="http://blog.csdn.net/zhangskd/article/details/17009111" target="_blank" rel="external">使用tar+lz4+ssh更快的数据传输</a></p>
-<p><a href="http://mogu.io/docker-162" target="_blank" rel="external">Docker源码分析之Docker daemon启动和销毁</a></p>
-<p><a href="http://www.readern.com/sublime-text-latex-chinese-under-mac.html" target="_blank" rel="external">部署MAC上的Sublime Text + LaTex 中文环境</a></p>
-<h2 id="Cgroup介绍、应用实例及原理描述"><a href="#Cgroup介绍、应用实例及原理描述" class="headerlink" title="Cgroup介绍、应用实例及原理描述"></a>Cgroup介绍、应用实例及原理描述</h2><p><a href="http://www.ibm.com/developerworks/cn/linux/1506_cgroup/index.html" target="_blank" rel="external">Cgroup介绍、应用实例及原理描述</a></p>
-<p><a href="http://tech.meituan.com/cgroups.html" target="_blank" rel="external">Linux资源管理之cgroups简介</a></p>
-<p><a href="https://www.linuxplumbersconf.org/2015/ocw//system/presentations/2619/original/2015-08-20-CRIU_Support_in_Docker_for_Native_Checkpoint_and_Restore.pdf" target="_blank" rel="external">CRIU support in Docker C/R</a></p>
-<h3 id="Cgroup设计原理分析"><a href="#Cgroup设计原理分析" class="headerlink" title="Cgroup设计原理分析"></a>Cgroup设计原理分析</h3><p>Linux中，管理进程的数据结构是task_struct</p>
-<pre><code>#ifdef CONFIG_CGROUPS
-/*Control Group info protected by css_set_lock*/
-struct css_set *cgroups;
-/*cg_list protected by css_set_lock and tsk-&gt;alloc_lock*/
-struct list_head cg_list;
-#endif
-</code></pre><p>其中*cgroups指向css_set结构，css_set存储了与进程相关的cgroups信息。cg_list是一个嵌入式的list_head结构，将链到同一个css_set的进程组织成一个链表。</p>
-<pre><code>struct css_set{
-  atomic_t refcount;
-  struct hlist_node hlist;
-  struct list_head tasks;
-  struct list_head cg_links;
-  struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
-  struct rcu_head ruc_head;
-};
-</code></pre><p>其中，refcount是该css_set的引用数，因为一个css_set可以被多个进程公用，只要这些进程的cgroups信息相同。</p>
-<p>hlist是嵌入的hlist_node，用于把所有css_set组成一个hash表，这样内核可以快速定位css_set。</p>
-<p>tasks指向所有连到此css_set的进程指向的链表。</p>
-<p>cg_links指向一个由struct_cg_group_link连城的链表。</p>
-<p>subsys是一个指针数组，存储一组指向cgroup_subsys_state的指针，一个cgroup_subsys_state就是进程与一个特定子系统相关的信息。通过这个数组，进程可以获得相应的cgroup控制信息了。</p>
-<pre><code>struct cgroup_subsys_state{
-  struct cgroup *cgroup;
-  atomic_t refcnt;
-  unsigned long flags;
-  struct css_id *id;
-};
-</code></pre><p>*cgroup指向一个cgroup结构，也就是进程属于的cgroup。</p>
-<pre><code>task_struct--&gt;css_set--&gt;cgroup_subsys_state--&gt;cgroup
-</code></pre><p>这样进程就和cgroup连接起来了。</p>
-<pre><code>struct cgroup{
-  unsigned long flags;
-  atomic_t count;
-  struct list_head sibling;
-  struct list_head children;
-  struct cgroup *parent;
-  struct dentry *dentry;
-  struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT]
-  struct cgroupfs_root *root;
-  struct cgroup *top_cgroup;
-  struct list_head css_sets;
-  struct list_head release_list;
-  struct list_head pidlists;
-  struct mutex pidlist_mutex;
-  struct rcu_head rcu_head;
-  struct list_head event_list;
-  spinlock_t event_list_lock;
-};
-</code></pre><p>sibling,children,parent三个嵌入的list_head负责将同一层级的cgroup连接成一颗cgroup树。</p>
-<p>subsys指针数组，存储一组指向cgroup_subsys_state的指针。这组指针指向了此cgroup跟各个子系统相关的信息。类似css_set中。</p>
-<p>root指向一个cgroupfs_root结构，就是cgroup所在层级对应的结构体。</p>
-<p>top_cgroup指向了所在层级的根cgroup，即创建层级时自动创建的那个cgroup。</p>
-<p>css_set指向一个由struct_cg_cgroup_link连成的链表。</p>
-<pre><code>struct cg_cgroup_link{
-  struct list_head cgrp_link_list;
-  struct cgroup *cgrp;
-  struct list_head cg_link_list;
-  struct css_set *cg;
-};
-</code></pre><p>cgrp_link_list连入到 cgroup-&gt;css_set链表，cgrp指向此cg_group_link相关的cgroup。</p>
-<p>cg_link_list连入到css_set-&gt;cg_links指向的链表，cg指向此cg_group_link相关的css_set。</p>
-<p>cgroup和css_set是一个多对多的关系，必须添加一个中间结构来将两者联系起来，这既是cg_cgroup_link的作用。cgrp和cg为此结构体的联合主键，cgrp_link_list和cg_link_list分别连入cgroup和css_set，使后两者都可以尽心遍历查询。</p>
-<p>####为什么cgroup和css_set是多对多的关系？<br>一个进程对应一个css_set，一个css_set存储了一组进程跟各个子系统相关的信息，但是这些信息由可能不是从一个cgroup那里获得的，因为一个进程可以同时属于多个cgroup，只要这些cgroup不在同一个层级。</p>
-<pre><code>eg：
-我们创建一个层级A，A上面附加了CPU和memory两个子系统，进程a属于A的根cgroup；创建一个层级B，B上面附加了ns和blkio两个子系统，进程a也属于B的根cgroup；那么进程a对应的CPU和memory是从A的根cgroup获得的，ns和blkio则是从B的根cgroup获得。因此一个css_set存储的cgroup_subsys_state可以对应多个cgroup。另一方面cgroup也存储了一组cgroup_subsys_state，这一组则是cgroup从所在的层级附加的子系统获得的。一个cgroup可以有多个进程，这些进程的css_set不一定都相同，因为有些进程可能还加入了其他cgroup，但是同一个cgroup中的进程与该cgroup关联的cgroup_subsys_state都受到该cgroup的管理，所以一个cgroup也可以对应多个css_set。
-</code></pre><p>从前面的分析，我们可以看出从 task 到 cgroup 是很容易定位的，但是从 cgroup 获取此 cgroup 的所有的 task 就必须通过这个结构了。每个进程都回指向一个 css_set，而与这个 css_set 关联的所有进程都会链入到 css_set-&gt;tasks 链表，而 cgroup 又通过一个中间结构 cg_cgroup_link 来寻找所有与之关联的所有 css_set，从而可以得到与 cgroup 关联的所有进程。<br><img src="http://ofacak8l3.bkt.clouddn.com/cgroups_1.png" alt="cgroups_1"></p>
-<p>上面这个图从整体结构上描述了进程与 cgroups 之间的关系。最下面的P代表一个进程。每一个进程的描述符中有一个指针指向了一个辅助数据结构css_set（cgroups subsystem set）。 指向某一个css_set的进程会被加入到当前css_set的进程链表中。一个进程只能隶属于一个css_set，一个css_set可以包含多个进程，隶属于同一css_set的进程受到同一个css_set所关联的资源限制。</p>
-<p>上图中的”M×N Linkage”说明的是css_set通过辅助数据结构可以与 cgroups 节点进行多对多的关联。但是 cgroups 的实现不允许css_set同时关联同一个cgroups层级结构下多个节点。 这是因为 cgroups 对同一种资源不允许有多个限制配置。</p>
-<p>一个css_set关联多个 cgroups 层级结构的节点时，表明需要对当前css_set下的进程进行多种资源的控制。而一个 cgroups 节点关联多个css_set时，表明多个css_set下的进程列表受到同一份资源的相同限制。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/11/24/毕设论文相关知识索引笔记/" data-id="cjumu6bv5000tavo3iekvc4ef" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/master-degree/">master degree</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -897,7 +850,7 @@ struct list_head cg_list;
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/K8S/">K8S</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -907,7 +860,7 @@ struct list_head cg_list;
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
+      <a href="/tags/K8S/" style="font-size: 10px;">K8S</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
     </div>
   </div>
 
@@ -916,7 +869,7 @@ struct list_head cg_list;
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 
@@ -927,6 +880,10 @@ struct list_head cg_list;
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2019/06/16/K8S学习之——etcd/">K8S学习之——ETCD</a>
+          </li>
         
           <li>
             <a href="/2019/04/18/Dynamic-Programming/">Dynamic Programming</a>
@@ -942,10 +899,6 @@ struct list_head cg_list;
         
           <li>
             <a href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周</a>
-          </li>
-        
-          <li>
-            <a href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周</a>
           </li>
         
       </ul>

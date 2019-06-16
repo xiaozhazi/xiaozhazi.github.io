@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="Frances Hu's Blog">
 <meta property="og:description" content="Introduction职业规划原因今年计划自学Go语言，前两个月也断断续续用Golang刷了100道左右的算法题。然而:(最近一个月工作比较忙就搁置了一段，今天看了下https://github.com/xiaozhazi/leetcode_go 距上次commit已经有近一个月的时间了 - _ -#。
 所以今天开始强制自己记录下个人解题过程以及go语言踩雷， 也便于随时复盘【其实是为了自我监督">
-<meta property="og:updated_time" content="2019-04-20T15:02:28.393Z">
+<meta property="og:updated_time" content="2019-04-20T15:06:25.655Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Dynamic Programming">
 <meta name="twitter:description" content="Introduction职业规划原因今年计划自学Go语言，前两个月也断断续续用Golang刷了100道左右的算法题。然而:(最近一个月工作比较忙就搁置了一段，今天看了下https://github.com/xiaozhazi/leetcode_go 距上次commit已经有近一个月的时间了 - _ -#。
@@ -147,7 +147,7 @@ There are two ways to reach the bottom-right corner:
 <p><strong>需要特别注意的是要开始OR结束点值为1的情况</strong></p>
 <p>核心代码如下</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">func DFS(obstacleGrid [][]int, i, j int) &#123;</div><div class="line">    m, n := len(obstacleGrid), len(obstacleGrid[0])</div><div class="line">    if i == m - 1 &amp;&amp; j == n - 1  &amp;&amp; obstacleGrid[i][j] != 1&#123;</div><div class="line">        count++</div><div class="line">        return </div><div class="line">    &#125;</div><div class="line">    if i &lt; m - 1 &amp;&amp; obstacleGrid[i+1][j] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i + 1, j)</div><div class="line">    &#125;</div><div class="line">    if j &lt; n - 1 &amp;&amp; obstacleGrid[i][j+1] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i, j + 1)</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>递推算法基本类似于暴力求解无重复又没有遗漏的穷举出所有走法。果不其然提交后TLE : (</p>
+<p>递推算法基本类似于暴力求解，无重复又没有遗漏的穷举出所有走法。果不其然代码提交后TLE : (</p>
 <p>继续分析这道题，对于图中任一个非障碍点(i,j)，从起始位置走到该点的路径个数可以通过走到该点的左边位置（i-1,j)和上方位置(i,j-1)的路径个数之和计算， 即</p>
 <p><code>dp[i][j] = dp[i-1][j] + dp[i][j-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
 <p>因此可以改用DP算法来解决，同样为了优化算法效率我们通过一个一维数组在存储状态集合，此时状态方程为<br><code>dp[i] += dp[i-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
@@ -168,6 +168,15 @@ There are two ways to reach the bottom-right corner:
   
     
 <nav id="article-nav">
+  
+    <a href="/2019/06/16/K8S学习之——etcd/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          K8S学习之——ETCD
+        
+      </div>
+    </a>
   
   
     <a href="/2019/04/17/重归博客/" id="article-nav-older" class="article-nav-link-wrap">
@@ -192,7 +201,7 @@ There are two ways to reach the bottom-right corner:
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/K8S/">K8S</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -202,7 +211,7 @@ There are two ways to reach the bottom-right corner:
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
+      <a href="/tags/K8S/" style="font-size: 10px;">K8S</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
     </div>
   </div>
 
@@ -211,7 +220,7 @@ There are two ways to reach the bottom-right corner:
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 
@@ -222,6 +231,10 @@ There are two ways to reach the bottom-right corner:
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2019/06/16/K8S学习之——etcd/">K8S学习之——ETCD</a>
+          </li>
         
           <li>
             <a href="/2019/04/18/Dynamic-Programming/">Dynamic Programming</a>
@@ -237,10 +250,6 @@ There are two ways to reach the bottom-right corner:
         
           <li>
             <a href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周</a>
-          </li>
-        
-          <li>
-            <a href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周</a>
           </li>
         
       </ul>
