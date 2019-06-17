@@ -18,7 +18,7 @@ Secure: automatic">
 Simple: well-defined, user-facing API (gRPC)  
 Secure: automatic">
 <meta property="og:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/raft-states.jpg">
-<meta property="og:updated_time" content="2019-06-17T16:09:07.008Z">
+<meta property="og:updated_time" content="2019-06-17T16:13:08.858Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernetes学习——etcd">
 <meta name="twitter:description" content="K8S学习之——ETCDEtcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  
@@ -112,28 +112,28 @@ Secure: automatic">
           
         <h2 id="K8S学习之——ETCD"><a href="#K8S学习之——ETCD" class="headerlink" title="K8S学习之——ETCD"></a>K8S学习之——ETCD</h2><p>Etcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  </p>
 <ul>
-<li>Simple: well-defined, user-facing API (gRPC)  </li>
-<li>Secure: automatic TLS with optional client cert authentication  </li>
-<li>Fast: benchmarked 10,000 writes/sec  </li>
-<li>Reliable: properly distributed using Raft<br>简单来说etcd是kubernetes提供默认的存储系统，通过分布式KV存储来保存集群中重要的数据，因此我们使用时需要为etcd数据提供备份计划。</li>
+<li><strong>Simple</strong>: well-defined, user-facing API (gRPC)  </li>
+<li><strong>Secure</strong>: automatic TLS with optional client cert authentication  </li>
+<li><strong>Fast</strong>: benchmarked 10,000 writes/sec  </li>
+<li><strong>Reliable</strong>: properly distributed using Raft<br>简单来说etcd是kubernetes提供默认的存储系统，通过分布式KV存储来保存集群中重要的数据，因此我们使用时需要为etcd数据提供备份计划。</li>
 </ul>
 <p>Etcd is written in Go and uses the Raft consensus algorithm to manage a highly-available replicated log.<br>它通过raft一致性算法来实现可靠的分布式存储，我们上个月在team meetup中也是主要探讨了raft算法原理以及它与zookeeper的一些区别，在此通过本文记录下。  </p>
 <h3 id="Raft算法原理"><a href="#Raft算法原理" class="headerlink" title="Raft算法原理"></a>Raft算法原理</h3><p>Raft算法和zookeeper类似，都是通过大多数机制来保证一致性。在Raft算法中通过选举出来的leader节点来接收客户端的请求日志数据，然后同步到集群中其它节点进行复制，当日志已经同步到超多半数以上节点的时候，该日志状态变为committed可提交状态，即可以提交到状态机中执行。此外leader节点还要通知其他节点哪些日志已经被复制成功。</p>
 <p><em>Raft算法将要解决的一致性问题分为以下三个子问题：</em>  </p>
 <ul>
-<li>leader选举： 通过心跳机制来触发leader选举，保证集群中存在一个leader节点  </li>
-<li>日志复制： leader节点将来自客户端的请求序列化成日志数据并且同步复制到其它节点  </li>
-<li>安全性： 如果某个节点已经将一条日志数据提交到状态机中执行，那么其他节点不可能再将此条数据输入到状态机中重复执行。  </li>
+<li><strong>leader选举：</strong> 通过心跳机制来触发leader选举，保证集群中存在一个leader节点  </li>
+<li><strong>日志复制：</strong> leader节点将来自客户端的请求序列化成日志数据并且同步复制到其它节点  </li>
+<li><strong>安全性：</strong> 如果某个节点已经将一条日志数据提交到状态机中执行，那么其他节点不可能再将此条数据输入到状态机中重复执行。  </li>
 </ul>
 <p><em>Raft算法需要保证以下几个特性：</em>  </p>
 <ul>
-<li>Election Safety：在一个任期内最多只能存在一个leader节点  </li>
-<li>Leader Append-Only：leader节点只能添加日志数据，不会删除/覆盖以前的数据  </li>
-<li>Log Matching：如果两个节点的日志在某个索引上的日志数据和任期号都相同，那么在此index之前的日志数据一定也匹配  </li>
-<li>Leader Completeness：如果一条日志在某个任期被提交，那么该条日志数据在leader节点上更高任期号的日志数据中一定存在。  </li>
-<li>State Machine Safety：一条提交到raft状态机执行过的数据不可能再被其他节点提交执行。</li>
+<li><strong>Election Safety：</strong>在一个任期内最多只能存在一个leader节点  </li>
+<li><strong>Leader Append-Only：</strong>leader节点只能添加日志数据，不会删除/覆盖以前的数据  </li>
+<li><strong>Log Matching：</strong>如果两个节点的日志在某个索引上的日志数据和任期号都相同，那么在此index之前的日志数据一定也匹配  </li>
+<li><strong>Leader Completeness：</strong>如果一条日志在某个任期被提交，那么该条日志数据在leader节点上更高任期号的日志数据中一定存在。  </li>
+<li><strong>State Machine Safety：</strong>一条提交到raft状态机执行过的数据不可能再被其他节点提交执行。</li>
 </ul>
-<h4 id="Leader选举"><a href="#Leader选举" class="headerlink" title="Leader选举"></a>Leader选举</h4><p><em>Node节点状态</em>  </p>
+<h4 id="Leader选举"><a href="#Leader选举" class="headerlink" title="Leader选举"></a>Leader选举</h4><p><strong><em>Node节点状态</em></strong>  </p>
 <ul>
 <li>Leader： 领导者，一个集群中只能存在一个leader  </li>
 <li>Follower：跟随者，一个客户端的操作请求发送到follower上面，会首先由follwer重定向到leader上  </li>
@@ -148,16 +148,14 @@ Secure: automatic">
 <li>若Candidate节点接收到来自Leader节点的消息，或者任期号更高的消息，即集群中已经存在Leader节点，此时节点状态切换回Follower</li>
 <li>Leader节点如果收到来自更高任期号的消息则切换回Follower节点（常见网络分区场景下）</li>
 </ol>
-<p><em>其中节点之间的通信通过RPC来完成，etcd中主要由两种RPC请求：</em>  </p>
+<p><strong><em>其中节点之间的通信通过RPC来完成，etcd中主要由两种RPC请求：</em></strong>  </p>
 <ul>
 <li>RequestVote 用于Candidate节点发起选举  </li>
 <li>AppendEntries 用于Leader节点向其他节点进行复制日志数据，以及同步心跳</li>
 </ul>
-<p><em>Raft算法通过心跳机制来触发Leader选举</em></p>
-<p>节点启动时状态为Follower，只要一直接收到来自Leader或者Candidate的正常RPC消息，就会一直保持为Follower状态。</p>
-<p>Leader节点周期性的向其它节点发送心跳请求来保持Leader状态，其中心跳请求即带有空数据的AppendEntries。  </p>
-<p>每个Follower节点都有一个选举超时定时器，如果在超时之前都没有接收到Leader的心跳请求将发起选举。发起选举时，Follower将自身的任期号+1并且切换到Candidate状态，然后向集群中其它节点发送RequestVote请求进行选举。  </p>
-<p>Candidate节点保持状态不变，直到以下情况之一发生：    </p>
+<p><strong><em>Raft算法通过心跳机制来触发Leader选举</em></strong></p>
+<p>节点启动时状态为Follower，只要一直接收到来自Leader或者Candidate的正常RPC消息，就会一直保持为Follower状态。<br>Leader节点周期性的向其它节点发送心跳请求来保持Leader状态，其中心跳请求即带有空数据的AppendEntries。<br>每个Follower节点都有一个选举超时定时器，如果在超时之前都没有接收到Leader的心跳请求将发起选举。发起选举时，Follower将自身的任期号+1并且切换到Candidate状态，然后向集群中其它节点发送RequestVote请求进行选举。  </p>
+<p><strong><em>Candidate节点保持状态不变，直到以下情况之一发生：</em></strong>   </p>
 <ul>
 <li>该节点收到集群中半数以上的节点投票，即赢得选举；  </li>
 <li>节点收到来自Leader节点的数据；  </li>
