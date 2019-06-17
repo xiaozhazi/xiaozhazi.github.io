@@ -18,7 +18,7 @@ Secure: automatic">
 Simple: well-defined, user-facing API (gRPC)  
 Secure: automatic">
 <meta property="og:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/raft-states.jpg">
-<meta property="og:updated_time" content="2019-06-17T16:05:31.680Z">
+<meta property="og:updated_time" content="2019-06-17T16:09:07.008Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernetes学习——etcd">
 <meta name="twitter:description" content="K8S学习之——ETCDEtcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  
@@ -148,15 +148,19 @@ Secure: automatic">
 <li>若Candidate节点接收到来自Leader节点的消息，或者任期号更高的消息，即集群中已经存在Leader节点，此时节点状态切换回Follower</li>
 <li>Leader节点如果收到来自更高任期号的消息则切换回Follower节点（常见网络分区场景下）</li>
 </ol>
-<p>其中节点之间的通信通过RPC来完成，etcd中主要由两种RPC请求：  </p>
+<p><em>其中节点之间的通信通过RPC来完成，etcd中主要由两种RPC请求：</em>  </p>
 <ul>
 <li>RequestVote 用于Candidate节点发起选举  </li>
 <li>AppendEntries 用于Leader节点向其他节点进行复制日志数据，以及同步心跳</li>
 </ul>
-<p>Raft算法就是通过心跳机制来出发Leader选举。<br>节点启动时状态为Follower，只要一直接收到来自Leader或者Candidate的正常RPC消息，就会一直保持为Follower状态。<br>Leader节点周期性的向其它节点发送心跳请求来保持Leader状态，其中心跳请求即带有空数据的AppendEntries。<br>每个Follower节点都有一个选举超时定时器，如果在超时之前都没有接收到Leader的心跳请求将发起选举。发起选举时，Follower将自身的任期号+1并且切换到Candidate状态，然后向集群中其它节点发送RequestVote请求进行选举。<br>Candidate节点保持状态不变，直到以下情况之一发生：  </p>
+<p><em>Raft算法通过心跳机制来触发Leader选举</em></p>
+<p>节点启动时状态为Follower，只要一直接收到来自Leader或者Candidate的正常RPC消息，就会一直保持为Follower状态。</p>
+<p>Leader节点周期性的向其它节点发送心跳请求来保持Leader状态，其中心跳请求即带有空数据的AppendEntries。  </p>
+<p>每个Follower节点都有一个选举超时定时器，如果在超时之前都没有接收到Leader的心跳请求将发起选举。发起选举时，Follower将自身的任期号+1并且切换到Candidate状态，然后向集群中其它节点发送RequestVote请求进行选举。  </p>
+<p>Candidate节点保持状态不变，直到以下情况之一发生：    </p>
 <ul>
 <li>该节点收到集群中半数以上的节点投票，即赢得选举；  </li>
-<li>节点收到来自Leader节点的数据；</li>
+<li>节点收到来自Leader节点的数据；  </li>
 <li>选举超时到来</li>
 </ul>
 
