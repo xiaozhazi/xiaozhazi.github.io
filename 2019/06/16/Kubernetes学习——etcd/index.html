@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Kubernetes学习——etcd | Frances Hu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="K8S学习之——ETCDEtcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  
+
+Simple: well-defined, user-facing API (gRPC)  
+Secure: automatic">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes学习——etcd">
+<meta property="og:url" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="K8S学习之——ETCDEtcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  
+
+Simple: well-defined, user-facing API (gRPC)  
+Secure: automatic">
+<meta property="og:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/raft-states.jpg">
+<meta property="og:updated_time" content="2019-06-17T16:05:31.680Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kubernetes学习——etcd">
+<meta name="twitter:description" content="K8S学习之——ETCDEtcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  
+
+Simple: well-defined, user-facing API (gRPC)  
+Secure: automatic">
+<meta name="twitter:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/raft-states.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Frances Hu&#39;s Blog</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">My idol is Chris Lee!</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/tags/life">Life</a>
+        
+          <a class="main-nav-link" href="/tags/go">GO</a>
+        
+          <a class="main-nav-link" href="/tags/kubernetes">K8S</a>
+        
+          <a class="main-nav-link" href="/tags/algorithm">Algorithm</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://xiaozhazi.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Kubernetes学习——etcd" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/06/16/Kubernetes学习——etcd/" class="article-date">
+  <time datetime="2019-06-16T14:57:55.000Z" itemprop="datePublished">2019-06-16</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Kubernetes学习——etcd
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          <!-- Table of Contents -->
+          
+        <h2 id="K8S学习之——ETCD"><a href="#K8S学习之——ETCD" class="headerlink" title="K8S学习之——ETCD"></a>K8S学习之——ETCD</h2><p>Etcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  </p>
+<ul>
+<li>Simple: well-defined, user-facing API (gRPC)  </li>
+<li>Secure: automatic TLS with optional client cert authentication  </li>
+<li>Fast: benchmarked 10,000 writes/sec  </li>
+<li>Reliable: properly distributed using Raft<br>简单来说etcd是kubernetes提供默认的存储系统，通过分布式KV存储来保存集群中重要的数据，因此我们使用时需要为etcd数据提供备份计划。</li>
+</ul>
+<p>Etcd is written in Go and uses the Raft consensus algorithm to manage a highly-available replicated log.<br>它通过raft一致性算法来实现可靠的分布式存储，我们上个月在team meetup中也是主要探讨了raft算法原理以及它与zookeeper的一些区别，在此通过本文记录下。  </p>
+<h3 id="Raft算法原理"><a href="#Raft算法原理" class="headerlink" title="Raft算法原理"></a>Raft算法原理</h3><p>Raft算法和zookeeper类似，都是通过大多数机制来保证一致性。在Raft算法中通过选举出来的leader节点来接收客户端的请求日志数据，然后同步到集群中其它节点进行复制，当日志已经同步到超多半数以上节点的时候，该日志状态变为committed可提交状态，即可以提交到状态机中执行。此外leader节点还要通知其他节点哪些日志已经被复制成功。</p>
+<p><em>Raft算法将要解决的一致性问题分为以下三个子问题：</em>  </p>
+<ul>
+<li>leader选举： 通过心跳机制来触发leader选举，保证集群中存在一个leader节点  </li>
+<li>日志复制： leader节点将来自客户端的请求序列化成日志数据并且同步复制到其它节点  </li>
+<li>安全性： 如果某个节点已经将一条日志数据提交到状态机中执行，那么其他节点不可能再将此条数据输入到状态机中重复执行。  </li>
+</ul>
+<p><em>Raft算法需要保证以下几个特性：</em>  </p>
+<ul>
+<li>Election Safety：在一个任期内最多只能存在一个leader节点  </li>
+<li>Leader Append-Only：leader节点只能添加日志数据，不会删除/覆盖以前的数据  </li>
+<li>Log Matching：如果两个节点的日志在某个索引上的日志数据和任期号都相同，那么在此index之前的日志数据一定也匹配  </li>
+<li>Leader Completeness：如果一条日志在某个任期被提交，那么该条日志数据在leader节点上更高任期号的日志数据中一定存在。  </li>
+<li>State Machine Safety：一条提交到raft状态机执行过的数据不可能再被其他节点提交执行。</li>
+</ul>
+<h4 id="Leader选举"><a href="#Leader选举" class="headerlink" title="Leader选举"></a>Leader选举</h4><p><em>Node节点状态</em>  </p>
+<ul>
+<li>Leader： 领导者，一个集群中只能存在一个leader  </li>
+<li>Follower：跟随者，一个客户端的操作请求发送到follower上面，会首先由follwer重定向到leader上  </li>
+<li>Candidate：参与者，在此状态的节点会发起新的选举  </li>
+</ul>
+<p>节点状态切换如图所示<br><img src="/2019/06/16/Kubernetes学习——etcd/raft-states.jpg" alt>  </p>
+<ol>
+<li>所有节点启动时自动进入Follower状态</li>
+<li>Follower节点启动时会开启一个选举超时的定时器，当times out时节点切换到Candidate状态发起选举</li>
+<li>节点一旦转换为Candidate状态就开始进行选举，如果在下一次选举超时到来之前都没有选出Leader节点，那么节点会保持状态不变重新发起一次新的选举</li>
+<li>若Candidate节点收到集群中超过半数的节点选票（包含自身），那么状态切换到Leader</li>
+<li>若Candidate节点接收到来自Leader节点的消息，或者任期号更高的消息，即集群中已经存在Leader节点，此时节点状态切换回Follower</li>
+<li>Leader节点如果收到来自更高任期号的消息则切换回Follower节点（常见网络分区场景下）</li>
+</ol>
+<p>其中节点之间的通信通过RPC来完成，etcd中主要由两种RPC请求：  </p>
+<ul>
+<li>RequestVote 用于Candidate节点发起选举  </li>
+<li>AppendEntries 用于Leader节点向其他节点进行复制日志数据，以及同步心跳</li>
+</ul>
+<p>Raft算法就是通过心跳机制来出发Leader选举。<br>节点启动时状态为Follower，只要一直接收到来自Leader或者Candidate的正常RPC消息，就会一直保持为Follower状态。<br>Leader节点周期性的向其它节点发送心跳请求来保持Leader状态，其中心跳请求即带有空数据的AppendEntries。<br>每个Follower节点都有一个选举超时定时器，如果在超时之前都没有接收到Leader的心跳请求将发起选举。发起选举时，Follower将自身的任期号+1并且切换到Candidate状态，然后向集群中其它节点发送RequestVote请求进行选举。<br>Candidate节点保持状态不变，直到以下情况之一发生：  </p>
+<ul>
+<li>该节点收到集群中半数以上的节点投票，即赢得选举；  </li>
+<li>节点收到来自Leader节点的数据；</li>
+<li>选举超时到来</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/" data-id="cjx0i9yip000nwto3mt8qdmkr" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/04/18/Dynamic-Programming/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Dynamic Programming</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/06/16/Kubernetes学习——etcd/">Kubernetes学习——etcd</a>
+          </li>
+        
+          <li>
+            <a href="/2019/04/18/Dynamic-Programming/">Dynamic Programming</a>
+          </li>
+        
+          <li>
+            <a href="/2019/04/17/重归博客/">重归博客</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 Frances Hu<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/tags/life" class="mobile-nav-link">Life</a>
+  
+    <a href="/tags/go" class="mobile-nav-link">GO</a>
+  
+    <a href="/tags/kubernetes" class="mobile-nav-link">K8S</a>
+  
+    <a href="/tags/algorithm" class="mobile-nav-link">Algorithm</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
