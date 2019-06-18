@@ -18,7 +18,12 @@ Secure: automatic">
 Simple: well-defined, user-facing API (gRPC)  
 Secure: automatic">
 <meta property="og:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/raft-states.jpg">
-<meta property="og:updated_time" content="2019-06-17T16:14:50.582Z">
+<meta property="og:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/log-entries.jpg">
+<meta property="og:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/log-replication-1.jpg">
+<meta property="og:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/log-replication-2.jpg">
+<meta property="og:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/log-replication-3.jpg">
+<meta property="og:image" content="http://xiaozhazi.github.io/2019/06/16/Kubernetes学习——etcd/inconsistentlog.jpg">
+<meta property="og:updated_time" content="2019-06-18T15:38:05.039Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Kubernetes学习——etcd">
 <meta name="twitter:description" content="K8S学习之——ETCDEtcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  
@@ -161,6 +166,52 @@ Secure: automatic">
 <li>节点收到来自Leader节点的数据；  </li>
 <li>选举超时到来</li>
 </ul>
+<p>第一种情况，因为每个Follower节点在一个任期内只能给一个节点投票先来先到，通过大多数原则保证了每个任期最多只有一个节点赢得选票（存在无节点当选的情况）。当节点成为Leader后会向集群中其它节点发送心跳消息来阻止不必要的选举。<br>第二种情况，处于Candidate状态下的节点收到了来自其它节点的心跳/AppendEntries消息。如果AppendEntries请求中的任期号大于自身任期，说明集群中已经存在Leader节点，此时节点转换成Follower状态。反之如果消息中任期号小于自身，则拒绝该消息，继续保持节点状态不变。<br>第三种情况，在选举超时到来时该节点没有赢得选举且没有收到其它节点的AppendEntries消息，说明集群中没有Leader存在，该Candidate节点任期号+1，再次发起选举。<br>其中，第三种情况发生在集群节点为偶数个，且有两个Candidate节点同时选举。理论上这种无法选择Leader的情况可以无限循环下去。为了避免该情况，每个节点的选举超时时间通过随机函数决定，一般在150ms-300ms之间。 （<strong><em>我们也仔细讨论了这种情况，因为Leader发送心跳消息时间非常短暂，如果节点选举超时时间T都相同，Leader节点挂掉那么可以极端得考虑认为所有Follower节点会在同一时刻（距离上一个心跳消息T时间）得到该信息。此时会有很多Follower节点切换到Candidate状态并进行选举，任意一个节点获得大多数投票的概率都很低。 而如果每个节点的超时时间是个随机值，那么大概率集群中有一个超时时间短的节点先感知到原Leader挂掉的事实，然后首先发起选举，因为RPC消息时间耗时较短，该节点大概率能获得大多数投票。</em></strong>）  </p>
+<h4 id="日志复制"><a href="#日志复制" class="headerlink" title="日志复制"></a>日志复制</h4><p><strong><em>日志形式</em></strong></p>
+<p><img src="/2019/06/16/Kubernetes学习——etcd/log-entries.jpg" alt>  </p>
+<p>如上图所示，日志主要由以下三个成员组成：  </p>
+<ol>
+<li>index：索引号，即图中最上方的数字  </li>
+<li>term：任期号，每个日志条目中上方数字，表示该日志在哪个任期中生成  </li>
+<li>command：日志中的数据修改操作  </li>
+</ol>
+<p>如果一条日志被Leader节点同步到超过半数的节点中，被称为“<strong>成功复制</strong>”，这个日志条目就是committed状态（已经被提交）。如果某条日志条目状态为committed，那么在此日志之前的所有日志也都是committed状态。（如图中index&lt;=7的日志都是committed状态）<br>committed状态的日志可以被Leader输入到raft状态机中执行，执行过的日志状态为applied。  </p>
+<p><strong><em>日志复制过程</em></strong></p>
+<p><img src="/2019/06/16/Kubernetes学习——etcd/log-replication-1.jpg" alt><br><img src="/2019/06/16/Kubernetes学习——etcd/log-replication-2.jpg" alt><br><img src="/2019/06/16/Kubernetes学习——etcd/log-replication-3.jpg" alt></p>
+<ol>
+<li>首先客户端的消息转发到集群Leader节点上</li>
+<li>Leader节点首先在本地日志中添加一条日志</li>
+<li>Leader节点通过AppendEntries RPC消息的形式向集群中其它节点广播该日志</li>
+<li>Follower节点收到日志首先也同样在本地日志中添加一条日志</li>
+<li>Follower节点向Leader节点返回AppendEntries应答消息</li>
+<li>Leader节点收到超过半数的应答消息时认为该日志已经被成功复制，将本地的committedIndex指向该日志的index</li>
+<li>如果该committed状态的日志被提交到状态机中执行，那么Leader节点本地日志中的appliedIndex也要随之更新</li>
+<li>Leader节点在下次广播AppendEntries消息时会带上最新的committedIndex和appliedIndex，用于Follower节点本地日志的索引更新。</li>
+</ol>
+<p><strong><em>日志恢复过程</em></strong></p>
+<p>正常情况下Follower节点和Leader节点的日志会始终保持一致，但是当Leader节点突然挂掉时集群中节点日志会出现不一致的情况，当新的Leader选举出来后就需要进行相应的恢复操作。<br><img src="/2019/06/16/Kubernetes学习——etcd/inconsistentlog.jpg" alt></p>
+<p>Raft算法通过Leader节点同步来解决数据不一致问题。 对于集群中任意一个节点，Leader中都存储着两个与它们日志相关的数据。  </p>
+<ol>
+<li>nextIndex： 下一次向该Follower节点同步时的日志索引  </li>
+<li>matchIndex： 该Follower节点的最大日志索引<br>在Follower节点和Leader节点日志复制正常的情况下，nextIndex = matchIndex + 1。如果日志不一致情况出现那么该等式不成立。<br>集群中原Leader宕机，新Leader选出后将初始化nextIndex为新Leader节点的最后一条日志索引，matchIndex均为0。这样做的目的是首先从Follower节点的最后一条日志进行探索，如果不匹配则从前向后进行复制。<br>如上图所示，Leader节点存储每个Follower节点的nextIndex=10，matchIndex=0。成为Leader首次向其它节点复制日志时，会复制index&gt;=10的日志，同时带上2⃣️元组<6,10>告知Follower节点将要复制Term=6，index=10的日志数据。  </6,10></li>
+</ol>
+<ul>
+<li>只有（a）节点的最大日志数据2⃣️元组<6,9>和Leader传来的<6,10>紧邻，复制成功且matchIndex也随之更新。  </6,10></6,9></li>
+<li>其他几个节点的2⃣️元组都不匹配，返回复制失败。Leader节点收到拒绝消息后修改该follwer节点的索引数据，将nextIndex复制为matchIndex+1即1。下次同步时从索引1到10的数据给该Follwer节点，且Follower节点中未提交的数据被清除。  </li>
+</ul>
+<h4 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h4><p>Raft算法对选举进行限制来保证安全性。  </p>
+<ul>
+<li>一个节点向成为Leader就必须得到集群中超过半数的选票  </li>
+<li>节点A投票给另一个节点B的必要条件时B的日志比A的要新（首先对比任期号，相同时再比较索引）</li>
+</ul>
+<h3 id="Raft算法处理只读请求"><a href="#Raft算法处理只读请求" class="headerlink" title="Raft算法处理只读请求"></a>Raft算法处理只读请求</h3><p>一般情况下，客户端的命令需要经过日志复制过程，当集群超过半数节点应答之后才可以提交给状态机执行，执行结束后再应答给客户端。这样的流程对于只读数据来说太漫长，如果不经过这样的流程Leader节点直接将本节点上保存的数据返回给客户端又是不安全的，因为可能返回的数据已经过期。因此Raft中针对只读请求有特殊的高效处理：  </p>
+<ol>
+<li>Leader节点需要有当前已提交的日志数据。如果该节点新成为Leader需要提交一个dummy空日志来确保上一个任期的日志全部提交。  </li>
+<li>Leader节点保存该只读请求到来时的committedIndex为readIndex  </li>
+<li>Leader节点确认自己是否还是集群中的leader（广播心跳给集群中节点，收到半数以上应答即可判断）同时readIndex索引也是当前集群日志AppliedIndex的最大索引  </li>
+<li>读取Leader节点中数据  </li>
+</ol>
+<p>——————————————————————————————————————————————————————————————————<br>LastModify：2019-06-18</p>
 
       
     </div>
