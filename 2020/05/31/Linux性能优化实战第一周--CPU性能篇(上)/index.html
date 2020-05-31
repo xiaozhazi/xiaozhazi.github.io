@@ -9,18 +9,18 @@
 第一本严格意义上并不是书籍，而是极客时间上倪老师的专栏《Linux性能优化实战》。无论是软件业务逻辑还是底层架构实现，我们在设计时都要尽可能的考虑性能开销，性能优化是软件系统中最有挑战的工作之">
 <meta property="og:type" content="article">
 <meta property="og:title" content="《Linux 性能优化实战》第一周--CPU性能篇(上)">
-<meta property="og:url" content="http://xiaozhazi.github.io/2018/01/01/Linux性能优化实战第一周--CPU性能篇(上)/index.html">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
 <meta property="og:description" content="《Linux 性能优化实战》第一周–CPU性能篇(上)首先，非常感谢Go夜读杨文大佬组织了这样一个读书会， 可以让大家在繁忙的工作生活之余抽出时间来一起学习进步。希望能和群里大佬共同讨论学习，一起坚持下去。
 第一本严格意义上并不是书籍，而是极客时间上倪老师的专栏《Linux性能优化实战》。无论是软件业务逻辑还是底层架构实现，我们在设计时都要尽可能的考虑性能开销，性能优化是软件系统中最有挑战的工作之">
-<meta property="og:image" content="http://xiaozhazi.github.io/2018/01/01/Linux性能优化实战第一周--CPU性能篇(上)/week1_1.png">
-<meta property="og:image" content="http://xiaozhazi.github.io/2018/01/01/Linux性能优化实战第一周--CPU性能篇(上)/LinuxPerformanceTool.png">
-<meta property="og:updated_time" content="2020-05-31T16:40:52.953Z">
+<meta property="og:image" content="http://xiaozhazi.github.io/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/week1_1.png">
+<meta property="og:image" content="http://xiaozhazi.github.io/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/LinuxPerformanceTool.png">
+<meta property="og:updated_time" content="2020-05-31T16:45:50.892Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Linux 性能优化实战》第一周--CPU性能篇(上)">
 <meta name="twitter:description" content="《Linux 性能优化实战》第一周–CPU性能篇(上)首先，非常感谢Go夜读杨文大佬组织了这样一个读书会， 可以让大家在繁忙的工作生活之余抽出时间来一起学习进步。希望能和群里大佬共同讨论学习，一起坚持下去。
 第一本严格意义上并不是书籍，而是极客时间上倪老师的专栏《Linux性能优化实战》。无论是软件业务逻辑还是底层架构实现，我们在设计时都要尽可能的考虑性能开销，性能优化是软件系统中最有挑战的工作之">
-<meta name="twitter:image" content="http://xiaozhazi.github.io/2018/01/01/Linux性能优化实战第一周--CPU性能篇(上)/week1_1.png">
+<meta name="twitter:image" content="http://xiaozhazi.github.io/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/week1_1.png">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -83,8 +83,8 @@
       <div class="outer">
         <section id="main"><article id="post-Linux性能优化实战第一周--CPU性能篇(上)" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2018/01/01/Linux性能优化实战第一周--CPU性能篇(上)/" class="article-date">
-  <time datetime="2018-01-01T00:08:26.777Z" itemprop="datePublished">2018-01-01</time>
+    <a href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/" class="article-date">
+  <time datetime="2020-05-31T14:57:55.000Z" itemprop="datePublished">2020-05-31</time>
 </a>
     
   </div>
@@ -110,7 +110,7 @@
 <p>在平时工作中我也会经常遇到一些性能相关的问题，不知如何排查和解决。希望读完这个专栏后能真正做到<strong>将性能问题和系统原理关联起来，特别是把系统从应用程序、库函数、系统调用再到内核和硬件等不同的层级贯穿起来</strong>。</p>
 <h2 id="1-如何学习Linux性能优化"><a href="#1-如何学习Linux性能优化" class="headerlink" title="1. 如何学习Linux性能优化"></a>1. 如何学习Linux性能优化</h2><p>解决性能问题首先需要理解应用程序和系统的少数几个基本原理，再<strong>进行大量的实战练习</strong>，建立起整体性能的全局观。</p>
 <h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><p>高并发和响应快对应着性能优化的两个核心指标：<strong>吞吐</strong>和<strong>延时</strong>。</p>
-<p><img src="/2018/01/01/Linux性能优化实战第一周--CPU性能篇(上)/week1_1.png" alt>  </p>
+<p><img src="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/week1_1.png" alt>  </p>
 <ul>
 <li><strong>应用负载</strong>角度：直接影响了产品终端的用户体验</li>
 <li><strong>系统资源</strong>角度：资源使用率、饱和度等 </li>
@@ -124,7 +124,7 @@
 <li>性能监控和告警</li>
 </ul>
 <p>对于不同的性能问题要选取不同的性能分析工具。 下面是常用的Linux Performance Tools以及对应分析的性能问题类型。（后续课程中会用到）</p>
-<p><img src="/2018/01/01/Linux性能优化实战第一周--CPU性能篇(上)/LinuxPerformanceTool.png" alt>  </p>
+<p><img src="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/LinuxPerformanceTool.png" alt>  </p>
 <h3 id="学习重点"><a href="#学习重点" class="headerlink" title="学习重点"></a>学习重点</h3><p>建立整体系统性能的全局观：</p>
 <ul>
 <li>理解最基本的几个系统知识原理</li>
@@ -275,7 +275,7 @@ ps aux | grep &apos;/app&apos;
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2018/01/01/Linux性能优化实战第一周--CPU性能篇(上)/" data-id="ckavajk0u00001ao3cp0vqio0" class="article-share-link">Share</a>
+      <a data-url="http://xiaozhazi.github.io/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/" data-id="ckavajk0u00001ao3cp0vqio0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux性能优化实战/">Linux性能优化实战</a></li></ul>
@@ -286,19 +286,10 @@ ps aux | grep &apos;/app&apos;
     
 <nav id="article-nav">
   
-    <a href="/2019/04/17/重归博客/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          重归博客
-        
-      </div>
-    </a>
   
-  
-    <a href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2019/06/16/Kubernetes学习——etcd/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周</div>
+      <div class="article-nav-title">Kubernetes学习——etcd</div>
     </a>
   
 </nav>
@@ -337,7 +328,7 @@ ps aux | grep &apos;/app&apos;
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">五月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 
@@ -350,6 +341,10 @@ ps aux | grep &apos;/app&apos;
       <ul>
         
           <li>
+            <a href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/">《Linux 性能优化实战》第一周--CPU性能篇(上)</a>
+          </li>
+        
+          <li>
             <a href="/2019/06/16/Kubernetes学习——etcd/">Kubernetes学习——etcd</a>
           </li>
         
@@ -359,10 +354,6 @@ ps aux | grep &apos;/app&apos;
         
           <li>
             <a href="/2019/04/17/重归博客/">重归博客</a>
-          </li>
-        
-          <li>
-            <a href="/2018/01/01/Linux性能优化实战第一周--CPU性能篇(上)/">《Linux 性能优化实战》第一周--CPU性能篇(上)</a>
           </li>
         
           <li>
