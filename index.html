@@ -115,7 +115,7 @@
 <li>性能分析定位瓶颈</li>
 <li>性能监控和告警</li>
 </ul>
-<p>对于不同的性能问题要选取不同的性能分析工具。 下面是常用的Linux Performance Tools以及对应分析的性能问题类型。（后续课程中会用到）</p>
+<p>对于不同的性能问题要选取不同的性能分析工具。 下面是常用的Linux Performance Tools以及对应分析的性能问题类型。</p>
 <p><img src="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/LinuxPerformanceTool.png" alt>  </p>
 <h3 id="学习重点"><a href="#学习重点" class="headerlink" title="学习重点"></a>学习重点</h3><p>建立整体系统性能的全局观：</p>
 <ul>
@@ -149,7 +149,7 @@ watch -d uptime              #查看平均负载变化情况
 mpstat -P ALL S              #查看CPU使用率的变化情况
 </code></pre><p>此实验中，CPU严重过载，8个进程在抢占CPU，导致平均负载升高</p>
 <pre><code>pidstat -u 5 1               #可以查看具体哪个进程导致了CPU使用率高
-</code></pre><p>总结来说： 平均负载高时可能是CPU密集型进程导致，也可能是I/O繁忙导致。具体分析时可以结合mpstat/pidstat工具辅助分析负载来源。</p>
+</code></pre><p>###总结<br> <strong>平均负载高时可能是CPU密集型进程导致，也可能是I/O繁忙导致。具体分析时可以结合mpstat/pidstat工具辅助分析负载来源。</strong></p>
 <h2 id="3-经常说的CPU上下文切换是什么意思？-上"><a href="#3-经常说的CPU上下文切换是什么意思？-上" class="headerlink" title="3. 经常说的CPU上下文切换是什么意思？(上)"></a>3. 经常说的CPU上下文切换是什么意思？(上)</h2><p><strong>CPU上下文切换</strong>，就是把前一个任务的CPU上下文（CPU寄存器和PC）保存起来，然后加载新任务的上下文到这些寄存器和程序计数器，最后再跳转到程序计数器所指的位置，运行新任务。其中，保存下来的上下文会存储在系统内核中，待任务重新调度执行时再加载，保证原来的任务状态不受影响。</p>
 <p>按照任务类型，CPU上下文切换分为：</p>
 <ul>
@@ -173,7 +173,8 @@ mpstat -P ALL S              #查看CPU使用率的变化情况
 </ul>
 <p>同进程的线程切换消耗资源较少，这也是多线程的优势。</p>
 <h3 id="中断上下文切换"><a href="#中断上下文切换" class="headerlink" title="中断上下文切换"></a>中断上下文切换</h3><p>中断上下文切换并不涉及到进程的用户态，因此中断上下文只包括内核态中断服务程序执行所必须的状态（CPU寄存器，内核堆栈，硬件中断参数等）。</p>
-<p>中断处理优先级比进程高，所以中断上下文切换和进程上下文切换不会同时发生。</p>
+<p><strong>中断处理优先级比进程高，所以中断上下文切换和进程上下文切换不会同时发生。</strong></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><strong>尽量在程序中使用多线程，因为多线程上下文切换资源消耗较少。</strong></p>
 <h2 id="4-经常说的CPU上下文切换是什么意思？-下"><a href="#4-经常说的CPU上下文切换是什么意思？-下" class="headerlink" title="4. 经常说的CPU上下文切换是什么意思？(下)"></a>4. 经常说的CPU上下文切换是什么意思？(下)</h2><p>通过vmstat可以查看系统总体的上下文切换情况。</p>
 <pre><code>vmstat 5         #每隔5s输出一组数据
 </code></pre><ul>
@@ -202,7 +203,7 @@ in列： 中断次数明显上升，说明中断处理也是潜在问题
 <p>另外对于中断次数过多，我们可以通过/proc/interrupts文件读取</p>
 <pre><code>watch -d cat /proc/interrupts
 </code></pre><p>发现次数变化速度最快的是重调度中断（RES），该中断用来唤醒空闲状态的CPU来调度新的任务运行。分析还是因为过多任务的调度问题，和上下文切换分析一致。</p>
-<p><strong>每秒上下文切换多少才正常呢？</strong><br>经验来说，当每秒上下文切换超过1w次，或者切换次数出现数量级的增长时，系统可能出现了性能问题。此时可以根据上下文切换类型来具体分析是I/O问题还是CPU瓶颈，或者具体哪一类中断导致的异常。</p>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p><strong>每秒上下文切换多少才正常呢？</strong><br><strong>经验来说，当每秒上下文切换超过1w次，或者切换次数出现数量级的增长时，系统可能出现了性能问题。此时可以根据上下文切换类型来具体分析是I/O问题还是CPU瓶颈，或者具体哪一类中断导致的异常。</strong></p>
 <h2 id="5-某个应用的CPU使用率达到100-，怎么办？"><a href="#5-某个应用的CPU使用率达到100-，怎么办？" class="headerlink" title="5. 某个应用的CPU使用率达到100%，怎么办？"></a>5. 某个应用的CPU使用率达到100%，怎么办？</h2><p>Linux作为多任务操作系统，将CPU时间划分为很短的时间片，通过调度器轮流分配给各个任务使用。为了维护CPU时间，Linux通过事先定义的节拍率，触发时间中断，并使用全局变了jiffies记录开机以来的节拍数。时间中断发生一次该值+1.</p>
 <p><strong>CPU使用率</strong>，除了空闲时间以外的其他时间占总CPU时间的百分比。可以通过/proc/stat中的数据来计算出CPU使用率。因为/proc/stat时开机以来的节拍数累加值，计算出来的是开机以来的平均CPU使用率，一般意义不大。可以间隔取一段时间的两次值作差来计算该段时间内的平均CPU使用率。 <strong>性能分析工具给出的都是间隔一段时间的平均CPU使用率，要注意间隔时间的设置。</strong></p>
 <p>CPU使用率可以通过top 或 ps来查看。分析进程的CPU问题可以通过perf，它以性能事件采样为基础，不仅可以分析系统的各种事件和内核性能，还可以用来分析指定应用程序的性能问题。</p>
@@ -215,7 +216,7 @@ ab -c 10 -n 100 http://XXX.XXX.XXX.XXX:10000/ #测试Nginx服务性能
 <p>接着用perf来分析具体是php-fpm中哪个函数导致该问题。</p>
 <pre><code>perf top -g -p XXXX #对某一个php-fpm进程进行分析
 </code></pre><p>发现其中sqrt和add_function占用CPU过多， 此时查看源码找到原来是sqrt中在发布前没有删除测试代码段，存在一个百万次的循环导致。 将该无用代码删除后发现nginx负载能力明显提升。</p>
-<p>总结： 在碰到CPU使用率过高问题时，可以借助top pidstat确定引发CPU性能问题的来源，然后用perf来具体定位到引起性能问题的函数。可以用来代码性能进一步优化。</p>
+<h3 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h3><p><strong>在碰到CPU使用率过高问题时，可以借助top pidstat确定引发CPU性能问题的来源，然后用perf来具体定位到引起性能问题的函数。可以用来代码性能进一步优化。</strong></p>
 <h2 id="6-系统的CPU使用率很高，为什么找不到高CPU的应用？"><a href="#6-系统的CPU使用率很高，为什么找不到高CPU的应用？" class="headerlink" title="6. 系统的CPU使用率很高，为什么找不到高CPU的应用？"></a>6. 系统的CPU使用率很高，为什么找不到高CPU的应用？</h2><p>按照上篇的CPU性能问题分析套路，看起来CPU使用率问题很容易排查，真实场景中却不然。</p>
 <h3 id="实验案例分析"><a href="#实验案例分析" class="headerlink" title="实验案例分析"></a>实验案例分析</h3><pre><code>sudo docker run --name nginx -p 10000:80 -itd feisky/nginx:sp
 sudo docker run --name phpfpm -itd --network container:nginx feisky/php-fpm:sp
@@ -232,7 +233,7 @@ ab -c 100 -n 1000 http://XXX.XXX.XXX.XXX:10000/ #并发100个请求测试
 <pre><code>pstree | grep stress
 </code></pre><p>发现是php-fpm调用的该子进程，此时去查看源码可以看出每个请求都会调用一个stress命令来模拟I/O压力。 之前top显示的结果是CPU使用率升高，是否真的是由该stress命令导致的，还需要继续分析。 代码中给每个请求加了verbose=1的参数后可以查看stress命令的输出，在中断测试该命令结果显示stress命令运行时存在因权限问题导致的文件创建失败的bug。</p>
 <p>此时依旧只是猜测，下一步继续通过perf工具来分析。性能报告显示确实时stress占用了大量的CPU，通过修复权限问题来优化解决即可。</p>
-<p>总结： 对于常规问题无法解释的CPU使用率场景，首先要想到可能时短时应用导致的问题。对于短时进程，还可以用execsnoop工具来进行监控。</p>
+<h3 id="总结-3"><a href="#总结-3" class="headerlink" title="总结"></a>总结</h3><p><strong>对于常规问题无法解释的CPU使用率场景，首先要想到可能时短时应用导致的问题。对于短时进程，还可以用execsnoop工具来进行监控。</strong></p>
 <h2 id="7-8-系统中出现大量不可中断进程和僵尸进程怎么办？"><a href="#7-8-系统中出现大量不可中断进程和僵尸进程怎么办？" class="headerlink" title="7/8. 系统中出现大量不可中断进程和僵尸进程怎么办？"></a>7/8. 系统中出现大量不可中断进程和僵尸进程怎么办？</h2><h3 id="进程状态"><a href="#进程状态" class="headerlink" title="进程状态"></a>进程状态</h3><ul>
 <li>R Running/Runnable，表示进程在CPU的就绪队列中，正在运行或者等待运行；</li>
 <li>D Disk Sleep，不可中断状态睡眠，一般表示进程正在跟硬件交互，并且交互过程中不允许被其他进程中断；</li>
@@ -261,7 +262,8 @@ ps aux | grep &apos;/app&apos;
 <p>通过层层分析后，root cause是app内部进行了磁盘的直接I/O。然后定位到具体代码位置进行优化即可。</p>
 <h4 id="僵尸进程"><a href="#僵尸进程" class="headerlink" title="僵尸进程"></a>僵尸进程</h4><p>上述优化后iowait显著下降，但是僵尸进程数量仍旧在增加。首先要定位僵尸进程的父进程，通过pstree -aps XXX，打印出该僵尸进程的调用树，发现父进程就是app进程。</p>
 <p>查看app代码，看看子进程结束的处理是否正确（是否调用wait()/waitpid(),有没有注册SIGCHILD信号的处理函数等）。</p>
-<p>总结： 碰到iowait升高时，先用dstat pidstat等工具确认是否存在磁盘I/O问题，再找是哪些进程导致I/O，不能用strace直接分析进程调用时可以通过perf工具分析。 对于僵尸问题，用pstree找到父进程，然后看源码检查子进程结束的处理逻辑即可。</p>
+<h3 id="总结-4"><a href="#总结-4" class="headerlink" title="总结"></a>总结</h3><p><strong>碰到iowait升高时，先用dstat pidstat等工具确认是否存在磁盘I/O问题，再找是哪些进程导致I/O，不能用strace直接分析进程调用时可以通过perf工具分析。</strong></p>
+<p><strong>对于僵尸问题，用pstree找到父进程，然后看源码检查子进程结束的处理逻辑即可。</strong></p>
 <p>——————————————————————————————————————————————————————————————————<br>LastModify：2020-05-31</p>
 
       
