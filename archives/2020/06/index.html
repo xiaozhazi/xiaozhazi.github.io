@@ -3,39 +3,14 @@
 <head>
   <meta charset="utf-8">
   
-  <title>AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周 | Frances Hu&#39;s Blog</title>
+  <title>归档: 2020/6 | Frances Hu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="11、Application Example: Photo OCR11.1、Photo OCR11.1.1、problem description and pipelinephoto OCR pipeline 
-
-Text detection
-Character segmentation
-Character classification
-
-11.1.2、sliding window对整个图片进行分">
-<meta property="og:type" content="article">
-<meta property="og:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周">
-<meta property="og:url" content="http://xiaozhazi.github.io/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Frances Hu's Blog">
+<meta property="og:url" content="http://xiaozhazi.github.io/archives/2020/06/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
-<meta property="og:description" content="11、Application Example: Photo OCR11.1、Photo OCR11.1.1、problem description and pipelinephoto OCR pipeline 
-
-Text detection
-Character segmentation
-Character classification
-
-11.1.2、sliding window对整个图片进行分">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/11_1.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/11_2.png">
-<meta property="og:updated_time" content="2019-04-19T16:34:09.450Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周">
-<meta name="twitter:description" content="11、Application Example: Photo OCR11.1、Photo OCR11.1.1、problem description and pipelinephoto OCR pipeline 
-
-Text detection
-Character segmentation
-Character classification
-
-11.1.2、sliding window对整个图片进行分">
-<meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/11_1.png">
+<meta name="twitter:title" content="Frances Hu's Blog">
   
     <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
   
@@ -96,80 +71,39 @@ Character classification
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/" class="article-date">
-  <time datetime="2016-12-31T07:54:03.000Z" itemprop="datePublished">2016-12-31</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+        <section id="main">
   
-    <h1 class="article-title" itemprop="name">
-      AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2020" class="archive-year">2020</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" class="archive-article-date">
+  <time datetime="2020-06-03T14:57:55.000Z" itemprop="datePublished">6月 3</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/">《Linux 性能优化实战》第一周--CPU性能篇(下)</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          <!-- Table of Contents -->
-          
-        <h1 id="11、Application-Example-Photo-OCR"><a href="#11、Application-Example-Photo-OCR" class="headerlink" title="11、Application Example: Photo OCR"></a>11、Application Example: Photo OCR</h1><h2 id="11-1、Photo-OCR"><a href="#11-1、Photo-OCR" class="headerlink" title="11.1、Photo OCR"></a>11.1、Photo OCR</h2><h3 id="11-1-1、problem-description-and-pipeline"><a href="#11-1-1、problem-description-and-pipeline" class="headerlink" title="11.1.1、problem description and pipeline"></a>11.1.1、problem description and pipeline</h3><p>photo OCR pipeline </p>
-<ol>
-<li>Text detection</li>
-<li>Character segmentation</li>
-<li>Character classification</li>
-</ol>
-<h3 id="11-1-2、sliding-window"><a href="#11-1-2、sliding-window" class="headerlink" title="11.1.2、sliding window"></a>11.1.2、sliding window</h3><p>对整个图片进行分别窗口化检测</p>
-<h3 id="11-1-3、Getting-lots-of-data-Artificial-data-synthesis"><a href="#11-1-3、Getting-lots-of-data-Artificial-data-synthesis" class="headerlink" title="11.1.3、Getting lots of data: Artificial data synthesis"></a>11.1.3、Getting lots of data: Artificial data synthesis</h3><p>Synthesizing data by introducing distortions</p>
-<ol>
-<li>Distortion introduced should be representation of the type of noise/distortions in the test set.</li>
-<li>Usually does not help to add purely random/meaningless noise to your data. </li>
-</ol>
-<h3 id="11-1-4、What-part-of-the-pipeline-to-work-on-next"><a href="#11-1-4、What-part-of-the-pipeline-to-work-on-next" class="headerlink" title="11.1.4、What part of the pipeline to work on next"></a>11.1.4、What part of the pipeline to work on next</h3><p>进行分块处理的目的是，我们可以很容易的分析出那一步骤是系统性能瓶颈，需要在那一步骤上投入更多的精力。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/11_1.png" alt="11_1"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/11_2.png" alt="11_2"></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/" data-id="ckavb34zu000d52o3eqm6yrrx" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
-    
-<nav id="article-nav">
-  
-    <a href="/2019/04/17/重归博客/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          重归博客
-        
-      </div>
-    </a>
-  
-  
-    <a href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周</div>
-    </a>
-  
-</nav>
-
-  
 </article>
-
+  
+  
+    </div></section>
+  
 
 </section>
         

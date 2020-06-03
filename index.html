@@ -73,6 +73,129 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Linux性能优化实战第二周--CPU性能篇(下)" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" class="article-date">
+  <time datetime="2020-06-03T14:57:55.000Z" itemprop="datePublished">2020-06-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/">《Linux 性能优化实战》第一周--CPU性能篇(下)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          <!-- Table of Contents -->
+          
+        <h2 id="《Linux-性能优化实战》第二周–CPU性能篇-下"><a href="#《Linux-性能优化实战》第二周–CPU性能篇-下" class="headerlink" title="《Linux 性能优化实战》第二周–CPU性能篇(下)"></a>《Linux 性能优化实战》第二周–CPU性能篇(下)</h2><h3 id="9-怎么理解Linux软中断"><a href="#9-怎么理解Linux软中断" class="headerlink" title="9. 怎么理解Linux软中断"></a>9. 怎么理解Linux软中断</h3><p>本周继续学习CPU性能相关知识点,上周第8课提到不可中断状态一般都是短时进程,主要是系统的一种保护机制,保证硬件的交互过程不被意外打断. 但是如果进程长时间处于不可中断状态就需要注意是否存在磁盘I/O问题.</p>
+<p>除了iowait,软中断softirq导致CPU使用率增加的场景也比较常见.</p>
+<p>为了解决中断处理程序执行时间过长和中断丢失的问题,Linux将中断过程分为两阶段:</p>
+<ul>
+<li><strong>快速处理中断</strong> (硬中断, 会打断CPU正在执行的任务)</li>
+<li><strong>延迟处理上半部未完成的工作, 通常以内核线程的方式运行</strong> (软中断,内核线程执行)</li>
+</ul>
+<p>以网卡接收数据包为例: 网卡接收到数据包之后,先通过硬中断通知内核新数据到达.此时内核调用中断处理程序来响应. 第一步快速处理中断,将网卡数据读到内存中,然后更新硬件寄存器的状态(表示数据已经读完); 第二步发送软中断信号,内核线程从内存中找到网络数据,按照网络协议栈对数据逐层解析和处理,直到将其发送给应用程序.</p>
+<p>软中断不仅包括上述硬件设备中断处理程序的第二阶段,还包含一些内核自定义的事件. 如内核调度,RCU锁等.</p>
+<pre><code>~ cat /proc/softirqs   #查看软中断的运行情况　10种不同软中断类型
+                CPU0       CPU1       CPU2       CPU3       
+      HI:     940848    8695970     929219     958387
+   TIMER:    6032528    8523080    6185804    7882723
+  NET_TX:         13         18         10      21655
+  NET_RX:      81303      81483      74123    5497701
+   BLOCK:        112        109    1961852         73
+IRQ_POLL:          0          0          0          0
+ TASKLET:         40        152      69233      41556
+   SCHED:    5262219    6279886    5054733    5849054
+ HRTIMER:          0          0          0          0
+     RCU:    4615615    5897520    4693046    5749548
+
+➜  ~ ps -aux | grep softirq #一个CPU对应一个软中断内核线程
+  root         7  0.0  0.0      0     0 ?        S    Jun01   0:00 [ksoftirqd/0]
+  root        16  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/1]
+  root        22  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/2]
+  root        28  0.0  0.0      0     0 ?        S    Jun01   0:02 [ksoftirqd/3]
+</code></pre><h3 id="10-系统的软中断CPU使用率高，怎么解决"><a href="#10-系统的软中断CPU使用率高，怎么解决" class="headerlink" title="10. 系统的软中断ＣＰＵ使用率高，怎么解决"></a>10. 系统的软中断ＣＰＵ使用率高，怎么解决</h3><h4 id="所需工具"><a href="#所需工具" class="headerlink" title="所需工具"></a>所需工具</h4><table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sar</td>
+<td>系统报告工具,实时查看当前系统活动,配置保存和报告历史统计</td>
+</tr>
+<tr>
+<td>hping3</td>
+<td>构造TCP/IP包, 对系统进行安全审计,防火墙测试等</td>
+</tr>
+<tr>
+<td>tcpdump</td>
+<td>网络抓包工具, 用来分析各种网络问题</td>
+</tr>
+</tbody>
+</table>
+<h4 id="实验与分析"><a href="#实验与分析" class="headerlink" title="实验与分析"></a>实验与分析</h4><pre><code>sudo docker run -itd --name=nginx -p 81:80 nginx  #启动nginx服务
+curl http://localhost:81  #检查nginx服务是否正常运行
+
+hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
+</code></pre><p>本机测试中并没有监测到系统响应变慢,改为1微秒时数据包全丢, 10微秒时丢包率为80%.</p>
+<p>top查看ksoftirqd软中断进程CPU使用率也不高.</p>
+<p>继续执行后续指令</p>
+<pre><code>watch -d cat /proc/softirqs #观察高亮变化
+</code></pre><p>此时发现TIMER/NET_RX/SCHED/RCU都在不停变化,且NET_RX变化速率较快,几K级别的在增加. 其它几种类型的软中断是保证linux调度,时钟,临界区保护等正常工作必须,有变化是正常的. </p>
+<p>因此我们着手分析网络接收的软中断,选取sar工具查看网络收发情况</p>
+<pre><code>sar -n DEV 1  #每隔1秒输出网络收发报告
+
+07:01:11 PM     IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s rxcmp/s   txcmp/s  rxmcst/s   %ifutil
+07:01:12 PM veth3a2b4de      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM        lo  20895.00  20895.00    843.42    843.42      0.00      0.00      0.00      0.00
+07:01:12 PM   docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM enp0s31f6      6.00      0.00      0.85      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM vethedb691a      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM br-1665f3682889      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+</code></pre><ul>
+<li>rxpck/s txpck/s　表示每秒接收/发送的网络帧数　　PPS</li>
+<li>rxkB/s  txkB/s　　表示每秒接收/发送的千字节数　BPS　</li>
+</ul>
+<p>看到网卡lo每秒接收的数据明显较多，　843*1024/20895 =41　说明每个网络帧只有41字节，小包问题．</p>
+<p>进一步通过tcpdump分析这是什么样的网络帧</p>
+<pre><code>tcpdump -i lo -n tcp port 81
+
+18:20:43.273056 IP 127.0.0.1.12537 &gt; 127.0.0.1.81: Flags [R], seq 393134060, win 0, length 0
+18:20:43.273184 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [S], seq 1240632262, win 512, length 0
+18:20:43.273193 IP 127.0.0.1.81 &gt; 127.0.0.1.12538: Flags [S.], seq 3698133257, ack 1240632263, win 65495, options [mss 65495], length 0
+18:20:43.273198 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [R], seq 1240632263, win 0, length 0
+</code></pre><p>可以看出网络帧是发送到nginx端口，Flags [S]表示这是一个ＳＹＮ包，　可以锁定是SYN FLOOD问题，最简单的解决方法就是防火墙中封锁该来源ＩＰ．</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>如果碰到软中断线程CPU使用率高的情况下, 可以借助sar和tcpdump等工具进一步分析来源.</p>
+<h3 id="11-套路-如何迅速分析出系统CPU的瓶颈在哪里"><a href="#11-套路-如何迅速分析出系统CPU的瓶颈在哪里" class="headerlink" title="11. [套路] 如何迅速分析出系统CPU的瓶颈在哪里?"></a>11. [套路] 如何迅速分析出系统CPU的瓶颈在哪里?</h3>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.github.io/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" data-id="ckazjzxmp000010o3s6lpc1bb" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux性能优化实战/">Linux性能优化实战</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-Linux性能优化实战第一周--CPU性能篇(上)" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/" class="article-date">
@@ -976,96 +1099,10 @@ but many slower to train.
 
 
   
-    <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" class="article-date">
-  <time datetime="2016-11-27T07:46:44.000Z" itemprop="datePublished">2016-11-27</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          <!-- Table of Contents -->
-          
-        <h2 id="6、Advice-for-Applying-Machine-Learning"><a href="#6、Advice-for-Applying-Machine-Learning" class="headerlink" title="6、Advice for Applying Machine Learning"></a>6、Advice for Applying Machine Learning</h2><h3 id="6-1、Evaluating-a-learning-Algorithm"><a href="#6-1、Evaluating-a-learning-Algorithm" class="headerlink" title="6.1、Evaluating a learning Algorithm"></a>6.1、Evaluating a learning Algorithm</h3><h4 id="6-1-1、Deciding-What-to-Try-Next"><a href="#6-1-1、Deciding-What-to-Try-Next" class="headerlink" title="6.1.1、Deciding What to Try Next"></a>6.1.1、Deciding What to Try Next</h4><p>Which of the following statements about diagnostics are true? (BCD)</p>
-<p>A. It’s hard to tell what will work to improve a learning algorithm, so the best approach is to go with gut feeling and just see what works.</p>
-<p>B. Diagnostics can give guidance as to what might be more fruitful things to try to improve a learning algorithm.</p>
-<p>C. Diagnostics can be time-consuming to implement and try, but they can still be a very good use of your time.</p>
-<p>D. A diagnostic can sometimes rule out certain courses of action(changes to your learning algorithm) as being unlikely to improve its performance signigicantly.</p>
-<h4 id="6-1-2、Evaluating-a-Hypothesis"><a href="#6-1-2、Evaluating-a-Hypothesis" class="headerlink" title="6.1.2、Evaluating a Hypothesis"></a>6.1.2、Evaluating a Hypothesis</h4><p>如何评估假设函数，后面可以以此为基础讨论如何避免过拟合和欠拟合的问题。</p>
-<p>Suppose an implementation of linear regression(without reguarization) is badly overfitting the training set. In this case, we would expect:</p>
-<p>The training error to be low, and the test error to be high.</p>
-<p>数据划分为训练集和测试集，一般比例为7:3,random select。如果数据不是随机的，最好自己随机排序或打乱顺序后再选取70%.</p>
-<p>Misclassification error(0/1 misclassification error)</p>
-<h4 id="6-1-3、Model-Selection-and-Training-Validation-Test-Sets"><a href="#6-1-3、Model-Selection-and-Training-Validation-Test-Sets" class="headerlink" title="6.1.3、Model Selection and Training/Validation/Test Sets"></a>6.1.3、Model Selection and Training/Validation/Test Sets</h4><p>如何确定对于某组数据，最合适的多项式次数是几次？如何选择学习算法中的正规化参数lamda？</p>
-<p>模型选择问题。（泛化误差）</p>
-<p>我们将数据集分为三部分，training set(60%), cross validation set(20%), test set(20%).</p>
-<p>Training error</p>
-<p>cross validation error</p>
-<p>test error</p>
-<p>我们使用交叉验证集来选择模型，看这些假设在交叉验证集表现如何。选择最小交叉验证集误差的模型。</p>
-<p>Consider the model selection procedure where we choose the degree of polynomial using a cross validation set. For the final model, we might generally expect Jcv to be lower than Jtest because:</p>
-<p>An extra parameter(d,the degree of the polynomial) has been fit to the cross validation set.</p>
-<h3 id="6-2、Bias-vs-Variance-偏差和方差"><a href="#6-2、Bias-vs-Variance-偏差和方差" class="headerlink" title="6.2、Bias vs. Variance(偏差和方差)"></a>6.2、Bias vs. Variance(偏差和方差)</h3><h4 id="6-2-1、Diagnosing-Bias-vs-Variance"><a href="#6-2-1、Diagnosing-Bias-vs-Variance" class="headerlink" title="6.2.1、Diagnosing Bias vs. Variance"></a>6.2.1、Diagnosing Bias vs. Variance</h4><p>High Bias Overfitting</p>
-<p>High Variance Underfitting</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/6_1.png" alt="6_1"></p>
-<h4 id="6-2-2、Regularization-and-Bias-Variance"><a href="#6-2-2、Regularization-and-Bias-Variance" class="headerlink" title="6.2.2、Regularization and Bias/Variance"></a>6.2.2、Regularization and Bias/Variance</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_2.png" alt="6_2"></p>
-<h4 id="6-2-3、Learning-Curves"><a href="#6-2-3、Learning-Curves" class="headerlink" title="6.2.3、Learning Curves"></a>6.2.3、Learning Curves</h4><p>判断一个假设是否存在偏差方差问题</p>
-<pre><code>High Bias
-If a learning algorithm is suffering from high bias, getting more training data will not help much.
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_3.png" alt="6_3"><br>因此知道自己的假设是否存在高偏差/方差问题，非常有用。</p>
-<pre><code>High variance
-If a learning algorithm is suffering from high variance, getting more training data is likely to help.
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_4.png" alt="6_4"></p>
-<h4 id="6-2-4、Deciding-What-to-Do-Next-Revisited"><a href="#6-2-4、Deciding-What-to-Do-Next-Revisited" class="headerlink" title="6.2.4、Deciding What to Do Next Revisited"></a>6.2.4、Deciding What to Do Next Revisited</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_5.png" alt="6_5"></p>
-<h3 id="6-3、Machine-Learning-system-design"><a href="#6-3、Machine-Learning-system-design" class="headerlink" title="6.3、Machine Learning system design"></a>6.3、Machine Learning system design</h3><h4 id="6-3-1、Priorityzing-what-to-work-on"><a href="#6-3-1、Priorityzing-what-to-work-on" class="headerlink" title="6.3.1、Priorityzing what to work on"></a>6.3.1、Priorityzing what to work on</h4><h4 id="6-3-2、Error-Analysis"><a href="#6-3-2、Error-Analysis" class="headerlink" title="6.3.2、Error Analysis"></a>6.3.2、Error Analysis</h4><p>建议的方法：</p>
-<p>1、尽快的实现一个最基本的算法，然后在交叉验证数据集上进行验证；</p>
-<p>2、画出learning curves，看是否更多的数据、更多的features能提升正确性；</p>
-<p>3、Error Analysis：主要分析那些算法预测出错的例子，看能否发现一些系统趋势。</p>
-<pre><code>Error analysis may not be helpful for deciding is this is likely to improve performance, only solution is to try it and say if it works.
-</code></pre><h4 id="6-3-3-Error-Metrics-for-Skewed-Classes"><a href="#6-3-3-Error-Metrics-for-Skewed-Classes" class="headerlink" title="6.3.3 Error Metrics for Skewed Classes"></a>6.3.3 Error Metrics for Skewed Classes</h4><p>不能仅仅依靠错误率来判断算法的性能，还需要利用Precision 和 Recall<br><img src="http://ofacak8l3.bkt.clouddn.com/6_6.png" alt="6_6"></p>
-<h4 id="6-3-4-Trading-off-precision-and-recall"><a href="#6-3-4-Trading-off-precision-and-recall" class="headerlink" title="6.3.4 Trading off precision and recall"></a>6.3.4 Trading off precision and recall</h4><p>我们可以通过计算F1来自动选择性能较高的算法。</p>
-<pre><code>F1 = 2*(P*R)/(P+R);
-</code></pre><h4 id="6-3-5-Data-for-Machine-Learning"><a href="#6-3-5-Data-for-Machine-Learning" class="headerlink" title="6.3.5 Data for Machine Learning"></a>6.3.5 Data for Machine Learning</h4><p>Banko anf Brill 在2001年提出了一个观点：</p>
-<pre><code>It&apos;s not who has the best algorithm that wins, 
-It&apos;s who has the most data.
-</code></pre><p>这个观点有时候不一定正确：</p>
-<p>当feature很少不足以预测时（例，预测房价时仅知道尺寸），此时再多的数据可能也无法提升算法的性能； </p>
-<p>当算法参数很多时（例，逻辑回归和线性回归有很多的feature，或者神经网络有很多的隐藏单元），更大的测试集可以尽可能的减少过拟合。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ckavb34zr000a52o301osyvya" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">__('next') &raquo;</a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">__('next') &raquo;</a>
   </nav>
 </section>
         
@@ -1078,7 +1115,7 @@ It&apos;s who has the most data.
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux性能优化实战/">Linux性能优化实战</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubernetes/">kubernetes</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux性能优化实战/">Linux性能优化实战</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubernetes/">kubernetes</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -1088,7 +1125,7 @@ It&apos;s who has the most data.
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Linux性能优化实战/" style="font-size: 10px;">Linux性能优化实战</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/kubernetes/" style="font-size: 10px;">kubernetes</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
+      <a href="/tags/Linux性能优化实战/" style="font-size: 15px;">Linux性能优化实战</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/kubernetes/" style="font-size: 10px;">kubernetes</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
     </div>
   </div>
 
@@ -1097,7 +1134,7 @@ It&apos;s who has the most data.
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">五月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">六月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">五月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 
@@ -1108,6 +1145,10 @@ It&apos;s who has the most data.
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/">《Linux 性能优化实战》第一周--CPU性能篇(下)</a>
+          </li>
         
           <li>
             <a href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/">《Linux 性能优化实战》第一周--CPU性能篇(上)</a>
@@ -1123,10 +1164,6 @@ It&apos;s who has the most data.
         
           <li>
             <a href="/2019/04/17/重归博客/">重归博客</a>
-          </li>
-        
-          <li>
-            <a href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周</a>
           </li>
         
       </ul>

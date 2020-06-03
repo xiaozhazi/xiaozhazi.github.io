@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>《Linux 性能优化实战》第一周--CPU性能篇(下) | Frances Hu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="《Linux 性能优化实战》第二周–CPU性能篇(下)9. 怎么理解Linux软中断本周继续学习CPU性能相关知识点,上周第8课提到不可中断状态一般都是短时进程,主要是系统的一种保护机制,保证硬件的交互过程不被意外打断. 但是如果进程长时间处于不可中断状态就需要注意是否存在磁盘I/O问题.
+除了iowait,软中断softirq导致CPU使用率增加的场景也比较常见.
+为了解决中断处理程序执行时间过">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Linux 性能优化实战》第一周--CPU性能篇(下)">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="《Linux 性能优化实战》第二周–CPU性能篇(下)9. 怎么理解Linux软中断本周继续学习CPU性能相关知识点,上周第8课提到不可中断状态一般都是短时进程,主要是系统的一种保护机制,保证硬件的交互过程不被意外打断. 但是如果进程长时间处于不可中断状态就需要注意是否存在磁盘I/O问题.
+除了iowait,软中断softirq导致CPU使用率增加的场景也比较常见.
+为了解决中断处理程序执行时间过">
+<meta property="og:updated_time" content="2020-06-03T16:15:13.167Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Linux 性能优化实战》第一周--CPU性能篇(下)">
+<meta name="twitter:description" content="《Linux 性能优化实战》第二周–CPU性能篇(下)9. 怎么理解Linux软中断本周继续学习CPU性能相关知识点,上周第8课提到不可中断状态一般都是短时进程,主要是系统的一种保护机制,保证硬件的交互过程不被意外打断. 但是如果进程长时间处于不可中断状态就需要注意是否存在磁盘I/O问题.
+除了iowait,软中断softirq导致CPU使用率增加的场景也比较常见.
+为了解决中断处理程序执行时间过">
+  
+    <link rel="alternate" href="/atom.xml" title="Frances Hu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Frances Hu&#39;s Blog</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">My idol is Chris Lee!</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/tags/life">Life</a>
+        
+          <a class="main-nav-link" href="/tags/go">GO</a>
+        
+          <a class="main-nav-link" href="/tags/kubernetes">K8S</a>
+        
+          <a class="main-nav-link" href="/tags/algorithm">Algorithm</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://xiaozhazi.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Linux性能优化实战第二周--CPU性能篇(下)" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" class="article-date">
+  <time datetime="2020-06-03T14:57:55.000Z" itemprop="datePublished">2020-06-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      《Linux 性能优化实战》第一周--CPU性能篇(下)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          <!-- Table of Contents -->
+          
+        <h2 id="《Linux-性能优化实战》第二周–CPU性能篇-下"><a href="#《Linux-性能优化实战》第二周–CPU性能篇-下" class="headerlink" title="《Linux 性能优化实战》第二周–CPU性能篇(下)"></a>《Linux 性能优化实战》第二周–CPU性能篇(下)</h2><h3 id="9-怎么理解Linux软中断"><a href="#9-怎么理解Linux软中断" class="headerlink" title="9. 怎么理解Linux软中断"></a>9. 怎么理解Linux软中断</h3><p>本周继续学习CPU性能相关知识点,上周第8课提到不可中断状态一般都是短时进程,主要是系统的一种保护机制,保证硬件的交互过程不被意外打断. 但是如果进程长时间处于不可中断状态就需要注意是否存在磁盘I/O问题.</p>
+<p>除了iowait,软中断softirq导致CPU使用率增加的场景也比较常见.</p>
+<p>为了解决中断处理程序执行时间过长和中断丢失的问题,Linux将中断过程分为两阶段:</p>
+<ul>
+<li><strong>快速处理中断</strong> (硬中断, 会打断CPU正在执行的任务)</li>
+<li><strong>延迟处理上半部未完成的工作, 通常以内核线程的方式运行</strong> (软中断,内核线程执行)</li>
+</ul>
+<p>以网卡接收数据包为例: 网卡接收到数据包之后,先通过硬中断通知内核新数据到达.此时内核调用中断处理程序来响应. 第一步快速处理中断,将网卡数据读到内存中,然后更新硬件寄存器的状态(表示数据已经读完); 第二步发送软中断信号,内核线程从内存中找到网络数据,按照网络协议栈对数据逐层解析和处理,直到将其发送给应用程序.</p>
+<p>软中断不仅包括上述硬件设备中断处理程序的第二阶段,还包含一些内核自定义的事件. 如内核调度,RCU锁等.</p>
+<pre><code>~ cat /proc/softirqs   #查看软中断的运行情况　10种不同软中断类型
+                CPU0       CPU1       CPU2       CPU3       
+      HI:     940848    8695970     929219     958387
+   TIMER:    6032528    8523080    6185804    7882723
+  NET_TX:         13         18         10      21655
+  NET_RX:      81303      81483      74123    5497701
+   BLOCK:        112        109    1961852         73
+IRQ_POLL:          0          0          0          0
+ TASKLET:         40        152      69233      41556
+   SCHED:    5262219    6279886    5054733    5849054
+ HRTIMER:          0          0          0          0
+     RCU:    4615615    5897520    4693046    5749548
+
+➜  ~ ps -aux | grep softirq #一个CPU对应一个软中断内核线程
+  root         7  0.0  0.0      0     0 ?        S    Jun01   0:00 [ksoftirqd/0]
+  root        16  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/1]
+  root        22  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/2]
+  root        28  0.0  0.0      0     0 ?        S    Jun01   0:02 [ksoftirqd/3]
+</code></pre><h3 id="10-系统的软中断CPU使用率高，怎么解决"><a href="#10-系统的软中断CPU使用率高，怎么解决" class="headerlink" title="10. 系统的软中断ＣＰＵ使用率高，怎么解决"></a>10. 系统的软中断ＣＰＵ使用率高，怎么解决</h3><h4 id="所需工具"><a href="#所需工具" class="headerlink" title="所需工具"></a>所需工具</h4><table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sar</td>
+<td>系统报告工具,实时查看当前系统活动,配置保存和报告历史统计</td>
+</tr>
+<tr>
+<td>hping3</td>
+<td>构造TCP/IP包, 对系统进行安全审计,防火墙测试等</td>
+</tr>
+<tr>
+<td>tcpdump</td>
+<td>网络抓包工具, 用来分析各种网络问题</td>
+</tr>
+</tbody>
+</table>
+<h4 id="实验与分析"><a href="#实验与分析" class="headerlink" title="实验与分析"></a>实验与分析</h4><pre><code>sudo docker run -itd --name=nginx -p 81:80 nginx  #启动nginx服务
+curl http://localhost:81  #检查nginx服务是否正常运行
+
+hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
+</code></pre><p>本机测试中并没有监测到系统响应变慢,改为1微秒时数据包全丢, 10微秒时丢包率为80%.</p>
+<p>top查看ksoftirqd软中断进程CPU使用率也不高.</p>
+<p>继续执行后续指令</p>
+<pre><code>watch -d cat /proc/softirqs #观察高亮变化
+</code></pre><p>此时发现TIMER/NET_RX/SCHED/RCU都在不停变化,且NET_RX变化速率较快,几K级别的在增加. 其它几种类型的软中断是保证linux调度,时钟,临界区保护等正常工作必须,有变化是正常的. </p>
+<p>因此我们着手分析网络接收的软中断,选取sar工具查看网络收发情况</p>
+<pre><code>sar -n DEV 1  #每隔1秒输出网络收发报告
+
+07:01:11 PM     IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s rxcmp/s   txcmp/s  rxmcst/s   %ifutil
+07:01:12 PM veth3a2b4de      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM        lo  20895.00  20895.00    843.42    843.42      0.00      0.00      0.00      0.00
+07:01:12 PM   docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM enp0s31f6      6.00      0.00      0.85      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM vethedb691a      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM br-1665f3682889      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+</code></pre><ul>
+<li>rxpck/s txpck/s　表示每秒接收/发送的网络帧数　　PPS</li>
+<li>rxkB/s  txkB/s　　表示每秒接收/发送的千字节数　BPS　</li>
+</ul>
+<p>看到网卡lo每秒接收的数据明显较多，　843*1024/20895 =41　说明每个网络帧只有41字节，小包问题．</p>
+<p>进一步通过tcpdump分析这是什么样的网络帧</p>
+<pre><code>tcpdump -i lo -n tcp port 81
+
+18:20:43.273056 IP 127.0.0.1.12537 &gt; 127.0.0.1.81: Flags [R], seq 393134060, win 0, length 0
+18:20:43.273184 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [S], seq 1240632262, win 512, length 0
+18:20:43.273193 IP 127.0.0.1.81 &gt; 127.0.0.1.12538: Flags [S.], seq 3698133257, ack 1240632263, win 65495, options [mss 65495], length 0
+18:20:43.273198 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [R], seq 1240632263, win 0, length 0
+</code></pre><p>可以看出网络帧是发送到nginx端口，Flags [S]表示这是一个ＳＹＮ包，　可以锁定是SYN FLOOD问题，最简单的解决方法就是防火墙中封锁该来源ＩＰ．</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>如果碰到软中断线程CPU使用率高的情况下, 可以借助sar和tcpdump等工具进一步分析来源.</p>
+<h3 id="11-套路-如何迅速分析出系统CPU的瓶颈在哪里"><a href="#11-套路-如何迅速分析出系统CPU的瓶颈在哪里" class="headerlink" title="11. [套路] 如何迅速分析出系统CPU的瓶颈在哪里?"></a>11. [套路] 如何迅速分析出系统CPU的瓶颈在哪里?</h3>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.github.io/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" data-id="ckazjzxmp000010o3s6lpc1bb" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux性能优化实战/">Linux性能优化实战</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">《Linux 性能优化实战》第一周--CPU性能篇(上)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux性能优化实战/">Linux性能优化实战</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubernetes/">kubernetes</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Linux性能优化实战/" style="font-size: 15px;">Linux性能优化实战</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/kubernetes/" style="font-size: 10px;">kubernetes</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">六月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">五月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/">《Linux 性能优化实战》第一周--CPU性能篇(下)</a>
+          </li>
+        
+          <li>
+            <a href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/">《Linux 性能优化实战》第一周--CPU性能篇(上)</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/16/Kubernetes学习——etcd/">Kubernetes学习——etcd</a>
+          </li>
+        
+          <li>
+            <a href="/2019/04/18/Dynamic-Programming/">Dynamic Programming</a>
+          </li>
+        
+          <li>
+            <a href="/2019/04/17/重归博客/">重归博客</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 Frances Hu<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/tags/life" class="mobile-nav-link">Life</a>
+  
+    <a href="/tags/go" class="mobile-nav-link">GO</a>
+  
+    <a href="/tags/kubernetes" class="mobile-nav-link">K8S</a>
+  
+    <a href="/tags/algorithm" class="mobile-nav-link">Algorithm</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

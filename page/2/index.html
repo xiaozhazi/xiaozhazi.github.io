@@ -73,6 +73,92 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" class="article-date">
+  <time datetime="2016-11-27T07:46:44.000Z" itemprop="datePublished">2016-11-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          <!-- Table of Contents -->
+          
+        <h2 id="6、Advice-for-Applying-Machine-Learning"><a href="#6、Advice-for-Applying-Machine-Learning" class="headerlink" title="6、Advice for Applying Machine Learning"></a>6、Advice for Applying Machine Learning</h2><h3 id="6-1、Evaluating-a-learning-Algorithm"><a href="#6-1、Evaluating-a-learning-Algorithm" class="headerlink" title="6.1、Evaluating a learning Algorithm"></a>6.1、Evaluating a learning Algorithm</h3><h4 id="6-1-1、Deciding-What-to-Try-Next"><a href="#6-1-1、Deciding-What-to-Try-Next" class="headerlink" title="6.1.1、Deciding What to Try Next"></a>6.1.1、Deciding What to Try Next</h4><p>Which of the following statements about diagnostics are true? (BCD)</p>
+<p>A. It’s hard to tell what will work to improve a learning algorithm, so the best approach is to go with gut feeling and just see what works.</p>
+<p>B. Diagnostics can give guidance as to what might be more fruitful things to try to improve a learning algorithm.</p>
+<p>C. Diagnostics can be time-consuming to implement and try, but they can still be a very good use of your time.</p>
+<p>D. A diagnostic can sometimes rule out certain courses of action(changes to your learning algorithm) as being unlikely to improve its performance signigicantly.</p>
+<h4 id="6-1-2、Evaluating-a-Hypothesis"><a href="#6-1-2、Evaluating-a-Hypothesis" class="headerlink" title="6.1.2、Evaluating a Hypothesis"></a>6.1.2、Evaluating a Hypothesis</h4><p>如何评估假设函数，后面可以以此为基础讨论如何避免过拟合和欠拟合的问题。</p>
+<p>Suppose an implementation of linear regression(without reguarization) is badly overfitting the training set. In this case, we would expect:</p>
+<p>The training error to be low, and the test error to be high.</p>
+<p>数据划分为训练集和测试集，一般比例为7:3,random select。如果数据不是随机的，最好自己随机排序或打乱顺序后再选取70%.</p>
+<p>Misclassification error(0/1 misclassification error)</p>
+<h4 id="6-1-3、Model-Selection-and-Training-Validation-Test-Sets"><a href="#6-1-3、Model-Selection-and-Training-Validation-Test-Sets" class="headerlink" title="6.1.3、Model Selection and Training/Validation/Test Sets"></a>6.1.3、Model Selection and Training/Validation/Test Sets</h4><p>如何确定对于某组数据，最合适的多项式次数是几次？如何选择学习算法中的正规化参数lamda？</p>
+<p>模型选择问题。（泛化误差）</p>
+<p>我们将数据集分为三部分，training set(60%), cross validation set(20%), test set(20%).</p>
+<p>Training error</p>
+<p>cross validation error</p>
+<p>test error</p>
+<p>我们使用交叉验证集来选择模型，看这些假设在交叉验证集表现如何。选择最小交叉验证集误差的模型。</p>
+<p>Consider the model selection procedure where we choose the degree of polynomial using a cross validation set. For the final model, we might generally expect Jcv to be lower than Jtest because:</p>
+<p>An extra parameter(d,the degree of the polynomial) has been fit to the cross validation set.</p>
+<h3 id="6-2、Bias-vs-Variance-偏差和方差"><a href="#6-2、Bias-vs-Variance-偏差和方差" class="headerlink" title="6.2、Bias vs. Variance(偏差和方差)"></a>6.2、Bias vs. Variance(偏差和方差)</h3><h4 id="6-2-1、Diagnosing-Bias-vs-Variance"><a href="#6-2-1、Diagnosing-Bias-vs-Variance" class="headerlink" title="6.2.1、Diagnosing Bias vs. Variance"></a>6.2.1、Diagnosing Bias vs. Variance</h4><p>High Bias Overfitting</p>
+<p>High Variance Underfitting</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/6_1.png" alt="6_1"></p>
+<h4 id="6-2-2、Regularization-and-Bias-Variance"><a href="#6-2-2、Regularization-and-Bias-Variance" class="headerlink" title="6.2.2、Regularization and Bias/Variance"></a>6.2.2、Regularization and Bias/Variance</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_2.png" alt="6_2"></p>
+<h4 id="6-2-3、Learning-Curves"><a href="#6-2-3、Learning-Curves" class="headerlink" title="6.2.3、Learning Curves"></a>6.2.3、Learning Curves</h4><p>判断一个假设是否存在偏差方差问题</p>
+<pre><code>High Bias
+If a learning algorithm is suffering from high bias, getting more training data will not help much.
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_3.png" alt="6_3"><br>因此知道自己的假设是否存在高偏差/方差问题，非常有用。</p>
+<pre><code>High variance
+If a learning algorithm is suffering from high variance, getting more training data is likely to help.
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_4.png" alt="6_4"></p>
+<h4 id="6-2-4、Deciding-What-to-Do-Next-Revisited"><a href="#6-2-4、Deciding-What-to-Do-Next-Revisited" class="headerlink" title="6.2.4、Deciding What to Do Next Revisited"></a>6.2.4、Deciding What to Do Next Revisited</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_5.png" alt="6_5"></p>
+<h3 id="6-3、Machine-Learning-system-design"><a href="#6-3、Machine-Learning-system-design" class="headerlink" title="6.3、Machine Learning system design"></a>6.3、Machine Learning system design</h3><h4 id="6-3-1、Priorityzing-what-to-work-on"><a href="#6-3-1、Priorityzing-what-to-work-on" class="headerlink" title="6.3.1、Priorityzing what to work on"></a>6.3.1、Priorityzing what to work on</h4><h4 id="6-3-2、Error-Analysis"><a href="#6-3-2、Error-Analysis" class="headerlink" title="6.3.2、Error Analysis"></a>6.3.2、Error Analysis</h4><p>建议的方法：</p>
+<p>1、尽快的实现一个最基本的算法，然后在交叉验证数据集上进行验证；</p>
+<p>2、画出learning curves，看是否更多的数据、更多的features能提升正确性；</p>
+<p>3、Error Analysis：主要分析那些算法预测出错的例子，看能否发现一些系统趋势。</p>
+<pre><code>Error analysis may not be helpful for deciding is this is likely to improve performance, only solution is to try it and say if it works.
+</code></pre><h4 id="6-3-3-Error-Metrics-for-Skewed-Classes"><a href="#6-3-3-Error-Metrics-for-Skewed-Classes" class="headerlink" title="6.3.3 Error Metrics for Skewed Classes"></a>6.3.3 Error Metrics for Skewed Classes</h4><p>不能仅仅依靠错误率来判断算法的性能，还需要利用Precision 和 Recall<br><img src="http://ofacak8l3.bkt.clouddn.com/6_6.png" alt="6_6"></p>
+<h4 id="6-3-4-Trading-off-precision-and-recall"><a href="#6-3-4-Trading-off-precision-and-recall" class="headerlink" title="6.3.4 Trading off precision and recall"></a>6.3.4 Trading off precision and recall</h4><p>我们可以通过计算F1来自动选择性能较高的算法。</p>
+<pre><code>F1 = 2*(P*R)/(P+R);
+</code></pre><h4 id="6-3-5-Data-for-Machine-Learning"><a href="#6-3-5-Data-for-Machine-Learning" class="headerlink" title="6.3.5 Data for Machine Learning"></a>6.3.5 Data for Machine Learning</h4><p>Banko anf Brill 在2001年提出了一个观点：</p>
+<pre><code>It&apos;s not who has the best algorithm that wins, 
+It&apos;s who has the most data.
+</code></pre><p>这个观点有时候不一定正确：</p>
+<p>当feature很少不足以预测时（例，预测房价时仅知道尺寸），此时再多的数据可能也无法提升算法的性能； </p>
+<p>当算法参数很多时（例，逻辑回归和线性回归有很多的feature，或者神经网络有很多的隐藏单元），更大的测试集可以尽可能的减少过拟合。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://xiaozhazi.github.io/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" data-id="ckavb34zr000a52o301osyvya" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learning/">machine learning</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" class="article-date">
@@ -821,60 +907,10 @@ hexo d -g
 
 
   
-    <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2016/09/27/hello-world/" class="article-date">
-  <time datetime="2016-09-27T02:23:49.000Z" itemprop="datePublished">2016-09-27</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/09/27/hello-world/">Hello World</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          <!-- Table of Contents -->
-          
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://xiaozhazi.github.io/2016/09/27/hello-world/" data-id="ckavb3504000x52o3p4l4cw6w" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/free-talk/">free talk</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
-    <a class="extend prev" rel="prev" href="/">&laquo; __('prev')</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+    <a class="extend prev" rel="prev" href="/">&laquo; __('prev')</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">__('next') &raquo;</a>
   </nav>
 </section>
         
@@ -887,7 +923,7 @@ hexo d -g
   <div class="widget-wrap">
     <h3 class="widget-title">标签</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux性能优化实战/">Linux性能优化实战</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubernetes/">kubernetes</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux性能优化实战/">Linux性能优化实战</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/">algorithm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/free-talk/">free talk</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/kubernetes/">kubernetes</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/life/">life</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learning/">machine learning</a><span class="tag-list-count">13</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/master-degree/">master degree</a><span class="tag-list-count">1</span></li></ul>
     </div>
   </div>
 
@@ -897,7 +933,7 @@ hexo d -g
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Linux性能优化实战/" style="font-size: 10px;">Linux性能优化实战</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/kubernetes/" style="font-size: 10px;">kubernetes</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
+      <a href="/tags/Linux性能优化实战/" style="font-size: 15px;">Linux性能优化实战</a> <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a> <a href="/tags/free-talk/" style="font-size: 15px;">free talk</a> <a href="/tags/kubernetes/" style="font-size: 10px;">kubernetes</a> <a href="/tags/life/" style="font-size: 10px;">life</a> <a href="/tags/machine-learning/" style="font-size: 20px;">machine learning</a> <a href="/tags/master-degree/" style="font-size: 10px;">master degree</a>
     </div>
   </div>
 
@@ -906,7 +942,7 @@ hexo d -g
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">五月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">六月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">五月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
   </div>
 
@@ -917,6 +953,10 @@ hexo d -g
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/">《Linux 性能优化实战》第一周--CPU性能篇(下)</a>
+          </li>
         
           <li>
             <a href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/">《Linux 性能优化实战》第一周--CPU性能篇(上)</a>
@@ -932,10 +972,6 @@ hexo d -g
         
           <li>
             <a href="/2019/04/17/重归博客/">重归博客</a>
-          </li>
-        
-          <li>
-            <a href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/">AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周</a>
           </li>
         
       </ul>
