@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -235,6 +235,136 @@
             
               
                 
+                <a class="post-title-link" href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
+              2016-12-04
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><h3 id="7-1-Optimization-objective"><a href="#7-1-Optimization-objective" class="headerlink" title="7.1 Optimization objective"></a>7.1 Optimization objective</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
+<h3 id="7-2-Large-Margin-Intuition"><a href="#7-2-Large-Margin-Intuition" class="headerlink" title="7.2 Large Margin Intuition"></a>7.2 Large Margin Intuition</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
+<p>C如果越大，两个分类的间距越小。</p>
+<h3 id="7-3-The-Mathematics-behind-large-margin-classification"><a href="#7-3-The-Mathematics-behind-large-margin-classification" class="headerlink" title="7.3 The Mathematics behind large margin classification"></a>7.3 The Mathematics behind large margin classification</h3><p>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/7_4.png" alt="7_4"><br>SVM Decision Boundary 计算时可以利用这个特性。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/7_5.png" alt="7_5"></p>
+<h3 id="7-4-Kernels"><a href="#7-4-Kernels" class="headerlink" title="7.4 Kernels"></a>7.4 Kernels</h3><h4 id="7-4-1-Kernels-I"><a href="#7-4-1-Kernels-I" class="headerlink" title="7.4.1 Kernels I"></a>7.4.1 Kernels I</h4><p>Gaussian Kernel.</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/7_6.png" alt="7_6"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_7.png" alt="7_7"></p>
+<h4 id="7-5-Kernels-II"><a href="#7-5-Kernels-II" class="headerlink" title="7.5 Kernels II"></a>7.5 Kernels II</h4><p>SVM parameters:<br>Large C: Lower bias, high variance</p>
+<p>Small C: High bias, low variance</p>
+<p>Large segma*segma: more smoothly. High bias, low variance.</p>
+<p>Small segma*segma: less smoothly. Lower bias, higher variance.</p>
+<h3 id="7-6-Using-an-SVM"><a href="#7-6-Using-an-SVM" class="headerlink" title="7.6 Using an SVM"></a>7.6 Using an SVM</h3><p>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
+<p><strong>Need to specify:</strong></p>
+<pre><code>Choice of parameter C.
+Choice of Kernel(similarity function):
+    No Kernel(&apos;Linear Kernel&apos;)
+    Gaussian Kernel.(need to choose segma)
+</code></pre><p><strong>Note:</strong></p>
+<pre><code>Do not perform feature scaling before using the Gaussian kernel.
+</code></pre><p><strong>Other Choice of kernel:</strong></p>
+<pre><code>Not all similarity functions similarity(x,l) make valid kernels. 
+(Need to satisfy &apos;mercer&apos;s Theorem&apos; to make sure SVM package&apos;s optimications run correctly, and do not diverge)    
+</code></pre><p><strong>Multi-class classification:</strong></p>
+<p>Train K SVMs, 需要对K个类进行分类，而非k-1。</p>
+<p><strong>Logistic regression vs SVM:</strong></p>
+<p>n= number of features, m =number of training examples</p>
+<pre><code>if n is large（相对于m）:
+    using Logistic regression, or SVM without kernel.
+if n is small, m is intermediate:
+    use SVM with Gaussian Kernel.
+if n is small, m is large:
+    create/add more features,
+    then use logistic regression or SVM without kernel.
+
+Neural network likely to work well for most od these settings,
+but many slower to train.
+</code></pre>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周
                 </a>
@@ -248,7 +378,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-27T15:46:44+08:00" content="2016-11-27">
               2016-11-27
             </time>
@@ -386,7 +516,7 @@ It&apos;s who has the most data.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-24T15:10:34+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -487,7 +617,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-24T14:14:40+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -656,7 +786,7 @@ struct list_head cg_list;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-13T15:48:54+08:00" content="2016-11-13">
               2016-11-13
             </time>
@@ -762,7 +892,7 @@ output层
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-07T10:31:30+08:00" content="2016-11-07">
               2016-11-07
             </time>
@@ -940,7 +1070,7 @@ end
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-01T15:30:52+08:00" content="2016-11-01">
               2016-11-01
             </time>
@@ -1060,7 +1190,7 @@ but fail to generalize to new examples.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-10-31T10:50:02+08:00" content="2016-10-31">
               2016-10-31
             </time>
@@ -1218,7 +1348,7 @@ end
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-10-24T14:00:42+08:00" content="2016-10-24">
               2016-10-24
             </time>
@@ -1358,7 +1488,7 @@ Normal Equation
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-10-18T10:44:48+08:00" content="2016-10-18">
               2016-10-18
             </time>
@@ -1437,137 +1567,6 @@ take smaller steps. So, no need to decrease a over time.
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/09/05/如何在MAC上搭建博客——hexo-github/" itemprop="url">
-                  如何在MAC上搭建博客——hexo+github
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2016-09-05T16:41:16+08:00" content="2016-09-05">
-              2016-09-05
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h2><h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>1、git——git-scm官网<a href="http://git-scm.com" target="_blank" rel="external">git-scm</a>下载mac版</p>
-<p>2、node.js——直接到<a href="https://nodejs.org" target="_blank" rel="external">node.js官网</a>下载安装 </p>
-<p>3、markdown编辑器——mac下推荐<a href="25.io/mou/">mou</a>或者<a href="http://macdown.uranusjr.com/" target="_blank" rel="external">macDown</a> 本人下载mou时其还未支持macOS sierra</p>
-<p>4、域名——阿里云购买即可</p>
-<h3 id="安装和初始化"><a href="#安装和初始化" class="headerlink" title="安装和初始化"></a>安装和初始化</h3><p>mac下在命令行下安装hexo</p>
-<pre><code>sudo npm install hexo -g
-hexo init blog
-cd blog
-sudo npm install
-hexo server
-</code></pre><h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>配置站点文件_config.yml,主要修改Site部分，URL部分，deploy部分</p>
-<pre><code>#Site
-title: Frances Hu&apos;s Blog
-subtitle: 技术迷，本命李宇春
-author: Frances Hu
-...
-language: zh_CN
-
-#URL
-url: http://xiaozhazi.win
-
-deploy:
-    type: git
-    repository: https://github.com/xiaozhazi/xiaozhazi.github.io.git
-    branch: master
-</code></pre><h3 id="部署网页"><a href="#部署网页" class="headerlink" title="部署网页"></a>部署网页</h3><p>在blog文件夹目录下执行生成静态页面的命令：</p>
-<pre><code>hexo generate
-hexo deploy
-</code></pre><p>如果出错，无法识别git，则执行如下命令来安装hexo-deployer-git</p>
-<pre><code>sudo npm install hexo-deployer-git --save
-</code></pre><h3 id="绑定个人域名"><a href="#绑定个人域名" class="headerlink" title="绑定个人域名"></a>绑定个人域名</h3><p>在/blog/themes/landscape/source目录下新建CNAME文件，将自己的域名 xiaozhazi.win写入即可</p>
-<p>重新部署</p>
-<pre><code>hexo clean
-hexo d -g
-</code></pre><p>###安装主题<br>在blog目录下执行如下命令</p>
-<pre><code>git clone https://github.com/iissnan/hexo-theme-next themes/next
-</code></pre><p>将blog目录下的_config.yml里theme的名称改为next即可</p>
-<p>也可以到<a href="http://hexo.io.themes" target="_blank" rel="external">hexo官网主题页</a>下载自己喜欢的主题</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1613,8 +1612,8 @@ hexo d -g
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">21</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-count">22</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -1624,7 +1623,7 @@ hexo d -g
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -1668,7 +1667,7 @@ hexo d -g
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

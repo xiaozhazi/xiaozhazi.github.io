@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -235,6 +235,357 @@
             
               
                 
+                <a class="post-title-link" href="/2020/06/14/Linux性能优化实战第三周--内存性能篇/" itemprop="url">
+                  《Linux 性能优化实战》第三周--内存性能篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-06-14T10:57:55+08:00" content="2020-06-14">
+              2020-06-14
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周主要学习内存性能方面的检测与优化。首先在概念上更加系统的了解了Linux内存的工作原理。进程看到的内存是内核提供的虚拟内存，通过页表映射到实际的物理内存。进程通过malloc申请内存根据页面大小有两种不同的方式，并且内存并不是立即分配而是在首次访问时通过缺页异常在内核态进行分配并更新页表。</p>
+<p>通过阅读文档以及实验了解了Buffer和Cache的区别。前者是对磁盘数据的缓存，后者是对文件数据的缓存，且<strong>两者均作用于读写操作</strong>。并掌握cachestat/cachetop/pcstat等工具如何检测系统缓存命中指标，在实验中掌握如何处理缓存异常的场景。</p>
+<p>在内存资源紧张时，Linux通过直接回收和定期扫描的方式来释放文件页和匿名页。其中资源是否紧张可以通过内存的三个阈值来判断。另外我们可以手动调整内存资源配置，例如修改 /proc/sys/vm/min_free_kbytes来调整内存阈值，/proc/sys/vm/swappiness来调整文件页和匿名页回收倾向。在NUMA架构下还可以设置/proc/sys/vm/zone_reclaim_node来调整本地内存的回收策略。</p>
+<p>当Swap变高时，可以用sar，/proc/zoneinfo，/proc/pid/status等方法查看系统or进程的内存使用情况，进而找到Swap升高的根源和受影响的进程。不过通常我们禁止Swap的使用来提升系统的整体性能：</p>
+<ul>
+<li>内存足够大时，禁用Swap</li>
+<li>实在需要Swap时，可以尝试降低swapiness的值，减少回收时Swap的使用倾向</li>
+<li>响应延迟敏感的应用，可以用mlock/mlockall来锁定内存，禁止内存换出</li>
+</ul>
+<p>之前在搭建组内K8S环境时按照教程都是先关闭Swap，不明所以。现在通过这周的学习才真正了解到缘由。</p>
+<p>本周对内存使用情况监测所用的主要工具有：</p>
+<ul>
+<li>常用性能工具： free/top/ps，vmstat观察内存变化情况</li>
+<li>查看缓存命中情况： bcc包中的cachestat和cachetop，基于Linux内核的eBPF(extend Berkeley Packet Filters)来跟踪内核中管理的缓存<ul>
+<li>cachestat 查看整个操作系统缓存的读写命中情况</li>
+<li>cachetop 提供了每个进程的缓存命中情况 </li>
+</ul>
+</li>
+<li>跟踪内存分配/释放： memleak    </li>
+<li>查看内存各个指标变化： sar</li>
+</ul>
+<p>对于系统内存问题的分析与定位，通常先运行几个覆盖面比较大的性能工具，如free，top，vmstat，pidstat等</p>
+<ul>
+<li>先用free和top查看系统整体内存使用情况</li>
+<li>再用vmstat和pidstat，查看一段时间的趋势，从而判断内存问题的类型</li>
+<li>最后进行详细分析，比如内存分配分析，缓存/缓冲区分析，具体进程的内存使用分析等 </li>
+</ul>
+<p><img src="/2020/06/14/Linux性能优化实战第三周--内存性能篇/analysis.png" alt> </p>
+<p>以及一些常见的优化思路：</p>
+<ul>
+<li>最好禁止Swap，若必须开启则尽量降低swappiness的值</li>
+<li>减少内存的动态分配，如可以用内存池，HugePage等</li>
+<li>尽量使用缓存和缓冲区来访问数据。如用堆栈明确声明内存空间来存储需要缓存的数据，或者用Redis外部缓存组件来优化数据的访问</li>
+<li>cgroups等方式来限制进程的内存使用情况，确保系统内存不被异常进程耗尽</li>
+<li>/proc/pid/oom_adj调整核心应用的oom_score，保证即使内存紧张核心应用也不会被OOM杀死 </li>
+</ul>
+<p>另外，在探索问题的过程中由于性能指标较多，我们不可能记住所有指标的详细含义，网上搜索有时并不能得到真正准确的答案，因此养成查文档的爱好非常重要。</p>
+<hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-15-Linux内存是怎么工作的"><a href="#Lesson-15-Linux内存是怎么工作的" class="headerlink" title="Lesson 15 Linux内存是怎么工作的"></a>Lesson 15 Linux内存是怎么工作的</h2><h3 id="内存映射"><a href="#内存映射" class="headerlink" title="内存映射"></a>内存映射</h3><p>大多数计算机用的主存都是动态随机访问内存(DRAM)，只有内核才可以直接访问物理内存。Linux内核给每个进程提供了一个独立的虚拟地址空间，并且这个地址空间是连续的。这样进程就可以很方便的访问内存(虚拟内存)。</p>
+<p>虚拟地址空间的内部分为内核空间和用户空间两部分，不同字长的处理器地址空间的范围不同。32位系统内核空间占用1G，用户空间占3G。 64位系统内核空间和用户空间都是128T，分别占内存空间的最高和最低处，中间部分为未定义。</p>
+<p>并不是所有的虚拟内存都会分配物理内存，只有实际使用的才会。分配后的物理内存通过内存映射管理。为了完成内存映射，内核为每个进程都维护了一个页表，记录虚拟地址和物理地址的映射关系。页表实际存储在CPU的内存管理单元MMU中，处理器可以直接通过硬件找出要访问的内存。</p>
+<p>当进程访问的虚拟地址在页表中查不到时，系统会产生一个缺页异常，进入内核空间分配物理内存，更新进程页表，再返回用户空间恢复进程的运行。</p>
+<p>MMU以页为单位管理内存，页大小4KB。为了解决页表项过多问题Linux提供了<strong>多级页表</strong>和<strong>HugePage</strong>的机制。</p>
+<h3 id="虚拟内存空间分布"><a href="#虚拟内存空间分布" class="headerlink" title="虚拟内存空间分布"></a>虚拟内存空间分布</h3><p>从图中可以看出用户空间内存从低到高是五种不同的内存段：</p>
+<ul>
+<li><strong>只读段</strong> 代码和常量等</li>
+<li><strong>数据段</strong> 全局变量等</li>
+<li><strong>堆</strong> 动态分配的内存，从低地址开始向上增长</li>
+<li><strong>文件映射</strong> 动态库、共享内存等，从高地址开始向下增长</li>
+<li><strong>栈</strong> 包括局部变量和函数调用的上下文等，栈的大小是固定的。一般8MB</li>
+</ul>
+<h3 id="内存分配与回收"><a href="#内存分配与回收" class="headerlink" title="内存分配与回收"></a>内存分配与回收</h3><h4 id="分配"><a href="#分配" class="headerlink" title="分配"></a>分配</h4><p>malloc对应到系统调用上有两种实现方式：</p>
+<ul>
+<li><strong>brk()</strong> 针对小块内存(&lt;128K)，通过移动堆顶位置来分配。内存释放后不立即归还内存，而是被缓存起来。</li>
+<li><strong>mmap()</strong>针对大块内存(&gt;128K)，直接用内存映射来分配，即在文件映射段找一块空闲内存分配。</li>
+</ul>
+<p>前者的缓存可以减少缺页异常的发生，提高内存访问效率。但是由于内存没有归还系统，在内存工作繁忙时，频繁的内存分配/释放会造成内存碎片。</p>
+<p>后者在释放时直接归还系统，所以每次mmap都会发生缺页异常。在内存工作繁忙时，频繁内存分配会导致大量缺页异常，使内核管理负担增加。</p>
+<p>上述两种调用并没有真正分配内存，这些内存只有在首次访问时，才通过缺页异常进入内核中，由内核来分配。</p>
+<h4 id="回收"><a href="#回收" class="headerlink" title="回收"></a>回收</h4><p>内存紧张时，系统通过以下方式来回收内存：</p>
+<ul>
+<li>回收缓存： LRU算法回收最近最少使用的内存页面；</li>
+<li>回收不常访问内存： 把不常用的内存通过交换分区写入磁盘</li>
+<li><p>杀死进程： OOM内核保护机制 （进程消耗内存越大oom_score越大，占用CPU越多oom_score越小，可以通过/proc手动调整oom_adj） </p>
+<pre><code>echo -16 &gt; /proc/$(pidof XXX)/oom_adj
+</code></pre></li>
+</ul>
+<h3 id="如何查看内存使用情况"><a href="#如何查看内存使用情况" class="headerlink" title="如何查看内存使用情况"></a>如何查看内存使用情况</h3><p>free来查看整个系统的内存使用情况</p>
+<p>top/ps来查看某个进程的内存使用情况</p>
+<ul>
+<li><strong>VIRT</strong> 进程的虚拟内存大小</li>
+<li><strong>RES</strong> 常驻内存的大小，即进程实际使用的物理内存大小，不包括swap和共享内存</li>
+<li><strong>SHR</strong> 共享内存大小，与其他进程共享的内存，加载的动态链接库以及程序代码段</li>
+<li><strong>%MEM</strong> 进程使用物理内存占系统总内存的百分比 </li>
+</ul>
+<hr>
+<h2 id="Lesson-16-怎样理解内存中的Buffer和Cache？"><a href="#Lesson-16-怎样理解内存中的Buffer和Cache？" class="headerlink" title="Lesson 16 怎样理解内存中的Buffer和Cache？"></a>Lesson 16 怎样理解内存中的Buffer和Cache？</h2><h3 id="free数据来源"><a href="#free数据来源" class="headerlink" title="free数据来源"></a>free数据来源</h3><p>在free手册中可以看到buffer和cache的定义，但是并不能直观帮助我们理解</p>
+<pre><code>buffers： Memory used by kernel buffers (Buffers in /proc/meminfo)
+cache: Memory used by the page cache and slabs (Cache and Sreclaimable in /proc/meminfo)
+</code></pre><h3 id="proc文件系统"><a href="#proc文件系统" class="headerlink" title="proc文件系统"></a>proc文件系统</h3><p>接着看proc文件系统中的文档可以看到： Buffers是对原始磁盘块的临时存储，也就是用来缓存磁盘的数据(通常不会特别大)。Cached是从磁盘读取文件的页缓存，用来缓存从文件中读取的数据。Slab包括可回收和不可回收两部分。</p>
+<pre><code>Buffers %lu: Relatively temporary storage for raw disk blocks that shouldn&apos;t get tremendously large (20MB or so)    
+
+Cached %lu: In-memory cache for files read from the disk(the page cache). Doesn&apos;t include SwapCached.
+
+SReclaimable %lu: Part of Slab, that might be reclaimed, such as ceches.
+
+Sunreclaim %lu: Part of Slab, that cannot bt reclaimed on memory pressure.
+</code></pre><h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><p><strong>该实验对环境要求较高，需要系用配置多块磁盘，并且分区/dev/sdb1处于未使用状态。如果不满足千万不要尝试，否则会对磁盘分区造成损坏</strong></p>
+<p>首先安装sysstat包，然后清理系统缓存</p>
+<pre><code>echo 3 &gt; /proc/sys/vm/drop_caches
+</code></pre><h4 id="场景1-磁盘和文件写案例"><a href="#场景1-磁盘和文件写案例" class="headerlink" title="场景1 磁盘和文件写案例"></a>场景1 磁盘和文件写案例</h4><pre><code>vmstat 1 #空闲情况下查看系统内存使用情况
+dd if=/dev/urandom of=/tmp/file bs=1M count=500 #通过读取随机设备，生产一个500MB大小的文件
+#此时观察vmstat，发现cache在不断增长，但是Buffer基本保持不变
+#Cache开始增长时，块设备IO很少，dd命令结束后cache不再增长，但块设备写还会持续一段时间
+
+echo 3 &gt;/proc/sys/vm/drop_caches
+dd if=/dev/urandom of=/dev/sdb1 bs=1M count=2048 #清理缓存后向磁盘分区写入2GB的随机数据
+#此时观察vmstat输出，发现写磁盘会时buffer和cache都在增长，但是buffer增长快得多
+</code></pre><p>通过该案例可以看出写文件时会用到cache缓存数据，写磁盘时会用到buffer来缓存数据。</p>
+<h4 id="场景2-磁盘和文件读案例"><a href="#场景2-磁盘和文件读案例" class="headerlink" title="场景2 磁盘和文件读案例"></a>场景2 磁盘和文件读案例</h4><pre><code>echo 3 &gt; /proc/sys/vm/drop_caches
+dd if=/tmp/file of=/dev/null
+#观察vmstat输出，发现读取文件时buffer保持不变，cache不停增长
+
+echo 3 &gt;/proc/sys/vm/drop_caches
+dd if=/dev/sda1 of=/dev/null bs=1M count=1024
+#观察vmstat发现读磁盘时，buffer和cache都在增长，但是buffer增长快得多
+</code></pre><p><strong>通过上述实验可以看出buffer是对磁盘数据的缓存，cache是对文件数据的缓存，它们既会用在读请求也会用在写请求中。</strong></p>
+<hr>
+<h2 id="Lesson-17-如何利用系统缓存优化程序的运行效率"><a href="#Lesson-17-如何利用系统缓存优化程序的运行效率" class="headerlink" title="Lesson 17 如何利用系统缓存优化程序的运行效率"></a>Lesson 17 如何利用系统缓存优化程序的运行效率</h2><h3 id="缓存命中率"><a href="#缓存命中率" class="headerlink" title="缓存命中率"></a>缓存命中率</h3><p><strong>缓存命中率</strong>是指直接通过缓存获取数据的请求次数，占所有请求次数的百分比。<strong>命中率越高说明缓存带来的收益越高，应用程序的性能也就越好。</strong></p>
+<p>安装bcc包后可以通过cachestat和cachetop来监测缓存的读写命中情况。</p>
+<p>安装pcstat后可以查看文件在内存中的缓存大小以及缓存比例。</p>
+<pre><code>#首先安装Go
+export GOPATH=~/go
+export PATH=~/go/bin:$PATH
+go get golang.org/x/sys/unix
+go ge github.com/tobert/pcstat/pcstat
+</code></pre><h3 id="实验案例一-dd缓存加速"><a href="#实验案例一-dd缓存加速" class="headerlink" title="实验案例一 dd缓存加速"></a>实验案例一 dd缓存加速</h3><pre><code>dd if=/dev/sda1 of=file bs=1M count=512 #生产一个512MB的临时文件
+echo 3 &gt; /proc/sys/vm/drop_caches #清理缓存
+pcstat file #确定刚才生成文件不在系统缓存中，此时cached和percent都是0
+cachetop 5
+dd if=file of=/dev/null bs=1M #测试文件读取速度
+#此时文件读取性能为30+MB/s，查看cachetop结果发现并不是所有的读都落在磁盘上，读缓存命中率只有50%。
+dd if=file of=/dev/null bs=1M #重复上述读文件测试
+#此时文件读取性能为4+GB/s，读缓存命中率为100%
+pcstat file #查看文件file的缓存情况，100%全部缓存
+</code></pre><p>实验表明系统缓存对第二次dd命令有明显的加速效果，大大提高了文件读取的性能。同时要注意如果我们把dd作为性能测试工具时，由于缓存存在会导致测试结果严重失真。</p>
+<h3 id="实验案例二-O-DIRECT选项绕过系统缓存"><a href="#实验案例二-O-DIRECT选项绕过系统缓存" class="headerlink" title="实验案例二 O_DIRECT选项绕过系统缓存"></a>实验案例二 O_DIRECT选项绕过系统缓存</h3><pre><code>cachetop 5
+sudo docker run --privileged --name=app -itd feisky/app:io-direct
+sudo docker logs app #确认案例启动成功
+#实验结果表明每读32MB数据都要花0.9s，且cachetop输出中显示1024次缓存全部命中
+</code></pre><p>但是凭感觉可知如果缓存命中读速度不应如此慢，读次数时1024，页大小为4K，五秒的时间内读取了1024*4KB数据，即每秒0.8MB，和结果中32MB相差较大。说明该案例没有充分利用缓存，怀疑系统调用设置了直接I/O标志绕过系统缓存。因此接下来观察系统调用</p>
+<pre><code>strace -p $(pgrep app)
+#strace 结果可以看到openat打开磁盘分区/dev/sdb1，传入参数为O_RDONLY|O_DIRECT
+</code></pre><p>这就解释了为什么读32MB数据那么慢，直接从磁盘读写肯定远远慢于缓存。找出问题后我们再看案例的源代码发现flags中指定了直接IO标志。删除该选项后重跑，验证性能变化。</p>
+<hr>
+<h2 id="Lesson-18-内存泄漏，如何定位和处理？"><a href="#Lesson-18-内存泄漏，如何定位和处理？" class="headerlink" title="Lesson 18 内存泄漏，如何定位和处理？"></a>Lesson 18 内存泄漏，如何定位和处理？</h2><p>对应用程序来说，动态内存的分配和回收是核心又复杂的一个逻辑功能模块。管理内存的过程中会发生各种各样的“事故”：</p>
+<ul>
+<li>没正确回收分配的内存，导致了泄漏</li>
+<li>访问的是已分配内存边界外的地址，导致程序异常退出</li>
+<li>…</li>
+</ul>
+<h3 id="内存的分配与回收"><a href="#内存的分配与回收" class="headerlink" title="内存的分配与回收"></a>内存的分配与回收</h3><p>在Lesson15中我们了解到了虚拟内存分布从低到高分别是<strong>只读段，数据段，堆，内存映射段，栈</strong>五部分。其中会导致内存泄漏的是：</p>
+<ul>
+<li>堆： 由应用程序自己来分配和管理，除非程序退出这些堆内存不会被系统自动释放。</li>
+<li>内存映射段：包括动态链接库和共享内存，其中共享内存由程序自动分配和管理</li>
+</ul>
+<p><strong>内存泄漏的危害比较大，这些忘记释放的内存，不仅应用程序自己不能访问，系统也不能把它们再次分配给其他应用。</strong> 内存泄漏不断累积甚至会耗尽系统内存。</p>
+<h3 id="实验-如何检测内存泄漏"><a href="#实验-如何检测内存泄漏" class="headerlink" title="实验 如何检测内存泄漏"></a>实验 如何检测内存泄漏</h3><p>预先安装systat，docker，bcc</p>
+<pre><code>sudo docker run --name=app -itd feisky/app:mem-leak
+sudo docker logs app
+vmstat 3
+</code></pre><p>可以看到free在不断下降，buffer和cache基本保持不变。说明系统的内存一致在升高。但并不能说明存在内存泄漏。此时可以通过memleak工具来跟踪系统或进程的内存分配/释放请求。</p>
+<pre><code>/usr/share/bcc/tools/memleak -a -p $(pidof app)
+</code></pre><p>从memleak输出可以看到，应用在不停地分配内存，并且这些分配的地址并没有被回收。通过调用栈看到是fibonacci函数分配的内存没有释放。定位到源码后查看源码来修复增加内存释放函数即可。</p>
+<p>另外，在该实验中也可以通过将动态分配的内存改为数组来避免内存泄漏的问题，数据放在栈中由系统自动分配与回收。</p>
+<hr>
+<h2 id="Lesson-19-20-为什么系统的Swap变高"><a href="#Lesson-19-20-为什么系统的Swap变高" class="headerlink" title="Lesson 19/20 为什么系统的Swap变高"></a>Lesson 19/20 为什么系统的Swap变高</h2><p>系统内存资源紧张时通过内存回收和OOM杀死进程来解决。其中可回收内存包括：</p>
+<ul>
+<li>缓存/缓冲区，属于可回收资源，在文件管理中通常叫做文件页<ul>
+<li>被应用程序修改过暂时没写入磁盘的数据(脏页)，要先写入磁盘然后才能内存释放<ul>
+<li>在应用程序中通过fsync将脏页同步到磁盘</li>
+<li>交给系统，内核线程pdflush负责这些脏页的刷新</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>内存映射获取的文件映射页，也可以被释放掉，下次访问时从文件重新读取</li>
+</ul>
+<p>对于程序自动分配的堆内存，也就是我们在内存管理中的匿名页，虽然这些内存不能直接释放，但是Linux提供了Swap机制将不常访问的内存写入到磁盘来释放内存，再次访问时从磁盘读取到内存即可。</p>
+<h3 id="Swap原理"><a href="#Swap原理" class="headerlink" title="Swap原理"></a>Swap原理</h3><p>Swap本质就是把一块磁盘空间或者一个本地文件当作内存来使用，包括换入和换出两个过程：</p>
+<ul>
+<li>换出： 将进程暂时不用的内存数据存储到磁盘中，并释放这些内存</li>
+<li>换入： 进程再次访问内存时，将它们从磁盘读到内存中</li>
+</ul>
+<p>Linux如何衡量内存资源是否紧张？</p>
+<ul>
+<li><strong>直接内存回收</strong> 新的大块内存分配请求，但剩余内存不足。此时系统会回收一部分内存；</li>
+<li><p><strong>kswapd0</strong> 内核线程定期回收内存。为了衡量内存使用情况，定义了pages_min,pages_low,pages_high三个阈值，并根据其来进行内存的回收操作。</p>
+<ul>
+<li>剩余内存 &lt; pages_min，进程可用内存耗尽了，只有内核才可以分配内存</li>
+<li>pages_min &lt; 剩余内存 &lt; pages_low,内存压力较大，kswapd0执行内存回收，直到剩余内存 &gt; pages_high</li>
+<li>pages_low &lt; 剩余内存 &lt; pages_high，内存有一定压力，但可以满足新内存请求</li>
+<li><p>剩余内存 &gt; pages_high，说明剩余内存较多，无内存压力</p>
+<p>pages_low = pages_min <em> 5 / 4<br>pages_high = pages_min </em> 3 / 2</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="NUMA-与-SWAP"><a href="#NUMA-与-SWAP" class="headerlink" title="NUMA 与 SWAP"></a>NUMA 与 SWAP</h3><p>很多情况下系统剩余内存较多，但SWAP依旧升高，这是由于处理器的NUMA架构。</p>
+<p>在NUMA架构下多个处理器划分到不同的Node，每个Node都拥有自己的本地内存空间。在分析内存的使用时应该针对每个Node单独分析。</p>
+<pre><code>numactl --hardware #查看处理器在Node的分布情况，以及每个Node的内存使用情况
+</code></pre><p>内存三个阈值可以通过/proc/zoneinfo来查看，该文件中还包括活跃和非活跃的匿名页/文件页数。</p>
+<p>当某个Node内存不足时，系统可以从其他Node寻找空闲资源，也可以从本地内存中回收内存。 通过/proc/sys/vm/zone_raclaim_mode来调整。</p>
+<ul>
+<li>0表示既可以从其他Node寻找空闲资源，也可以从本地回收内存</li>
+<li>1，2，4表示只回收本地内存，2表示可以会回脏数据回收内存，4表示可以用Swap方式回收内存。</li>
+</ul>
+<h3 id="swappiness"><a href="#swappiness" class="headerlink" title="swappiness"></a>swappiness</h3><p>在实际回收过程中Linux根据/proc/sys/vm/swapiness选项来调整使用Swap的积极程度，从0-100，数值越大越积极使用Swap，即更倾向于回收匿名页；数值越小越消极使用Swap，即更倾向于回收文件页。</p>
+<p><strong>注意：这只是调整Swap积极程度的权重，即使设置为0，当剩余内存+文件页小于页高阈值时，还是会发生Swap。</strong></p>
+<h3 id="实验-Swap升高时如何定位分析"><a href="#实验-Swap升高时如何定位分析" class="headerlink" title="实验 Swap升高时如何定位分析"></a>实验 Swap升高时如何定位分析</h3><pre><code>free #首先通过free查看swap使用情况，若swap=0表示未配置Swap
+#先创建并开启swap
+fallocate -l 8G /mnt/swapfile
+chmod 600 /mnt/swapfile
+mkswap /mnt/swapfile
+swapon /mnt/swapfile
+
+free #再次执行free确保Swap配置成功
+
+dd if=/dev/sda1 of=/dev/null bs=1G count=2048 #模拟大文件读取
+sar -r -S 1  #查看内存各个指标变化 -r内存 -S swap
+#根据结果可以看出，%memused在不断增长，剩余内存kbmemfress不断减少，缓冲区kbbuffers不断增大，由此可知剩余内存不断分配给了缓冲区
+#一段时间之后，剩余内存很小，而缓冲区占用了大部分内存。此时Swap使用之间增大，缓冲区和剩余内存只在小范围波动
+
+停下sar命令
+cachetop5 #观察缓存
+#可以看到dd进程读写只有50%的命中率，未命中数为4w+页，说明正式dd进程导致缓冲区使用升高
+watch -d grep -A 15 ‘Normal’ /proc/zoneinfo #观察内存指标变化
+#发现升级内存在一个小范围不停的波动，低于页低阈值时会突然增大到一个大于页高阈值的值
+</code></pre><p>说明剩余内存和缓冲区的波动变化正是由于内存回收和缓存再次分配的循环往复。有时候Swap用的多，有时候缓冲区波动更多。此时查看swappiness值为60，是一个相对中和的配置，系统会根据实际运行情况来选去合适的回收类型。</p>
+<hr>
+<h2 id="Lesson-21-套路篇：如何“快准狠”找到系统内存存在的问题"><a href="#Lesson-21-套路篇：如何“快准狠”找到系统内存存在的问题" class="headerlink" title="Lesson 21 套路篇：如何“快准狠”找到系统内存存在的问题"></a>Lesson 21 套路篇：如何“快准狠”找到系统内存存在的问题</h2><h3 id="内存性能指标"><a href="#内存性能指标" class="headerlink" title="内存性能指标"></a>内存性能指标</h3><p><strong>系统内存指标</strong></p>
+<ul>
+<li>已用内存/剩余内存</li>
+<li>共享内存 （tmpfs实现）</li>
+<li>可用内存： 包括剩余内存和可回收内存</li>
+<li>缓存：磁盘读取文件的页缓存，slab分配器中的可回收部分</li>
+<li>缓冲区： 原始磁盘块的临时存储，缓存将要写入磁盘的数据</li>
+</ul>
+<p><strong>进程内存指标</strong></p>
+<ul>
+<li>虚拟内存： 5大部分</li>
+<li>常驻内存： 进程实际使用的物理内存，不包括Swap和共享内存</li>
+<li>共享内存： 与其他进程共享的内存，以及动态链接库和程序的代码段</li>
+<li>Swap内存： 通过Swap换出到磁盘的内存</li>
+</ul>
+<p><strong>缺页异常</strong></p>
+<ul>
+<li>可以直接从物理内存中分配，次缺页异常</li>
+<li>需要磁盘IO介入(如Swap)，主缺页异常。 此时内存访问会慢很多</li>
+</ul>
+<h3 id="内存性能工具"><a href="#内存性能工具" class="headerlink" title="内存性能工具"></a>内存性能工具</h3><p>根据不同的性能指标来找合适的工具:<br><img src="/2020/06/14/Linux性能优化实战第三周--内存性能篇/metric_tool.png" alt> </p>
+<p>内存分析工具包含的性能指标:<br><img src="/2020/06/14/Linux性能优化实战第三周--内存性能篇/tool_metric.png" alt> </p>
+<h3 id="如何迅速分析内存的性能瓶颈"><a href="#如何迅速分析内存的性能瓶颈" class="headerlink" title="如何迅速分析内存的性能瓶颈"></a>如何迅速分析内存的性能瓶颈</h3><p>通常先运行几个覆盖面比较大的性能工具，如free，top，vmstat，pidstat等</p>
+<ul>
+<li>先用free和top查看系统整体内存使用情况</li>
+<li>再用vmstat和pidstat，查看一段时间的趋势，从而判断内存问题的类型</li>
+<li>最后进行详细分析，比如内存分配分析，缓存/缓冲区分析，具体进程的内存使用分析等</li>
+</ul>
+<p>常见的优化思路：</p>
+<ul>
+<li>最好禁止Swap，若必须开启则尽量降低swappiness的值</li>
+<li>减少内存的动态分配，如可以用内存池，HugePage等</li>
+<li>尽量使用缓存和缓冲区来访问数据。如用堆栈明确声明内存空间来存储需要缓存的数据，或者用Redis外部缓存组件来优化数据的访问</li>
+<li>cgroups等方式来限制进程的内存使用情况，确保系统内存不被异常进程耗尽</li>
+<li>/proc/pid/oom_adj调整核心应用的oom_score，保证即使内存紧张核心应用也不会被OOM杀死 </li>
+</ul>
+<h2 id="Lesson-22-答疑-（略）"><a href="#Lesson-22-答疑-（略）" class="headerlink" title="Lesson 22 答疑 （略）"></a>Lesson 22 答疑 （略）</h2>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" itemprop="url">
                   《Linux 性能优化实战》第二周--CPU性能篇(下)
                 </a>
@@ -248,7 +599,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-03T22:57:55+08:00" content="2020-06-03">
               2020-06-03
             </time>
@@ -627,7 +978,7 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-05-31T22:57:55+08:00" content="2020-05-31">
               2020-05-31
             </time>
@@ -895,7 +1246,7 @@ ps aux | grep &apos;/app&apos;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-06-16T22:57:55+08:00" content="2019-06-16">
               2019-06-16
             </time>
@@ -1085,7 +1436,7 @@ ps aux | grep &apos;/app&apos;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-04-18T23:31:19+08:00" content="2019-04-18">
               2019-04-18
             </time>
@@ -1225,7 +1576,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-04-17T23:38:48+08:00" content="2019-04-17">
               2019-04-17
             </time>
@@ -1321,7 +1672,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-31T15:54:03+08:00" content="2016-12-31">
               2016-12-31
             </time>
@@ -1429,7 +1780,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-23T15:53:56+08:00" content="2016-12-23">
               2016-12-23
             </time>
@@ -1530,7 +1881,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-16T10:56:39+08:00" content="2016-12-16">
               2016-12-16
             </time>
@@ -1687,7 +2038,7 @@ Test:2000 good engines,10 anomalous
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
               2016-12-08
             </time>
@@ -1841,136 +2192,6 @@ xj&apos; = xj - uj
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
-              2016-12-04
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><h3 id="7-1-Optimization-objective"><a href="#7-1-Optimization-objective" class="headerlink" title="7.1 Optimization objective"></a>7.1 Optimization objective</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
-<h3 id="7-2-Large-Margin-Intuition"><a href="#7-2-Large-Margin-Intuition" class="headerlink" title="7.2 Large Margin Intuition"></a>7.2 Large Margin Intuition</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
-<p>C如果越大，两个分类的间距越小。</p>
-<h3 id="7-3-The-Mathematics-behind-large-margin-classification"><a href="#7-3-The-Mathematics-behind-large-margin-classification" class="headerlink" title="7.3 The Mathematics behind large margin classification"></a>7.3 The Mathematics behind large margin classification</h3><p>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/7_4.png" alt="7_4"><br>SVM Decision Boundary 计算时可以利用这个特性。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/7_5.png" alt="7_5"></p>
-<h3 id="7-4-Kernels"><a href="#7-4-Kernels" class="headerlink" title="7.4 Kernels"></a>7.4 Kernels</h3><h4 id="7-4-1-Kernels-I"><a href="#7-4-1-Kernels-I" class="headerlink" title="7.4.1 Kernels I"></a>7.4.1 Kernels I</h4><p>Gaussian Kernel.</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/7_6.png" alt="7_6"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_7.png" alt="7_7"></p>
-<h4 id="7-5-Kernels-II"><a href="#7-5-Kernels-II" class="headerlink" title="7.5 Kernels II"></a>7.5 Kernels II</h4><p>SVM parameters:<br>Large C: Lower bias, high variance</p>
-<p>Small C: High bias, low variance</p>
-<p>Large segma*segma: more smoothly. High bias, low variance.</p>
-<p>Small segma*segma: less smoothly. Lower bias, higher variance.</p>
-<h3 id="7-6-Using-an-SVM"><a href="#7-6-Using-an-SVM" class="headerlink" title="7.6 Using an SVM"></a>7.6 Using an SVM</h3><p>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
-<p><strong>Need to specify:</strong></p>
-<pre><code>Choice of parameter C.
-Choice of Kernel(similarity function):
-    No Kernel(&apos;Linear Kernel&apos;)
-    Gaussian Kernel.(need to choose segma)
-</code></pre><p><strong>Note:</strong></p>
-<pre><code>Do not perform feature scaling before using the Gaussian kernel.
-</code></pre><p><strong>Other Choice of kernel:</strong></p>
-<pre><code>Not all similarity functions similarity(x,l) make valid kernels. 
-(Need to satisfy &apos;mercer&apos;s Theorem&apos; to make sure SVM package&apos;s optimications run correctly, and do not diverge)    
-</code></pre><p><strong>Multi-class classification:</strong></p>
-<p>Train K SVMs, 需要对K个类进行分类，而非k-1。</p>
-<p><strong>Logistic regression vs SVM:</strong></p>
-<p>n= number of features, m =number of training examples</p>
-<pre><code>if n is large（相对于m）:
-    using Logistic regression, or SVM without kernel.
-if n is small, m is intermediate:
-    use SVM with Gaussian Kernel.
-if n is small, m is large:
-    create/add more features,
-    then use logistic regression or SVM without kernel.
-
-Neural network likely to work well for most od these settings,
-but many slower to train.
-</code></pre>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2016,8 +2237,8 @@ but many slower to train.
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">21</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-count">22</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -2027,7 +2248,7 @@ but many slower to train.
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -2071,7 +2292,7 @@ but many slower to train.
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
