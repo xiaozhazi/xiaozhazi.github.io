@@ -235,6 +235,194 @@
             
               
                 
+                <a class="post-title-link" href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
+              2016-12-08
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="8、Unsupervised-Learning"><a href="#8、Unsupervised-Learning" class="headerlink" title="8、Unsupervised Learning"></a>8、Unsupervised Learning</h1><h2 id="8-1-Clustering"><a href="#8-1-Clustering" class="headerlink" title="8.1 Clustering"></a>8.1 Clustering</h2><h3 id="8-1-1-Unsupervised-Learning-Introduction"><a href="#8-1-1-Unsupervised-Learning-Introduction" class="headerlink" title="8.1.1 Unsupervised Learning: Introduction"></a>8.1.1 Unsupervised Learning: Introduction</h3><p>Applications of clustering:</p>
+<ol>
+<li>Market segementation</li>
+<li>Social network analysis</li>
+<li>Organize computing clusters</li>
+<li>Astronomical data analysis</li>
+</ol>
+<p>无监督学习，数据是没有label的。</p>
+<h3 id="8-1-2-K-Means-Algorithm"><a href="#8-1-2-K-Means-Algorithm" class="headerlink" title="8.1.2 K-Means Algorithm"></a>8.1.2 K-Means Algorithm</h3><p>Input:</p>
+<pre><code>K (number of clusters)
+Training set {x1,x2,...xm}
+</code></pre><p>算法：</p>
+<p>随机初始化K个聚类簇（cluster centroids）u1,u2…uK</p>
+<p>然后repeat操作：</p>
+<ol>
+<li><p>cluster assignment step：</p>
+<pre><code>for     i = 1 to m
+  c(i):=index(from 1 to K) of cluster centroids closest to xi
+</code></pre></li>
+<li><p>Move centroid:</p>
+<pre><code>for k = 1 to K
+  uk := average(mean)of points assigned to cluster k
+</code></pre></li>
+</ol>
+<h3 id="8-1-3-Optimization-objective"><a href="#8-1-3-Optimization-objective" class="headerlink" title="8.1.3 Optimization objective"></a>8.1.3 Optimization objective</h3><p>最小化distortion：<br><img src="http://ofacak8l3.bkt.clouddn.com/8_1.png" alt="8_1"></p>
+<p>因此K-means算法也可以表示为：</p>
+<ol>
+<li>Randomly initialize K cluster centroids u1,u2,…uk</li>
+<li><p>Repeat:</p>
+<pre><code>for i = 1 to m
+    c(i):= index(from 1 to K) of cluster centroid closest to xi
+</code></pre></li>
+</ol>
+<pre><code>for k = 1 to K
+    uk:= average(mean) of points assigned to cluster k [minize J]
+</code></pre><h3 id="8-1-4-Random-initialization"><a href="#8-1-4-Random-initialization" class="headerlink" title="8.1.4 Random initialization"></a>8.1.4 Random initialization</h3><p>Random initialize:</p>
+<p>首先满足 K &lt; m；</p>
+<p>然后随机选择K个训练实例；</p>
+<p>将u1,u2,…uk等于这K个实例；</p>
+<pre><code>for i = 1 to 100{
+    Randomly initialize K-means.
+    Run K-means. Get c1,c2,...cm,u1,...uk.
+    Compute cost function(distortion)
+</code></pre><p>选择最小cost的聚类</p>
+<h3 id="8-1-5-Choosing-the-number-of-clusters"><a href="#8-1-5-Choosing-the-number-of-clusters" class="headerlink" title="8.1.5 Choosing the number of clusters"></a>8.1.5 Choosing the number of clusters</h3><p>目前最好的方法还是手动选择；</p>
+<p>Elbow cost：手肘方法，不是所有情况都能画出这样的图形，有时候会下降趋势较平滑。</p>
+<p>sometimes, you’re running K-means to get clusters to use for some later/downstream purpose.</p>
+<p>Evaluate K-means based on a metric for how well it performs for that later purpose.    </p>
+<h2 id="8-2-Dimensionality-Reduction"><a href="#8-2-Dimensionality-Reduction" class="headerlink" title="8.2 Dimensionality Reduction"></a>8.2 Dimensionality Reduction</h2><p>介绍了第二种无监督学习算法：维数约减。</p>
+<p>主要分为两大类应用：</p>
+<ol>
+<li>Data Compression</li>
+<li>Data Visualization</li>
+</ol>
+<h3 id="8-2-1-Data-Compression"><a href="#8-2-1-Data-Compression" class="headerlink" title="8.2.1 Data Compression"></a>8.2.1 Data Compression</h3><p>将数据从2D 降维到 1D</p>
+<p>将数据从3D 降维到 2D （将三维中的点投影到一个平面上）</p>
+<h3 id="8-2-2-Data-Visualization"><a href="#8-2-2-Data-Visualization" class="headerlink" title="8.2.2 Data Visualization"></a>8.2.2 Data Visualization</h3><p>数据可视化，便于用户更好的观察数据，理解数据之间的含义。</p>
+<p>将数据比较相关的进行降维，原来N维的数据降低到K维</p>
+<p>k &lt;= N； 并且通常K=2或3， 便于进行可视化视图分析 </p>
+<h2 id="8-3-Principal-Component-Analysis"><a href="#8-3-Principal-Component-Analysis" class="headerlink" title="8.3 Principal Component Analysis"></a>8.3 Principal Component Analysis</h2><h3 id="8-3-1-Principal-Component-Analysis-Problem-Formulation"><a href="#8-3-1-Principal-Component-Analysis-Problem-Formulation" class="headerlink" title="8.3.1 Principal Component Analysis Problem Formulation"></a>8.3.1 Principal Component Analysis Problem Formulation</h3><p>Reduce from 2-dimension to 1-dimension:</p>
+<p>Find a direction (a vector v1) onto which to project the data so as to minimize the projection error.</p>
+<p>Reduce from n-dimension to k-dimension:</p>
+<p>Find k vectors v1,v2…vk on to which to project the data, so as to minimize the projection error.</p>
+<p>PCA 不是线性回归：线性回归是竖着映射，PCA是垂直映射。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/8_2.png" alt="8_2"></p>
+<h3 id="8-3-2-Principal-Component-Analysis-algorithm"><a href="#8-3-2-Principal-Component-Analysis-algorithm" class="headerlink" title="8.3.2 Principal Component Analysis algorithm"></a>8.3.2 Principal Component Analysis algorithm</h3><p><strong>Data Preprocessing:</strong></p>
+<p>Training set: x1,x2,…xm</p>
+<p>Preprocessing(feature scaling/mean normalization):</p>
+<pre><code>uj = 1/m(x1+x2+...+xm)
+xj&apos; = xj - uj
+</code></pre><p>If different features on different scales, scale features to have comparable range of values.</p>
+<p><strong>Principal Component Analysis (PCA) algorithm</strong></p>
+<p>Reduce data from n-dimensions to k-dimensions</p>
+<p>compute “covariance matrix”: sigma = 1/m(x1<em>x1T+…+xn</em>xnT)</p>
+<p>compute “eigenvectors” of matrix sigma: [U,S,V] = svd(sigma)</p>
+<p>Ureduce = U(:,1:k)</p>
+<p>z = Ureduce’ * x</p>
+<h3 id="8-4-Applying-PCA"><a href="#8-4-Applying-PCA" class="headerlink" title="8.4 Applying PCA"></a>8.4 Applying PCA</h3><h4 id="8-4-1-Reconstruction-from-Compressed-Representation"><a href="#8-4-1-Reconstruction-from-Compressed-Representation" class="headerlink" title="8.4.1 Reconstruction from Compressed Representation"></a>8.4.1 Reconstruction from Compressed Representation</h4><p>Xapprox = Ureduce*z</p>
+<h4 id="8-4-2-Choosing-the-number-of-principal-components"><a href="#8-4-2-Choosing-the-number-of-principal-components" class="headerlink" title="8.4.2 Choosing the number of principal components"></a>8.4.2 Choosing the number of principal components</h4><p><strong>choosing k    </strong></p>
+<p>(1)Average squared projection error: 1/m(||x1-xapprox1||2 +…)</p>
+<p>(2)Total variation in the data : 1/m(||x1||2 + … +||xm||2)</p>
+<p>Typically, choose k to be smallest value so that (1)/(2)&lt;=0.01</p>
+<p>“99% of variance is retained”    </p>
+<p><strong>Advice for applying PCA</strong></p>
+<p>Supervised learning speedup</p>
+<p>Compression:</p>
+<ol>
+<li>Reduce memory/disk needed to store data</li>
+<li>speed up learning algorithm</li>
+</ol>
+<p>Visualization</p>
+<p><strong>Bad use of PCA: To prevent overfitting</strong></p>
+<p>fewer features, less likely to overfit.</p>
+<p>This might work ok, but isn’t good way to address overfitting. Use regularization instead.</p>
+<p>Before implementing PCA, first try running whatever you want to do with the original/raw data xi. Only if that doesn’t do what you want, then implement PCA and consider using zi.</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周
                 </a>
@@ -1454,119 +1642,6 @@ Normal Equation
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/10/18/AI入门笔记一/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第一周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2016-10-18T10:44:48+08:00" content="2016-10-18">
-              2016-10-18
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="课程内容简介"><a href="#课程内容简介" class="headerlink" title="课程内容简介"></a>课程内容简介</h2><p>课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：<br>i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）<br>ii）无监督学习（集群、降维、推荐系统、深度学习）<br>iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）</p>
-<h3 id="课程学习"><a href="#课程学习" class="headerlink" title="课程学习"></a>课程学习</h3><h4 id="第一周"><a href="#第一周" class="headerlink" title="第一周"></a>第一周</h4><p>1、10月18日学习Introduction章节。主要介绍了什么是Machine Learning及其意义，后续介绍了监督学习和无监督学习，其中监督学习主要介绍了regression和classification，无监督学习主要是cluster。(review三遍才过，对于有无监督学习理解不深刻)</p>
-<pre><code>Machine Learning is the field of study that gives computers 
-the ability to learn without being explicitly programmed.
-</code></pre><p>2、10月19日学习Model and Cost Function章节。分为四个小节，Model Representation、Cost Function、Cost Function-Intuition I、Cost Function-Intuition II。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/hypothesis_structure.png" alt="hypothsis structure"></p>
-<pre><code>Cost Function —— square error function
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/2.png" alt="2"></p>
-<p>我们的目标就是尽可能的使Cost Function值最小。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/3.png" alt="3"></p>
-<p>3、10月19日学习Parameter Learning章节。分为三个小节Gradient Descent、Gradient Descent Intuition、Gradient Descent For Linear Regression。</p>
-<p>因此采用梯度下降的方法</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/4.png" alt="4"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/5.png" alt="5"></p>
-<p>注意，上述temp0和temp1是同步变化的。</p>
-<p>参数a的选取也至关重要，不仅影响算法的效率，还对是否能寻找到局部最优解起至关重要的作用。<br><img src="http://ofacak8l3.bkt.clouddn.com/6.png" alt="6"></p>
-<pre><code>As we approach a local minimum, gradient descent will sutomatically
-take smaller steps. So, no need to decrease a over time.
-</code></pre><p>最终算法表示如下：<br><img src="http://ofacak8l3.bkt.clouddn.com/7.png" alt="7"><br><img src="http://ofacak8l3.bkt.clouddn.com/8.png" alt="8"></p>
-<p>4、10月20日学习Linear Algebra Review，主要是复习了线性代数的相关知识，矩阵计算、矩阵的逆和转置等。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1612,7 +1687,7 @@ take smaller steps. So, no need to decrease a over time.
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">22</span>
+              <span class="site-state-item-count">23</span>
               <span class="site-state-item-name">posts</span>
             </a>
           </div>

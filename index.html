@@ -235,6 +235,283 @@
             
               
                 
+                <a class="post-title-link" href="/2020/06/21/Linux性能优化实战第四周--IO性能篇/" itemprop="url">
+                  《Linux 性能优化实战》第四周--IO性能篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-06-21T10:57:55+08:00" content="2020-06-21">
+              2020-06-21
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周主要学习Linux I/O相关的基础知识以及遇到I/O异常问题如何分析解决。<strong>Linux一切皆文件</strong>。为了支持不同的文件系统，首先Linux在用户进程和文件系统之间实现了一层虚拟文件系统。用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互。其次，为了降低慢速磁盘对性能的影响，文件系统又通过页缓存、目录项缓存以及索引节点缓存来减少对应用程序性能的影响。</p>
+<p>文件系统层、通用块层和块设备层组成了Linux存储系统I/O栈。其中通用块层是磁盘I/O的核心，向上为文件系统和应用程序提供访问块设备的标准接口，向下把各种异构磁盘抽象为统一的块设备，并对文件系统和应用程序发来的I/O请求进行重新排序、请求合并等。</p>
+<p>通过实验具体分析了日志打印级别较低造成IO瓶颈进一步导致CPU使用率高的问题如何分析和解决。一般通过iostat确认是否存在I/O性能瓶颈，再用strace和lsof定位应用程序以及它正在写入的日志文件路径。最后通过调整日志打印级别来解决。</p>
+<h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><p>查看目录项和各种文件系统索引节点的缓存情况： </p>
+<pre><code>cat /proc/slabinfo | slabtop
+</code></pre><p>磁盘IO观察</p>
+<pre><code>iostat -d -x 1      # -d -x 表示显示所有磁盘I/O的指标
+</code></pre><p>进程IO观察</p>
+<pre><code>pidstat -d 1
+
+iotop #可以按照I/O大小对进程排序找到I/O较大的进程
+</code></pre><h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><pre><code>find / -name XXX 会不会导致系统的缓存升高？
+会，导致inode_cache/dentry/proc_inode_cache/xfs_inode缓存升高
+</code></pre><p>可以通过实验进行验证，先清除系统缓存，然后执行命令观察缓存使用情况。</p>
+<hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-23-Linux文件系统是怎么工作的"><a href="#Lesson-23-Linux文件系统是怎么工作的" class="headerlink" title="Lesson 23 Linux文件系统是怎么工作的"></a>Lesson 23 Linux文件系统是怎么工作的</h2><ul>
+<li>磁盘为文件系统提供了最基本的持久化存储</li>
+<li>文件系统在磁盘的基础上，提供了一个用来管理文件的树状结构</li>
+</ul>
+<h3 id="索引节点和目录项"><a href="#索引节点和目录项" class="headerlink" title="索引节点和目录项"></a>索引节点和目录项</h3><p>Linux中一切皆文件。为了方便管理，Linux文件系统为每个文件都分配两个数据结构：</p>
+<ul>
+<li>索引节点： index node，记录文件的元数据(如inode编号，文件大小，访问权限，修改日期，数据位置等)。索引节点会持久化存储到磁盘中，同样占用磁盘空间。</li>
+<li>目录项： directory entry，记录文件的名字，索引节点指针以及与其他目录项的关联关系。目录项是由内核维护的一个内存数据结构，也叫目录项缓存。</li>
+</ul>
+<p>索引节点是每个文件唯一标志，目录项维护文件系统的树状结构。目录项和索引节点关系是多对一。</p>
+<p>磁盘在执行文件系统格式化时，会被分成三个存储区域：</p>
+<ul>
+<li>超级块，存储整个文件系统的状态</li>
+<li>索引节点区，用来存储索引节点</li>
+<li>数据块区，用来存储文件数据</li>
+</ul>
+<h3 id="虚拟文件系统"><a href="#虚拟文件系统" class="headerlink" title="虚拟文件系统"></a>虚拟文件系统</h3><p>目录项、虚拟节点、逻辑块以及超级块构成了Linux文件系统的四大基本要素，为了支持各种不同的文件系统，内核在用户进程和文件系统之间引入了一个虚拟文件系统VFS抽象层。</p>
+<p>VFS定义了一组所有文件系统都支持的数据结构和标准接口。这样用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互即可。</p>
+<h3 id="文件系统I-O"><a href="#文件系统I-O" class="headerlink" title="文件系统I/O"></a>文件系统I/O</h3><p>根据是否利用标准库缓存，可以分为：</p>
+<ul>
+<li>缓冲I/O，利用标准库缓存来加速文件的访问，标准库内部再通过系统调度访问文件</li>
+<li>非缓冲I/O，直接通过系统调用来访问文件，不再经过标准库缓存</li>
+</ul>
+<p>根据是否利用系统的页缓存，分为：</p>
+<ul>
+<li>直接I/O，跳过操作系统的页缓存，直接跟文件系统交互来访问文件  （O_DIRECT）</li>
+<li>非直接I/O，文件读写时，先要经过系统的页缓存然后再由内核或额外的系统调用，真正写入磁盘</li>
+</ul>
+<p>根据应用程序是否阻塞自身运行，分为：</p>
+<ul>
+<li>阻塞I/O，应用程序执行I/O操作后如果没有获得响应，就会阻塞当前线程</li>
+<li>非阻塞I/O，应用程序执行I/O操作后，不会阻塞当前的线程，可以继续执行其他的任务。然后再通过轮询或者事件通知的形式获取调用结果                   （O_NONBLOCK）</li>
+</ul>
+<p>根据是否响应结果，分为：</p>
+<ul>
+<li>所谓同步I/O，应用程序执行I/O操作后，要一直等到整个I/O完成后才能获得I/O响应 （O_SYNC/O_DSYNC）</li>
+<li>所谓异步I/O，应用程序执行I/O操作后，不用等待完成和完成后的响应，而是继续执行就可以。等这次I/O完成后，响应会用事件通知的方式告诉应用程序 （O_ASYNC）</li>
+</ul>
+<h3 id="性能观测"><a href="#性能观测" class="headerlink" title="性能观测"></a>性能观测</h3><pre><code>cat /proc/slabinfo | grep -E &apos;^#|dentry|inode&apos;
+
+slabtop
+</code></pre><hr>
+<h2 id="Lesson-24-25-Linux磁盘I-O时怎么工作的？"><a href="#Lesson-24-25-Linux磁盘I-O时怎么工作的？" class="headerlink" title="Lesson 24/25 Linux磁盘I/O时怎么工作的？"></a>Lesson 24/25 Linux磁盘I/O时怎么工作的？</h2><p>###磁盘<br>磁盘是可以持久化的设备，根据存储介质不同，分为：</p>
+<ul>
+<li>机械磁盘(Hard Disk Driver)，主要由盘片和读写磁头组成，数据存储在盘片的环状磁道中。读写数据时移动磁头，定位到数据所在的磁道中，然后才能访问。最小读写单位是扇区，一般512byte</li>
+<li>固态磁盘(Solid State Disk)，由固态电子元器件组成，不需要磁道寻址。无论连续I/O还是随机I/O都比前者要好。最小读写单位是页，一般4KB，8KB等</li>
+</ul>
+<p>两种磁盘随机I/O都要比连续I/O慢得多：</p>
+<ul>
+<li>机械磁盘随机I/O需要更多的磁头寻道和盘片旋转</li>
+<li>固态磁盘同样存在“先擦除再写入的限制”，随机读写会导致大量的垃圾回收</li>
+<li>连续I/O可以通过预读的方式来减少I/O请求的次数</li>
+</ul>
+<p>###通用块层</p>
+<p>通用块层，是处在文件系统和磁盘驱动中间的一个块设备抽象层。主要有以下功能：</p>
+<ul>
+<li>与VFS类似，向上为文件系统和应用程序提供块设备的标准接口；向下，把各种异构的磁盘设备抽象为统一的块设备，并提供统一框架来管理这些设备的驱动程序。</li>
+<li>给文件系统和应用程序发来的I/O请求排队，并通过重新排序、请求合并等来提升磁盘读写的能力。</li>
+</ul>
+<p><strong>I/O调度算法</strong>：</p>
+<ul>
+<li><strong>NONE</strong>，不使用任何I/O调度，常用在虚拟机中</li>
+<li><strong>NOOP</strong>，先入先出队列，只进行最基本的请求合并，常用与SSD磁盘</li>
+<li><strong>CFQ（Completely Fair Schedule）</strong>，完全公平调度器，为每个进程维护一个I/O调度队列，并按照时间片来均匀分布每个进程的I/O请求。 类似进程CPU调度，CFQ还支持进程I/O的优先级调度，适用于大量进程的系统</li>
+<li><strong>Deadline</strong>，分别为读写请求创建不同的I/O队列，提高机械磁盘的吞吐量，并确保达到最终期限的请求被优先处理。多用于IO压力较重的场景，如数据库等</li>
+</ul>
+<h3 id="IO栈"><a href="#IO栈" class="headerlink" title="IO栈"></a>IO栈</h3><p>Linux存储系统的I/O栈由上到下分为 <strong>文件系统层、通用块层、设备层</strong>。存储系统的IO通常是整个系统最慢的一环，所以Linux系统通过多种缓存机制来优化I/O效率。</p>
+<ul>
+<li>优化文件访问性能： 页缓存、索引节点缓存、目录项缓存等减少对下层设备的直接调用</li>
+<li>优化块设备访问性能：使用缓冲区来缓存块设备的数据</li>
+</ul>
+<h3 id="磁盘性能指标"><a href="#磁盘性能指标" class="headerlink" title="磁盘性能指标"></a>磁盘性能指标</h3><ul>
+<li>使用率， 磁盘处理I/O的时间百分比</li>
+<li>饱和度， 磁盘处理I/O的繁忙程度</li>
+<li>IOPS， 每秒的I/O请求数</li>
+<li>吞吐量， 每秒I/O请求大小</li>
+<li>响应时间， I/O请求从发出到收到响应的间隔时间</li>
+</ul>
+<h3 id="磁盘I-O观测"><a href="#磁盘I-O观测" class="headerlink" title="磁盘I/O观测"></a>磁盘I/O观测</h3><pre><code>iostat -d -x 1      # -d -x 表示显示所有磁盘I/O的指标
+</code></pre><h3 id="进程I-O观测"><a href="#进程I-O观测" class="headerlink" title="进程I/O观测"></a>进程I/O观测</h3><pre><code>pidstat -d 1
+
+iotop #可以按照I/O大小对进程排序找到I/O较大的进程
+</code></pre><hr>
+<h2 id="Lesson-26-案例篇：如何找出狂打日志的内鬼"><a href="#Lesson-26-案例篇：如何找出狂打日志的内鬼" class="headerlink" title="Lesson 26 案例篇：如何找出狂打日志的内鬼"></a>Lesson 26 案例篇：如何找出狂打日志的内鬼</h2><h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><p>首先运行目标应用</p>
+<pre><code>sudo docker run -v /tmp:/tmp --name=app -itd feisky/logapp
+ps -ef | grep /app.py #确保程序启动
+</code></pre><p>我们先用top来观察CPU和内存的使用情况，然后再用iostat来观察磁盘使用情况</p>
+<pre><code>top 
+#观察发现CPU0使用率高且iowait超过了90%，说明cpu0上正在运行IO密集型程序
+#进程方面pythonCPU使用率较高，记录其pid号
+#内存使用方面，总内存8G剩余700+M，Buffer/Cache占用较高
+</code></pre><p>基本可以判断出CPU使用率中的iowait是一个潜在瓶颈，而内存中的缓存占比较大。<br>再用iostat查看I/O使用情况</p>
+<pre><code>iostat -x -d 1 
+#发现sda的I/O使用率很高，很可能已经接近饱和
+#查看前面指标，每秒写磁盘请求数是64，写大小是32MB，写请求响应时间7s，而请求队列长度则达到了1000+
+#超慢的响应时间和请求队列过长，进一步验证了IO已经饱和
+</code></pre><p>接下来分析I/O性能瓶颈的根源</p>
+<pre><code>pidstat -d 1 
+#此时python进程的写比较大，且每秒数据超过了45M，说明python进程导致了IO瓶颈
+
+strace -p XXXX 
+#在write()系统调用上，可以看出进程向文件描述符编号为3的文件中写入了300M数据
+#再观察后面的stat调用，可以看到它正在获取/tmp/logtest.txt.1的状态，这种格式的文件在日志回滚中常见
+
+losf -p XXXX
+#查看进程打开了哪些文件，/tmp/logtest.txt
+</code></pre><p>综上说明进程以每次300MB的速度在疯狂的写日志，其中日志文件目录为/tmp/logtest.txt。此时查看案例源码发现其默认记录INFO级别以上的所有日志。此时将默认级别调高到WARNING级别，日志问题即可解决。</p>
+<hr>
+<h2 id="Lesson-27-案例篇：为什么我的磁盘IO延迟很高？"><a href="#Lesson-27-案例篇：为什么我的磁盘IO延迟很高？" class="headerlink" title="Lesson 27 案例篇：为什么我的磁盘IO延迟很高？"></a>Lesson 27 案例篇：为什么我的磁盘IO延迟很高？</h2><p>本实验需要两台虚拟机，一台案例分析的目标机器运行Flask应用，另一台作为客户端请求单词的热度。</p>
+<pre><code>sudo docker run --name=app -p 10000:80 -itd feisky/word-app
+</code></pre><p>然后在第二天机器 curl */popularity/word 发现一直没响应</p>
+<p>回第一台机器来分析，首先执行df命令查看文件系统使用情况，发现也要等好久才输出。此时df显示系统还有足够多的磁盘空间。此时同样可以先用top来观察CPU和内存使用情况，再用iostat来观察磁盘的IO情况。</p>
+<p>为了避免curl请求结束，在终端2循环执行curl，并用time观察每次执行时间。</p>
+<pre><code>while true； do 
+    time curl */popularity/word
+    sleep 1
+done
+</code></pre><p>top输出发现两个CPU的iowait都非常高，进程部分python进程的CPU使用率稍高，可能和iowait相关。 记录其pid</p>
+<pre><code>ps -aux | grep app.py #正好CPU使用率高的进程是我们的案例应用
+
+iostat -x -d 1 #发现磁盘sda的I/O使用率已经达到98%，写响应时间18s，每秒32MB显然已经达到了IO瓶颈
+
+pidstat -d 1 #再次看到了案例应用pid导致的io瓶颈
+
+strace -p XXX
+</code></pre><p>类似上节的套路，此时strace中可以看到大量的stat系统调用，却没有任何write调用。文件写明明应该有响应的write系统调用，现有工具却找不到痕迹。此时就该考虑换工具了，filetop基于eBPF机制，主要跟踪内核中文件的读写情况，并输出线程ID、读写大小、读写类型以及文件名称。</p>
+<pre><code>filetop -C #发现每隔一段时间线程号为XXX的python应用会写入大量的txt文件，再大量读。
+ps -efT | grep XXX #该线程确实属于我们的应用进程
+</code></pre><p>filetop只给出文件名，并没有给出文件路径。此时opensnoop工具登场</p>
+<pre><code>opensnoop #可以看到这些txt文件位于/tmp目录下，文件从0.txt到1000.txt
+</code></pre><p>结合filetop和opensnoop我们可以猜测案例应用应该是写入1000个txt文件后，又将这些文件内容读取到内存中进行处理。</p>
+<p><strong>系统内存指标</strong></p>
+<ul>
+<li>已用内存/剩余内存</li>
+<li>共享内存 （tmpfs实现）</li>
+<li>可用内存： 包括剩余内存和可回收内存</li>
+<li>缓存：磁盘读取文件的页缓存，slab分配器中的可回收部分</li>
+<li>缓冲区： 原始磁盘块的临时存储，缓存将要写入磁盘的数据</li>
+</ul>
+<p><strong>进程内存指标</strong></p>
+<ul>
+<li>虚拟内存： 5大部分</li>
+<li>常驻内存： 进程实际使用的物理内存，不包括Swap和共享内存</li>
+<li>共享内存： 与其他进程共享的内存，以及动态链接库和程序的代码段</li>
+<li>Swap内存： 通过Swap换出到磁盘的内存</li>
+</ul>
+<p><strong>缺页异常</strong></p>
+<ul>
+<li>可以直接从物理内存中分配，次缺页异常</li>
+<li>需要磁盘IO介入(如Swap)，主缺页异常。 此时内存访问会慢很多</li>
+</ul>
+<h3 id="内存性能工具"><a href="#内存性能工具" class="headerlink" title="内存性能工具"></a>内存性能工具</h3><p>根据不同的性能指标来找合适的工具:<br><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/metric_tool.png" alt> </p>
+<p>内存分析工具包含的性能指标:<br><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/tool_metric.png" alt> </p>
+<h3 id="如何迅速分析内存的性能瓶颈"><a href="#如何迅速分析内存的性能瓶颈" class="headerlink" title="如何迅速分析内存的性能瓶颈"></a>如何迅速分析内存的性能瓶颈</h3><p>通常先运行几个覆盖面比较大的性能工具，如free，top，vmstat，pidstat等</p>
+<ul>
+<li>先用free和top查看系统整体内存使用情况</li>
+<li>再用vmstat和pidstat，查看一段时间的趋势，从而判断内存问题的类型</li>
+<li>最后进行详细分析，比如内存分配分析，缓存/缓冲区分析，具体进程的内存使用分析等</li>
+</ul>
+<p>常见的优化思路：</p>
+<ul>
+<li>最好禁止Swap，若必须开启则尽量降低swappiness的值</li>
+<li>减少内存的动态分配，如可以用内存池，HugePage等</li>
+<li>尽量使用缓存和缓冲区来访问数据。如用堆栈明确声明内存空间来存储需要缓存的数据，或者用Redis外部缓存组件来优化数据的访问</li>
+<li>cgroups等方式来限制进程的内存使用情况，确保系统内存不被异常进程耗尽</li>
+<li>/proc/pid/oom_adj调整核心应用的oom_score，保证即使内存紧张核心应用也不会被OOM杀死 </li>
+</ul>
+<h2 id="Lesson-22-答疑-（略）"><a href="#Lesson-22-答疑-（略）" class="headerlink" title="Lesson 22 答疑 （略）"></a>Lesson 22 答疑 （略）</h2>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/06/14/Linux性能优化实战第三周--内存性能篇/" itemprop="url">
                   《Linux 性能优化实战》第三周--内存性能篇
                 </a>
@@ -2004,194 +2281,6 @@ Test:2000 good engines,10 anomalous
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
-              2016-12-08
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="8、Unsupervised-Learning"><a href="#8、Unsupervised-Learning" class="headerlink" title="8、Unsupervised Learning"></a>8、Unsupervised Learning</h1><h2 id="8-1-Clustering"><a href="#8-1-Clustering" class="headerlink" title="8.1 Clustering"></a>8.1 Clustering</h2><h3 id="8-1-1-Unsupervised-Learning-Introduction"><a href="#8-1-1-Unsupervised-Learning-Introduction" class="headerlink" title="8.1.1 Unsupervised Learning: Introduction"></a>8.1.1 Unsupervised Learning: Introduction</h3><p>Applications of clustering:</p>
-<ol>
-<li>Market segementation</li>
-<li>Social network analysis</li>
-<li>Organize computing clusters</li>
-<li>Astronomical data analysis</li>
-</ol>
-<p>无监督学习，数据是没有label的。</p>
-<h3 id="8-1-2-K-Means-Algorithm"><a href="#8-1-2-K-Means-Algorithm" class="headerlink" title="8.1.2 K-Means Algorithm"></a>8.1.2 K-Means Algorithm</h3><p>Input:</p>
-<pre><code>K (number of clusters)
-Training set {x1,x2,...xm}
-</code></pre><p>算法：</p>
-<p>随机初始化K个聚类簇（cluster centroids）u1,u2…uK</p>
-<p>然后repeat操作：</p>
-<ol>
-<li><p>cluster assignment step：</p>
-<pre><code>for     i = 1 to m
-  c(i):=index(from 1 to K) of cluster centroids closest to xi
-</code></pre></li>
-<li><p>Move centroid:</p>
-<pre><code>for k = 1 to K
-  uk := average(mean)of points assigned to cluster k
-</code></pre></li>
-</ol>
-<h3 id="8-1-3-Optimization-objective"><a href="#8-1-3-Optimization-objective" class="headerlink" title="8.1.3 Optimization objective"></a>8.1.3 Optimization objective</h3><p>最小化distortion：<br><img src="http://ofacak8l3.bkt.clouddn.com/8_1.png" alt="8_1"></p>
-<p>因此K-means算法也可以表示为：</p>
-<ol>
-<li>Randomly initialize K cluster centroids u1,u2,…uk</li>
-<li><p>Repeat:</p>
-<pre><code>for i = 1 to m
-    c(i):= index(from 1 to K) of cluster centroid closest to xi
-</code></pre></li>
-</ol>
-<pre><code>for k = 1 to K
-    uk:= average(mean) of points assigned to cluster k [minize J]
-</code></pre><h3 id="8-1-4-Random-initialization"><a href="#8-1-4-Random-initialization" class="headerlink" title="8.1.4 Random initialization"></a>8.1.4 Random initialization</h3><p>Random initialize:</p>
-<p>首先满足 K &lt; m；</p>
-<p>然后随机选择K个训练实例；</p>
-<p>将u1,u2,…uk等于这K个实例；</p>
-<pre><code>for i = 1 to 100{
-    Randomly initialize K-means.
-    Run K-means. Get c1,c2,...cm,u1,...uk.
-    Compute cost function(distortion)
-</code></pre><p>选择最小cost的聚类</p>
-<h3 id="8-1-5-Choosing-the-number-of-clusters"><a href="#8-1-5-Choosing-the-number-of-clusters" class="headerlink" title="8.1.5 Choosing the number of clusters"></a>8.1.5 Choosing the number of clusters</h3><p>目前最好的方法还是手动选择；</p>
-<p>Elbow cost：手肘方法，不是所有情况都能画出这样的图形，有时候会下降趋势较平滑。</p>
-<p>sometimes, you’re running K-means to get clusters to use for some later/downstream purpose.</p>
-<p>Evaluate K-means based on a metric for how well it performs for that later purpose.    </p>
-<h2 id="8-2-Dimensionality-Reduction"><a href="#8-2-Dimensionality-Reduction" class="headerlink" title="8.2 Dimensionality Reduction"></a>8.2 Dimensionality Reduction</h2><p>介绍了第二种无监督学习算法：维数约减。</p>
-<p>主要分为两大类应用：</p>
-<ol>
-<li>Data Compression</li>
-<li>Data Visualization</li>
-</ol>
-<h3 id="8-2-1-Data-Compression"><a href="#8-2-1-Data-Compression" class="headerlink" title="8.2.1 Data Compression"></a>8.2.1 Data Compression</h3><p>将数据从2D 降维到 1D</p>
-<p>将数据从3D 降维到 2D （将三维中的点投影到一个平面上）</p>
-<h3 id="8-2-2-Data-Visualization"><a href="#8-2-2-Data-Visualization" class="headerlink" title="8.2.2 Data Visualization"></a>8.2.2 Data Visualization</h3><p>数据可视化，便于用户更好的观察数据，理解数据之间的含义。</p>
-<p>将数据比较相关的进行降维，原来N维的数据降低到K维</p>
-<p>k &lt;= N； 并且通常K=2或3， 便于进行可视化视图分析 </p>
-<h2 id="8-3-Principal-Component-Analysis"><a href="#8-3-Principal-Component-Analysis" class="headerlink" title="8.3 Principal Component Analysis"></a>8.3 Principal Component Analysis</h2><h3 id="8-3-1-Principal-Component-Analysis-Problem-Formulation"><a href="#8-3-1-Principal-Component-Analysis-Problem-Formulation" class="headerlink" title="8.3.1 Principal Component Analysis Problem Formulation"></a>8.3.1 Principal Component Analysis Problem Formulation</h3><p>Reduce from 2-dimension to 1-dimension:</p>
-<p>Find a direction (a vector v1) onto which to project the data so as to minimize the projection error.</p>
-<p>Reduce from n-dimension to k-dimension:</p>
-<p>Find k vectors v1,v2…vk on to which to project the data, so as to minimize the projection error.</p>
-<p>PCA 不是线性回归：线性回归是竖着映射，PCA是垂直映射。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/8_2.png" alt="8_2"></p>
-<h3 id="8-3-2-Principal-Component-Analysis-algorithm"><a href="#8-3-2-Principal-Component-Analysis-algorithm" class="headerlink" title="8.3.2 Principal Component Analysis algorithm"></a>8.3.2 Principal Component Analysis algorithm</h3><p><strong>Data Preprocessing:</strong></p>
-<p>Training set: x1,x2,…xm</p>
-<p>Preprocessing(feature scaling/mean normalization):</p>
-<pre><code>uj = 1/m(x1+x2+...+xm)
-xj&apos; = xj - uj
-</code></pre><p>If different features on different scales, scale features to have comparable range of values.</p>
-<p><strong>Principal Component Analysis (PCA) algorithm</strong></p>
-<p>Reduce data from n-dimensions to k-dimensions</p>
-<p>compute “covariance matrix”: sigma = 1/m(x1<em>x1T+…+xn</em>xnT)</p>
-<p>compute “eigenvectors” of matrix sigma: [U,S,V] = svd(sigma)</p>
-<p>Ureduce = U(:,1:k)</p>
-<p>z = Ureduce’ * x</p>
-<h3 id="8-4-Applying-PCA"><a href="#8-4-Applying-PCA" class="headerlink" title="8.4 Applying PCA"></a>8.4 Applying PCA</h3><h4 id="8-4-1-Reconstruction-from-Compressed-Representation"><a href="#8-4-1-Reconstruction-from-Compressed-Representation" class="headerlink" title="8.4.1 Reconstruction from Compressed Representation"></a>8.4.1 Reconstruction from Compressed Representation</h4><p>Xapprox = Ureduce*z</p>
-<h4 id="8-4-2-Choosing-the-number-of-principal-components"><a href="#8-4-2-Choosing-the-number-of-principal-components" class="headerlink" title="8.4.2 Choosing the number of principal components"></a>8.4.2 Choosing the number of principal components</h4><p><strong>choosing k    </strong></p>
-<p>(1)Average squared projection error: 1/m(||x1-xapprox1||2 +…)</p>
-<p>(2)Total variation in the data : 1/m(||x1||2 + … +||xm||2)</p>
-<p>Typically, choose k to be smallest value so that (1)/(2)&lt;=0.01</p>
-<p>“99% of variance is retained”    </p>
-<p><strong>Advice for applying PCA</strong></p>
-<p>Supervised learning speedup</p>
-<p>Compression:</p>
-<ol>
-<li>Reduce memory/disk needed to store data</li>
-<li>speed up learning algorithm</li>
-</ol>
-<p>Visualization</p>
-<p><strong>Bad use of PCA: To prevent overfitting</strong></p>
-<p>fewer features, less likely to overfit.</p>
-<p>This might work ok, but isn’t good way to address overfitting. Use regularization instead.</p>
-<p>Before implementing PCA, first try running whatever you want to do with the original/raw data xi. Only if that doesn’t do what you want, then implement PCA and consider using zi.</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2237,7 +2326,7 @@ xj&apos; = xj - uj
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">22</span>
+              <span class="site-state-item-count">23</span>
               <span class="site-state-item-name">posts</span>
             </a>
           </div>
