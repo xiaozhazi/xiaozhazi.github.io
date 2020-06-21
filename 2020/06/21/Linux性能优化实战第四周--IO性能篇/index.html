@@ -92,14 +92,11 @@
 <meta property="og:site_name" content="Frances Hu's Blog">
 <meta property="og:description" content="个人感悟本周主要学习Linux I/O相关的基础知识以及遇到I/O异常问题如何分析解决。Linux一切皆文件。为了支持不同的文件系统，首先Linux在用户进程和文件系统之间实现了一层虚拟文件系统。用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互。其次，为了降低慢速磁盘对性能的影响，文件系统又通过页缓存、目录项缓存以及索引节点缓存来减少对应用程序性能的影响。
 文件系统层、通用块层和块">
-<meta property="og:image" content="http://xiaozhazi.github.io/2020/06/21/Linux性能优化实战第四周--IO性能篇/metric_tool.png">
-<meta property="og:image" content="http://xiaozhazi.github.io/2020/06/21/Linux性能优化实战第四周--IO性能篇/tool_metric.png">
-<meta property="og:updated_time" content="2020-06-21T10:06:34.069Z">
+<meta property="og:updated_time" content="2020-06-21T12:51:33.461Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Linux 性能优化实战》第四周--IO性能篇">
 <meta name="twitter:description" content="个人感悟本周主要学习Linux I/O相关的基础知识以及遇到I/O异常问题如何分析解决。Linux一切皆文件。为了支持不同的文件系统，首先Linux在用户进程和文件系统之间实现了一层虚拟文件系统。用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互。其次，为了降低慢速磁盘对性能的影响，文件系统又通过页缓存、目录项缓存以及索引节点缓存来减少对应用程序性能的影响。
 文件系统层、通用块层和块">
-<meta name="twitter:image" content="http://xiaozhazi.github.io/2020/06/21/Linux性能优化实战第四周--IO性能篇/metric_tool.png">
 
 
 
@@ -180,7 +177,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            ホーム
           </a>
         </li>
       
@@ -190,7 +187,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            アーカイブ
           </a>
         </li>
       
@@ -200,7 +197,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
             
-            Tags
+            タグ
           </a>
         </li>
       
@@ -253,7 +250,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">投稿日</span>
             <time itemprop="dateCreated" datetime="2020-06-21T10:57:55+08:00" content="2020-06-21">
               2020-06-21
             </time>
@@ -284,7 +281,9 @@
       
         <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周主要学习Linux I/O相关的基础知识以及遇到I/O异常问题如何分析解决。<strong>Linux一切皆文件</strong>。为了支持不同的文件系统，首先Linux在用户进程和文件系统之间实现了一层虚拟文件系统。用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互。其次，为了降低慢速磁盘对性能的影响，文件系统又通过页缓存、目录项缓存以及索引节点缓存来减少对应用程序性能的影响。</p>
 <p>文件系统层、通用块层和块设备层组成了Linux存储系统I/O栈。其中通用块层是磁盘I/O的核心，向上为文件系统和应用程序提供访问块设备的标准接口，向下把各种异构磁盘抽象为统一的块设备，并对文件系统和应用程序发来的I/O请求进行重新排序、请求合并等。</p>
-<p>通过实验具体分析了日志打印级别较低造成IO瓶颈进一步导致CPU使用率高的问题如何分析和解决。一般通过iostat确认是否存在I/O性能瓶颈，再用strace和lsof定位应用程序以及它正在写入的日志文件路径。最后通过调整日志打印级别来解决。</p>
+<p>通过实验学习了遇到IO瓶颈进一步导致CPU使用率高的问题如何分析和解决。一般通过iostat确认是否存在I/O性能瓶颈，再用strace和lsof定位应用程序以及它正在写入的日志文件路径。最后通过调整日志打印级别来解决。如果strace无法跟踪到write系统调用时，可以用filetop和opensnoop来定位具体的线程和读写文件目录；也可以加-p选项开启线程跟踪。</p>
+<p>MYSQL的MyISAM引擎主要依赖系统缓存加速磁盘IO的访问。如果系统中还有其他应用同时运行，MyISAM引擎很难充分利用系统缓存。缓存可能会被其他应用程序占用，甚至被清理掉。因此最好不要将应用程序的性能优化完全建立在系统缓存上，最好能在应用程序内部分配内存，构建完全自主的缓存；或者利用第三方缓存应用，如Memcached，redis等。</p>
+<p>对于磁盘IO瓶颈可以通过在内存充足时将数据放在更快的内存中来进行优化。也可以进一步利用Trie树等各种算法来进一步优化处理效率。</p>
 <h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><p>查看目录项和各种文件系统索引节点的缓存情况： </p>
 <pre><code>cat /proc/slabinfo | slabtop
 </code></pre><p>磁盘IO观察</p>
@@ -293,9 +292,15 @@
 <pre><code>pidstat -d 1
 
 iotop #可以按照I/O大小对进程排序找到I/O较大的进程
-</code></pre><h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><pre><code>find / -name XXX 会不会导致系统的缓存升高？
+</code></pre><p>当strace无法跟踪到文件IO痕迹时</p>
+<pre><code>filetop 查看文件名以及使用情况
+opensnoop 查看具体的文件目录
+</code></pre><p>TCP网络连接可以用过nsenter工具来查看详细信息</p>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><pre><code>find / -name XXX 会不会导致系统的缓存升高？
 会，导致inode_cache/dentry/proc_inode_cache/xfs_inode缓存升高
 </code></pre><p>可以通过实验进行验证，先清除系统缓存，然后执行命令观察缓存使用情况。</p>
+<pre><code>iostat/pidstat已经证明了IO瓶颈是由哪个进程导致，为什么strace跟踪没有发现痕迹？
+</code></pre><p>写文件是由子线程来进行处理的，默认strace是不开启线程跟踪的。在strace命令加上-fp选项既可以跟踪进程也可以跟踪线程。</p>
 <hr>
 <p>接下来是本周读书笔记</p>
 <hr>
@@ -407,7 +412,7 @@ losf -p XXXX
 #查看进程打开了哪些文件，/tmp/logtest.txt
 </code></pre><p>综上说明进程以每次300MB的速度在疯狂的写日志，其中日志文件目录为/tmp/logtest.txt。此时查看案例源码发现其默认记录INFO级别以上的所有日志。此时将默认级别调高到WARNING级别，日志问题即可解决。</p>
 <hr>
-<h2 id="Lesson-27-案例篇：为什么我的磁盘IO延迟很高？"><a href="#Lesson-27-案例篇：为什么我的磁盘IO延迟很高？" class="headerlink" title="Lesson 27 案例篇：为什么我的磁盘IO延迟很高？"></a>Lesson 27 案例篇：为什么我的磁盘IO延迟很高？</h2><p>本实验需要两台虚拟机，一台案例分析的目标机器运行Flask应用，另一台作为客户端请求单词的热度。</p>
+<h2 id="Lesson-27-案例篇：为什么我的磁盘IO延迟很高？"><a href="#Lesson-27-案例篇：为什么我的磁盘IO延迟很高？" class="headerlink" title="Lesson 27 案例篇：为什么我的磁盘IO延迟很高？"></a>Lesson 27 案例篇：为什么我的磁盘IO延迟很高？</h2><h3 id="实验-1"><a href="#实验-1" class="headerlink" title="实验"></a>实验</h3><p>本实验需要两台虚拟机，一台案例分析的目标机器运行Flask应用，另一台作为客户端请求单词的热度。</p>
 <pre><code>sudo docker run --name=app -p 10000:80 -itd feisky/word-app
 </code></pre><p>然后在第二天机器 curl */popularity/word 发现一直没响应</p>
 <p>回第一台机器来分析，首先执行df命令查看文件系统使用情况，发现也要等好久才输出。此时df显示系统还有足够多的磁盘空间。此时同样可以先用top来观察CPU和内存使用情况，再用iostat来观察磁盘的IO情况。</p>
@@ -429,44 +434,58 @@ strace -p XXX
 ps -efT | grep XXX #该线程确实属于我们的应用进程
 </code></pre><p>filetop只给出文件名，并没有给出文件路径。此时opensnoop工具登场</p>
 <pre><code>opensnoop #可以看到这些txt文件位于/tmp目录下，文件从0.txt到1000.txt
-</code></pre><p>结合filetop和opensnoop我们可以猜测案例应用应该是写入1000个txt文件后，又将这些文件内容读取到内存中进行处理。</p>
-<p><strong>系统内存指标</strong></p>
+</code></pre><p>结合filetop和opensnoop我们可以猜测案例应用应该是写入1000个txt文件后，又将这些文件内容读取到内存中进行处理。在打断ls检查路径中文件时发现内容为空。此时再次运行opensnoop发现目录变化了，说明这些目录都是应用程序动态生成的，用后就删除了。</p>
+<p>接下来查看程序源码发现该案例应用，在每个请求的处理过程中都会生成一批临时文件，然后读入内存处理，最后再删除整个目录。这是一种常见的利用磁盘空间处理大量数据的技巧，不过本次案例中的IO请求太重导致磁盘I/O利用率过高。</p>
+<p>通过算法优化，在内存充足时将所有数据放到内存中处理，这样就能避免IO性能问题。</p>
+<hr>
+<h2 id="Lesson-28-案例篇：一个SQL查询要15s是怎么回事？"><a href="#Lesson-28-案例篇：一个SQL查询要15s是怎么回事？" class="headerlink" title="Lesson 28 案例篇：一个SQL查询要15s是怎么回事？"></a>Lesson 28 案例篇：一个SQL查询要15s是怎么回事？</h2><h3 id="实验-2"><a href="#实验-2" class="headerlink" title="实验"></a>实验</h3><p>案例由3个容器组成，一个mysql数据库应用，一个商品搜索应用，一个数据处理的应用。在执行搜索命令时遇到了返回数据为空且处理时间超过15s的问题。同样通过循环持续发送请求来进行问题问题，为了避免系统压力过大sleep 5s再开始新请求。</p>
+<p>同样的套路，top iostat pidstat定位IO瓶颈问题以及mysqld进程。慢查询现象大多是CPU使用率高，但这里看到的却是IO问题，说明这并不是单纯的慢查询问题。</p>
+<p>接下来通过strace发现线程XXX正在读取大量数据，且读取文件的描述符编号为38。再用lsof尝试查找对应的文件，此时发现lsof没有任何输出。</p>
+<pre><code>echo $? #查找上一条指令退出时返回值，结果为1说明lsof命令执行失败。
+</code></pre><p>因为-p需要指定进程号，而我们传入线程号所以执行失败。<br>切换回进程号重新执行lsof命令，从输出可以看出确实mysqld进程打开了大量的文件，根据文件描述符找到对应的文件路径为/var/lib/mysql/test/products.MYD文件。</p>
+<p>MYSQL中MYD文件时MyISAM引擎用来存储表数据的文件，文件名就是数据表的名字，父目录即为数据库的名字。 即改文件告诉我们mysqld正在读取test数据库中的products表。</p>
+<p>如何确定这些文件是不是mysqld正在使用的数据库文件呢？有没有可能是不再使用的旧数据？我们通过查看mysqld配置的数据路径即可。</p>
+<pre><code>sudo docker exec -ti mysql mysql -e &apos;show global variable like &quot;%datadir%&quot;;&apos;
+</code></pre><p>可以看到/var/lib/mysql确实是mysqld正在使用的数据存储目录。<br>即然找出了数据库和表，下一步就是弄清楚数据库中正在执行什么样的SQL。</p>
+<p>在SQL命令界面执行</p>
+<pre><code>show full processlist #可以看到select * from products where productName=‘geektime’这条执行时间比较长
+</code></pre><p>一般SQL慢查询问题，很可能是没有利用好索引导致，如何判断这条是不是这样？</p>
+<pre><code>explain  select * from products where productName-‘geektime’
+</code></pre><p>其中pissible_keys和key都为NULL，type为ALL全表查询，这条查询语句根本没有使用索引，所以查询时会扫描整个表。</p>
+<p>因此给productName建立索引即可， 优化后查询时间从15s缩短到了3ms。</p>
+<p>该案例中测试时启动了一个DataService应用，其实停止该应用查询时间也能缩短到0.1s。这种情况下是否还存在IO瓶颈呢？通过vmstat来查看IO变化，发现磁盘读和iowait刚开始挺大，但是没过多久就变成了0，说明IO瓶颈消失。为什么呢？</p>
+<p>通过查看DataService源码可以看到其读取文件前先将 /proc/sys/vm/drop_caches改为1。即释放文件缓存，而mysql读取的数据就是文件缓存，dataService不断释放缓存导致mysql直接访问磁盘。因此产生IO瓶颈。</p>
+<hr>
+<h2 id="Lesson-29-案例篇：Redis响应验证延迟，如何解决？"><a href="#Lesson-29-案例篇：Redis响应验证延迟，如何解决？" class="headerlink" title="Lesson 29 案例篇：Redis响应验证延迟，如何解决？"></a>Lesson 29 案例篇：Redis响应验证延迟，如何解决？</h2><h3 id="实验-3"><a href="#实验-3" class="headerlink" title="实验"></a>实验</h3><p>本实验由python应用和redis两部分组成。Python应用是一个基于Flask的应用，会利用Redis来管理应用程序的缓存。</p>
+<p>实验中在访问应用程序的缓存接口时，发现10s的长响应时间，接下来定位瓶颈。</p>
+<p>同样为了避免分析过程中请求结束，通过loop循环来执行curl命令。</p>
+<p>继续先通过top和iostat先分析是否存在IO瓶颈。 结果发现CPU的iowait比较高，但是磁盘每秒写数据为2.5M，IO使用率为0，没有IO瓶颈。</p>
+<p>但是案例中测试时从Redis缓存中读取数据，对应应该时磁盘的读操作，iostat结果却显示时写操作。所以我们就要知道是什么进程在具体写磁盘。</p>
+<p>运行pidstat -d查看发现是redis-server进程在写磁盘。接下来用strace+lsof查看到底在写什么。从系统调用看epoll_wait、read、write、fdatasync这些系统调用都比较频繁，刚才观察的写操作应该是write和fdatasync导致。lsof找出这些系统调用的操作对象，发现只有7号普通文件会产生磁盘写，其操作路径为/data/appendonly.aof。</p>
+<p>在Redis中这对应着持久化配置中的appendonly和appendfsync选项，可能是由于它们配置不合理导致磁盘写较多。为了验证这个猜测，通过redis命令行查这两个选项的配置。</p>
+<pre><code>sudo docker exec -ti redis redis-cli config get &apos;append*&apos;
+</code></pre><p>发现appendfsync配置为always，appendonly配置为yes。</p>
+<p>Redis提供了两种数据持久化方式：</p>
 <ul>
-<li>已用内存/剩余内存</li>
-<li>共享内存 （tmpfs实现）</li>
-<li>可用内存： 包括剩余内存和可回收内存</li>
-<li>缓存：磁盘读取文件的页缓存，slab分配器中的可回收部分</li>
-<li>缓冲区： 原始磁盘块的临时存储，缓存将要写入磁盘的数据</li>
+<li><strong>快照方式</strong>，按照指定的时间间隔生成数据的快照，并且保存在磁盘文件中。为避免阻塞主进程，Redis会fork一个子进程来进行快照的保存。 无论备份恢复都比追加文件性能好，缺点是在数据量大时fork子进程会用到比较大的内存，保存数据比较耗时。</li>
+<li><strong>追加文件</strong>，在文件末尾追加记录的方式对redis写入数据进行持久化。提供appendfsync选项设置fsync策略：<ul>
+<li>always， 每个操作都会执行一次fsync，最安全</li>
+<li>everysec，每秒钟调用一次fsync，即使最坏情况也只会丢失1s数据</li>
+<li>no， 交给操作系统来处理</li>
 </ul>
-<p><strong>进程内存指标</strong></p>
-<ul>
-<li>虚拟内存： 5大部分</li>
-<li>常驻内存： 进程实际使用的物理内存，不包括Swap和共享内存</li>
-<li>共享内存： 与其他进程共享的内存，以及动态链接库和程序的代码段</li>
-<li>Swap内存： 通过Swap换出到磁盘的内存</li>
+</li>
 </ul>
-<p><strong>缺页异常</strong></p>
-<ul>
-<li>可以直接从物理内存中分配，次缺页异常</li>
-<li>需要磁盘IO介入(如Swap)，主缺页异常。 此时内存访问会慢很多</li>
-</ul>
-<h3 id="内存性能工具"><a href="#内存性能工具" class="headerlink" title="内存性能工具"></a>内存性能工具</h3><p>根据不同的性能指标来找合适的工具:<br><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/metric_tool.png" alt> </p>
-<p>内存分析工具包含的性能指标:<br><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/tool_metric.png" alt> </p>
-<h3 id="如何迅速分析内存的性能瓶颈"><a href="#如何迅速分析内存的性能瓶颈" class="headerlink" title="如何迅速分析内存的性能瓶颈"></a>如何迅速分析内存的性能瓶颈</h3><p>通常先运行几个覆盖面比较大的性能工具，如free，top，vmstat，pidstat等</p>
-<ul>
-<li>先用free和top查看系统整体内存使用情况</li>
-<li>再用vmstat和pidstat，查看一段时间的趋势，从而判断内存问题的类型</li>
-<li>最后进行详细分析，比如内存分配分析，缓存/缓冲区分析，具体进程的内存使用分析等</li>
-</ul>
-<p>常见的优化思路：</p>
-<ul>
-<li>最好禁止Swap，若必须开启则尽量降低swappiness的值</li>
-<li>减少内存的动态分配，如可以用内存池，HugePage等</li>
-<li>尽量使用缓存和缓冲区来访问数据。如用堆栈明确声明内存空间来存储需要缓存的数据，或者用Redis外部缓存组件来优化数据的访问</li>
-<li>cgroups等方式来限制进程的内存使用情况，确保系统内存不被异常进程耗尽</li>
-<li>/proc/pid/oom_adj调整核心应用的oom_score，保证即使内存紧张核心应用也不会被OOM杀死 </li>
-</ul>
-<h2 id="Lesson-22-答疑-（略）"><a href="#Lesson-22-答疑-（略）" class="headerlink" title="Lesson 22 答疑 （略）"></a>Lesson 22 答疑 （略）</h2>
+<p>回头看上述测试，因为配置为always导致每次写数据都会调用一次fsync，从而造成比较大的磁盘IO压力。</p>
+<p>但是为什么查询会有磁盘写呢，我们再次审视strace和lsof的输出，发现编号为8的TCP socket正好对应TCP读写，是一个标准的“请求-相应”格式。从socket中GET uuid：X后响应good，再从socket中读取SADD good X后响应1。对Redis来说SADD是一个写操作，所以Redis会将其持久化到appendonly.aof文件中。因此产生大量的磁盘读写。</p>
+<p>接下来我们确认8号TCPsocket对应的Redis客户端是否为我们的案例应用。 通过lsof -i 找出TCP socket对应的TCP连接信息，进入容器网络命名空间内部看到完成的TCP连接。</p>
+<pre><code>PID=$(sudo docker inspect --format {{.State.Pid}} app)
+nsenter --target $PID --net -- lsof -i
+</code></pre><p>综合分析可知，首先redis配置always不太合理，本案例不需要这么高频的同步写，改为1s时间间隔足够；其次python应用在查询接口中会调用Redis的SADD命令，这很可能是不合理使用缓存导致。</p>
+<p>修改配置后请求时间降低到0.9s，接着通过分析源码解决第二个问题。代码中Python应用将Redis当成临时空间，用来存储查询过程中找到的数据。优化将其放在内存中，再次查看响应时间已经降低到了0.2s。</p>
+<hr>
+<h2 id="Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><a href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈" class="headerlink" title="Lesson 30 套路篇：如何迅速分析出系统IO瓶颈"></a>Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</h2><hr>
+<h2 id="Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><a href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路" class="headerlink" title="Lesson 31 套路篇： 磁盘I/O性能优化的几个思路"></a>Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</h2><hr>
+<h2 id="Lesson-32-答疑-（略）"><a href="#Lesson-32-答疑-（略）" class="headerlink" title="Lesson 32 答疑 （略）"></a>Lesson 32 答疑 （略）</h2>
       
     </div>
 
@@ -552,10 +571,10 @@ ps -efT | grep XXX #该线程确实属于我们的应用进程
       
         <ul class="sidebar-nav motion-element">
           <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
-            Table of Contents
+            見出し
           </li>
           <li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
+            概要
           </li>
         </ul>
       
@@ -572,7 +591,7 @@ ps -efT | grep XXX #该线程确实属于我们的应用进程
           <div class="site-state-item site-state-posts">
             <a href="/archives">
               <span class="site-state-item-count">23</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-name">ポスト</span>
             </a>
           </div>
 
@@ -582,7 +601,7 @@ ps -efT | grep XXX #该线程确实属于我们的应用进程
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">タグ</span>
               </a>
             </div>
           
@@ -610,7 +629,7 @@ ps -efT | grep XXX #该线程确实属于我们的应用进程
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#新工具GET"><span class="nav-number">1.1.</span> <span class="nav-text">新工具GET</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#思考"><span class="nav-number">1.2.</span> <span class="nav-text">思考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-23-Linux文件系统是怎么工作的"><span class="nav-number">2.</span> <span class="nav-text">Lesson 23 Linux文件系统是怎么工作的</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#索引节点和目录项"><span class="nav-number">2.1.</span> <span class="nav-text">索引节点和目录项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟文件系统"><span class="nav-number">2.2.</span> <span class="nav-text">虚拟文件系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件系统I-O"><span class="nav-number">2.3.</span> <span class="nav-text">文件系统I/O</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能观测"><span class="nav-number">2.4.</span> <span class="nav-text">性能观测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-24-25-Linux磁盘I-O时怎么工作的？"><span class="nav-number">3.</span> <span class="nav-text">Lesson 24/25 Linux磁盘I/O时怎么工作的？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IO栈"><span class="nav-number">3.1.</span> <span class="nav-text">IO栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘性能指标"><span class="nav-number">3.2.</span> <span class="nav-text">磁盘性能指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘I-O观测"><span class="nav-number">3.3.</span> <span class="nav-text">磁盘I/O观测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#进程I-O观测"><span class="nav-number">3.4.</span> <span class="nav-text">进程I/O观测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-26-案例篇：如何找出狂打日志的内鬼"><span class="nav-number">4.</span> <span class="nav-text">Lesson 26 案例篇：如何找出狂打日志的内鬼</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验"><span class="nav-number">4.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-27-案例篇：为什么我的磁盘IO延迟很高？"><span class="nav-number">5.</span> <span class="nav-text">Lesson 27 案例篇：为什么我的磁盘IO延迟很高？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内存性能工具"><span class="nav-number">5.1.</span> <span class="nav-text">内存性能工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何迅速分析内存的性能瓶颈"><span class="nav-number">5.2.</span> <span class="nav-text">如何迅速分析内存的性能瓶颈</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-22-答疑-（略）"><span class="nav-number">6.</span> <span class="nav-text">Lesson 22 答疑 （略）</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#新工具GET"><span class="nav-number">1.1.</span> <span class="nav-text">新工具GET</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#思考"><span class="nav-number">1.2.</span> <span class="nav-text">思考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-23-Linux文件系统是怎么工作的"><span class="nav-number">2.</span> <span class="nav-text">Lesson 23 Linux文件系统是怎么工作的</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#索引节点和目录项"><span class="nav-number">2.1.</span> <span class="nav-text">索引节点和目录项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟文件系统"><span class="nav-number">2.2.</span> <span class="nav-text">虚拟文件系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件系统I-O"><span class="nav-number">2.3.</span> <span class="nav-text">文件系统I/O</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能观测"><span class="nav-number">2.4.</span> <span class="nav-text">性能观测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-24-25-Linux磁盘I-O时怎么工作的？"><span class="nav-number">3.</span> <span class="nav-text">Lesson 24/25 Linux磁盘I/O时怎么工作的？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IO栈"><span class="nav-number">3.1.</span> <span class="nav-text">IO栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘性能指标"><span class="nav-number">3.2.</span> <span class="nav-text">磁盘性能指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘I-O观测"><span class="nav-number">3.3.</span> <span class="nav-text">磁盘I/O观测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#进程I-O观测"><span class="nav-number">3.4.</span> <span class="nav-text">进程I/O观测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-26-案例篇：如何找出狂打日志的内鬼"><span class="nav-number">4.</span> <span class="nav-text">Lesson 26 案例篇：如何找出狂打日志的内鬼</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验"><span class="nav-number">4.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-27-案例篇：为什么我的磁盘IO延迟很高？"><span class="nav-number">5.</span> <span class="nav-text">Lesson 27 案例篇：为什么我的磁盘IO延迟很高？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-1"><span class="nav-number">5.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-28-案例篇：一个SQL查询要15s是怎么回事？"><span class="nav-number">6.</span> <span class="nav-text">Lesson 28 案例篇：一个SQL查询要15s是怎么回事？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-2"><span class="nav-number">6.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-29-案例篇：Redis响应验证延迟，如何解决？"><span class="nav-number">7.</span> <span class="nav-text">Lesson 29 案例篇：Redis响应验证延迟，如何解决？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-3"><span class="nav-number">7.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><span class="nav-number">8.</span> <span class="nav-text">Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><span class="nav-number">9.</span> <span class="nav-text">Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-32-答疑-（略）"><span class="nav-number">10.</span> <span class="nav-text">Lesson 32 答疑 （略）</span></a></li></ol></div>
             
           </div>
         </section>
