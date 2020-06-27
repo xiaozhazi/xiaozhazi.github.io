@@ -1,0 +1,735 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Linux性能优化实战," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="个人感悟本周的学习首先了解了Linux网络的工作原理，OSI七层网络模型，TCP/IP模型以及网络包的收发流程。应用程序通过Socket接口发送数据包时先要在网络协议栈从上到下逐层处理最终到网卡上发送，接收也要经过网络协议栈从下到上逐层解析，最后送到应用程序。以及网络传输相关性能指标和响应的查看工具。
+并且学习了经典的C10K问题，以及延伸的C1000K和C10M问题。这个印象中研究生毕业面试B家">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Linux 性能优化实战》第五周--网络性能篇">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/06/27/Linux性能优化实战第五周--网络性能篇/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="个人感悟本周的学习首先了解了Linux网络的工作原理，OSI七层网络模型，TCP/IP模型以及网络包的收发流程。应用程序通过Socket接口发送数据包时先要在网络协议栈从上到下逐层处理最终到网卡上发送，接收也要经过网络协议栈从下到上逐层解析，最后送到应用程序。以及网络传输相关性能指标和响应的查看工具。
+并且学习了经典的C10K问题，以及延伸的C1000K和C10M问题。这个印象中研究生毕业面试B家">
+<meta property="og:updated_time" content="2020-06-27T09:44:25.756Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Linux 性能优化实战》第五周--网络性能篇">
+<meta name="twitter:description" content="个人感悟本周的学习首先了解了Linux网络的工作原理，OSI七层网络模型，TCP/IP模型以及网络包的收发流程。应用程序通过Socket接口发送数据包时先要在网络协议栈从上到下逐层处理最终到网卡上发送，接收也要经过网络协议栈从下到上逐层解析，最后送到应用程序。以及网络传输相关性能指标和响应的查看工具。
+并且学习了经典的C10K问题，以及延伸的C1000K和C10M问题。这个印象中研究生毕业面试B家">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2020/06/27/Linux性能优化实战第五周--网络性能篇/"/>
+
+  <title> 《Linux 性能优化实战》第五周--网络性能篇 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Startseite
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archiv
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                《Linux 性能优化实战》第五周--网络性能篇
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-06-27T15:26:55+08:00" content="2020-06-27">
+              2020-06-27
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周的学习首先了解了Linux网络的工作原理，<strong>OSI七层网络模型</strong>，<strong>TCP/IP模型</strong>以及<strong>网络包的收发流程</strong>。应用程序通过Socket接口发送数据包时先要在网络协议栈从上到下逐层处理最终到网卡上发送，接收也要经过网络协议栈从下到上逐层解析，最后送到应用程序。以及网络传输相关性能指标和响应的查看工具。</p>
+<p>并且学习了经典的C10K问题，以及延伸的C1000K和C10M问题。这个印象中研究生毕业面试B家的时候被问到过。C10K问题的根源一方面在于系统有限的资源，另一方面，同步阻塞I/O模型以及轮询的套接字接口限制了网络事件的处理效率。目前高性能网络方法都基于epoll。从10K到100K，增加物理资源就能解决，但是到1000K时就需要多方面的优化工作，从硬件中断处理和网络功能卸载、到网络协议栈的文件描述符数量、连接状态跟踪、缓存队列等内核的优化，再到应用程序的工作模型优化，都需要考虑。</p>
+<p>再进一步实现10M，就需要用XDP的方式，在内核协议栈之前处理网络包；或者用DPDK直接跳过网络协议栈在用户空间通过轮询的方式直接处理网络包。其中DPDK时目前最主流的高性能网络解决方案，但是需要能支持DPDK的网卡配合使用。</p>
+<p>对于网络性能评估，一般情况需要从上到下对每个协议层进行性能测试，然后根据性能测试结果结合Linux网络协议栈原理，找出导致性能瓶颈的根源。</p>
+<h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><pre><code>查看网络配置
+ifconfig/ip
+套接字信息/协议栈统计信息
+netstat/ss
+网络吞吐量和PPS
+sar
+带宽
+ethtool
+连通性和延时
+ping
+应用层性能
+wrk/jmeter
+传输层性能
+iperf
+转发性能
+pktgen
+</code></pre><hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-33-34-关于网络，你必须知道这些"><a href="#Lesson-33-34-关于网络，你必须知道这些" class="headerlink" title="Lesson 33/34 关于网络，你必须知道这些"></a>Lesson 33/34 关于网络，你必须知道这些</h2><h3 id="网络模型"><a href="#网络模型" class="headerlink" title="网络模型"></a>网络模型</h3><p>开放式系统互联通信参考模型（Open System Interconnection Reference Model），简称<strong>OSI网络模型</strong></p>
+<p>为了解决网络互联中异构设备的兼容性，并解耦复杂的网络包处理流程，OSI模型把网络互联的框架分为应用层、表示层、会话层、传输层、网络层、数据链路层以及物理层等七层。</p>
+<ul>
+<li>应用层，负责为应用程序提供统一的接口</li>
+<li>表示层，负责把数据转换成兼容接收系统的格式</li>
+<li>会话层，负责维护计算机之间的通信连接</li>
+<li>传输层，负责为数据加上传输表头，形成数据包</li>
+<li>网络层，负责数据的路由和转发</li>
+<li>数据链路层，负责MAC寻址，错误侦测和改错</li>
+<li>物理层，负责在物理网络中传输数据帧</li>
+</ul>
+<p>在Linux中我们实际上使用的是一个更实用的四层模型，即TCP/IP网络模型。</p>
+<p>TCP/IP模型把网络互联的框架分为应用层、传输层、网络层、网络接口层等四层。</p>
+<ul>
+<li>应用层，负责向用户提供一组应用程序，如HTTP，FTP，DNS等</li>
+<li>传输层，负责端到端的通信，如TCP，UDP</li>
+<li>网络层，负责网络包的封装、寻址和路由，如IP，ICMP</li>
+<li>网络接口层，负责网络包在物理网络中的传输，比如MAC寻址、错误侦测以及通过网卡传输网络帧等</li>
+</ul>
+<h3 id="Linux网络栈"><a href="#Linux网络栈" class="headerlink" title="Linux网络栈"></a>Linux网络栈</h3><ul>
+<li>传输层在应用数据前面增加了TCP头</li>
+<li>网络层在TCP数据包前增加了IP头</li>
+<li>网络接口层在IP数据包前后分别增加了帧头和帧尾</li>
+</ul>
+<p>网络接口配置的最大传输单元MTU规定了最大的IP包大小，以太网中MTU默认时1500</p>
+<h3 id="Linux网络收发流程"><a href="#Linux网络收发流程" class="headerlink" title="Linux网络收发流程"></a>Linux网络收发流程</h3><h4 id="网络包的接收流程"><a href="#网络包的接收流程" class="headerlink" title="网络包的接收流程"></a>网络包的接收流程</h4><ul>
+<li>当一个网络帧到达网卡后，网卡通过DMA方式，把网络包放到收包队列中；然后通过硬中断告诉中断处理程序已经接收到了网络包。</li>
+<li>网卡中断处理程序为网络帧分配内核数据结构sk_buff，并将其拷贝到sk_buff缓冲区中；再通过软中断通知内核接收到了新的网络帧。</li>
+<li>内核协议栈从缓冲区中取出网络帧，并通过网络协议，从上到下处理这个网络帧<ul>
+<li>链路层检查报文合法性，找出上层协议的类型（IPv4 or IPv6），再去掉帧头和帧尾，交给网络层；</li>
+<li>网络层取出IP头，判断网络包的下一步走向，比如是交给上层处理还是转发。当网络层确认这个包发送本机后，取出上层协议的类型（TCP or UDP），去掉IP头再交给传输层处理。</li>
+<li>传输层取出TCP/UDP头之后根据&lt;源IP，源端口，目的IP，目的端口&gt;四元组作为标识，找出对应的Socket，并把数据拷贝到Socket接收缓存中</li>
+</ul>
+</li>
+<li>应用程序使用Socket接口读取到新收到的数据</li>
+</ul>
+<h4 id="网络包的发送流程"><a href="#网络包的发送流程" class="headerlink" title="网络包的发送流程"></a>网络包的发送流程</h4><ul>
+<li>应用程序通过调用Socket API发送网络包</li>
+<li>由于这是系统调用，会陷入内核态的套接字层中。套接字层把数据包放到Socket发送缓冲区中</li>
+<li>网络协议栈从Socket发送缓冲区中取出数据包，再按照TCP/IP栈，从上到下逐层处理</li>
+<li>分片后的网络包再发送到网络接口层，进行物理地址寻址，找到下一跳的MAC地址，然后添加帧头和帧尾，放到发包队列中。这一切完成后会有软中断通知驱动程序</li>
+<li>驱动程序通过DMA从发包队列中读出网络帧，并通过物理网卡发送出去</li>
+</ul>
+<h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><ul>
+<li>带宽， 表示链路的最大传输速率，单位b/s</li>
+<li>吞吐量，表示单位时间内成功传输的数据量，单位b/s或者B/s 吞吐量/带宽=网络使用率</li>
+<li>延时，表示从网络请求发出后，一直到收到远端响应，所需要的时间延迟。<ul>
+<li>建立连接需要的时间， TCP握手延时</li>
+<li>一个数据包往返所需的时间，RTT</li>
+</ul>
+</li>
+<li>PPS，Packet Per Second，表示以网络包为单位的传输速率。通常用来评估网络的转发能力</li>
+</ul>
+<p>此外，<strong>网络的可用性、并发连接数、丢包率、重传率</strong>也是常用的性能指标。</p>
+<h3 id="网络配置"><a href="#网络配置" class="headerlink" title="网络配置"></a>网络配置</h3><pre><code>ifconfig eth0
+ip -s addr show dev eth0
+</code></pre><ul>
+<li>网络接口的状态标志， ifconfig输出中的RUNNING，ip输出中的LOWER_UP，都表示物理网络是联通的</li>
+<li>MTU大小</li>
+<li>网络接口的IP地址、子网、以及MAC地址</li>
+<li>网络收发的字节数、包数、错误数以及丢包情况，特别是TX和RX部分的errors、dropped、overruns、carrier以及collisions等指标不为0时，通常表示出现了网络I/O问题<ul>
+<li><strong>errors</strong>表示发生错误的数据包数，比如校验错误、帧同步错误等</li>
+<li><strong>dropped</strong>表示丢弃的数据包数，即数据包已经收到了Ring Buffer，但是因为内存不足等原因丢包</li>
+<li><strong>overruns</strong>表示超限数据包数，即网络I/O速度过快，导致RingBuffer中的数据包来不及处理导致的丢包</li>
+<li><strong>carrier</strong>表示发生carrier错误的数据包数，比如双工模式不匹配、物理电缆出问题</li>
+<li><strong>collisions</strong>表示碰撞数据包数</li>
+</ul>
+</li>
+</ul>
+<h3 id="套接字信息"><a href="#套接字信息" class="headerlink" title="套接字信息"></a>套接字信息</h3><pre><code>netstat -nlp | head -n 3
+ss -ltnp | head -n 3
+</code></pre><p>netstat和ss用来查看套接字、网络栈、网络接口以及路由表的信息。其中Recv-Q和Send-Q信息需要特别关注，如果不是0的话说明有网络包的堆积发生。</p>
+<p>当Socket处于Established时，Recv-Q表示套接字缓冲中还没有被应用取走的字节数，Send-Q表示还没有被远端主机确认的字节数。<br>当Socket处于Listening时，Recv-Q表示全连接队列的长度，Send-Q表示全连接队列的最大长度。</p>
+<h3 id="协议栈统计信息"><a href="#协议栈统计信息" class="headerlink" title="协议栈统计信息"></a>协议栈统计信息</h3><pre><code>netstat -s 
+ss -s
+</code></pre><h3 id="吞吐量和PPS"><a href="#吞吐量和PPS" class="headerlink" title="吞吐量和PPS"></a>吞吐量和PPS</h3><pre><code>sar -n DEV 1 
+</code></pre><p>带宽可以用ethtool来查询</p>
+<pre><code>ethtool eth0 | grep Speed
+</code></pre><h3 id="连通性和延时"><a href="#连通性和延时" class="headerlink" title="连通性和延时"></a>连通性和延时</h3><pre><code>ping -c3 XXX.XXX.XXX.XXX
+</code></pre><h2 id="Lesson-35-基础篇：C10K和C1000K回顾"><a href="#Lesson-35-基础篇：C10K和C1000K回顾" class="headerlink" title="Lesson 35 基础篇：C10K和C1000K回顾"></a>Lesson 35 基础篇：C10K和C1000K回顾</h2><p>C10K问题最早由Dan Kegel在1999年提出，那是服务器还是32位系统，运行Linux2.2版本，只配置的很少的内存(2G)和千兆网卡。怎样在这样的系统中支持并发1万的请求？</p>
+<p>从资源上说，2G内存和千兆网卡服务器，同时处理1w请求，只要每个请求处理占用不超200KB内存和100Kbit的网络带宽就可以。所以物理资源充足，接下来时软件的问题。</p>
+<p>如果每个请求分配一个进程/线程，1w个请求会涉及1w个进程/线程的调度、上下文切换乃至它们占用的内存都会成为瓶颈。</p>
+<ul>
+<li>怎样在一个线程内处理多个请求？非阻塞I/O或者异步I/O？</li>
+<li>怎么更节省资源地处理用户请求？用最少的线程来服务这些请求？</li>
+</ul>
+<h3 id="I-O模型优化"><a href="#I-O模型优化" class="headerlink" title="I/O模型优化"></a>I/O模型优化</h3><p>I/O事件的通知方式：</p>
+<ul>
+<li><strong>水平触发</strong>：只要文件描述符可以非阻塞的执行I/O，就会触发通知 </li>
+<li><strong>边缘出发</strong>：只有在文件描述符发生改变时(I/O请求到达时)，才发送一次通知。</li>
+</ul>
+<p>I/O多路复用的方法：</p>
+<ul>
+<li><strong>使用非阻塞I/O和水平触发通知，比如使用select和poll</strong><ul>
+<li>select和 poll从文件描述符列表中，找出哪些可以执行IO，然后进行真正的网络I/O读写。由于I/O是非阻塞的，一个线程中就可以同时监控一批套接字的文件描述符，达到了单线程处理多请求的目的。 </li>
+<li>优点：对程序友好，API简单。</li>
+<li>缺点：需要对文件描述符列表轮询，请求多时较为耗时，且select和poll还有一些限制。以及应用程序每次调用select和poll时还需要把文件描述符的集合从用户空间传入内核空间，由内核修改后再传回用户空间。增加了处理成本。</li>
+</ul>
+</li>
+<li><strong>使用非阻塞I/O和边缘触发通知，如epoll</strong><ul>
+<li>epoll使用红黑树在内核中管理文件描述符的集合，使用事件驱动的机制，只关注有I/O事件发生的文件描述符，不需要轮询整个集合</li>
+<li>epoll在Linux2.6之后提供，由于边缘触发只在文件描述符可读或可写事件发生时才通知，应用程序需要尽可能多地执行I/O并要处理更多的异常事件</li>
+</ul>
+</li>
+<li><strong>使用异步I/O</strong><ul>
+<li>异步I/O也是在Linux2.6后提供，和直观逻辑不太一样，使用时要小心设计，难度较高</li>
+</ul>
+</li>
+</ul>
+<h3 id="工作模型优化"><a href="#工作模型优化" class="headerlink" title="工作模型优化"></a>工作模型优化</h3><ul>
+<li>主进程+多个worker子进程<ul>
+<li>主进程执行bind()+listen()后创建多个子进程</li>
+<li>每个子进程中都通过accept()和epoll_wait（）来处理相同的套接字</li>
+<li>Nginx就是采取这种模式，主进程用来初始化套接字并管理子进程的生命周期，worker进程用来负责实际的请求处理</li>
+<li>accept和epoll_wait调用存在一个惊群问题，当网络I/O事件发生时多个进程被同时唤醒，但实际上只有一个进程来响应事件，其他被唤醒的进程都会重新休眠。<ul>
+<li>accept惊群问题在Linux2.6中解决了</li>
+<li>epoll_wait到Linux4.5才通过EPOLLEXCLUSIVE解决</li>
+<li>nginx通过在worker进程中增加一个全局锁来解决，worker进程首先要竞争到锁，然后才加入到epoll中，确保只有一个worker子进程被唤醒</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>监听相同端口的多进程模型<ul>
+<li>所有进程都监听相同的接口，并且开启SO_REUSEPORT选项，由内核将请求负载均衡到这些监听进程中</li>
+<li>不会存在惊群问题，Nginx1.9.1中支持该模式，SO_REUSEPORT选项在Linux3.9以上版本才有</li>
+</ul>
+</li>
+</ul>
+<h3 id="C1000K"><a href="#C1000K" class="headerlink" title="C1000K"></a>C1000K</h3><p>基于I/O多路复用和请求处理的优化，C10K问题很容易解决，那么C1000K呢？</p>
+<p>100万个请求需要大量的系统资源</p>
+<ul>
+<li>假设一个请求16KB，需要15GB内存</li>
+<li>带宽上来看，假设只有20%的活跃连接，即使每个连接只需要1KB/s的吞吐量，总共也需要1.6Gb/s的吞吐量。因此还需要配置万兆网卡，或者基于多网卡bonding承载更大的吞吐量。</li>
+</ul>
+<p>C1000K的解决方法，本质上还是构建在epoll的非阻塞I/O模型上，只不过除了I/O模型外还需要从应用程序到Linux内核，再到CPU、内存和网络各个层次的深度优化，特别是需要借助硬件来卸载哪些通过软件处理的大量功能。</p>
+<h3 id="C10M"><a href="#C10M" class="headerlink" title="C10M"></a>C10M</h3><p>同时处理1000w条请求呢？在C1000K时各种软件硬件的优化可能已经做到极致了，此时无论怎么优化应用程序和内核中各种网络参数，想实现1000万请求的并发都是及其困难的。</p>
+<p>究其根本，还是Linux内核协议栈做了太多太多繁重的工作，从网卡中断带来的硬中断处理程序开始到软中断中的各层网络协议处理，最后再到应用程序，这个路径太长导致网络包的处理优化到一定程度后就无法再进一步。</p>
+<p>要解决这个问题，就要跳过内核协议栈的冗长路径，把网络包直接发送到要处理的应用程序那里。</p>
+<ul>
+<li>DPDK，用户态网络的标准，跳过内核协议栈直接由用户进程通过轮询方式处理网络接收。 还通过大页、CPU绑定、内存对齐、流水线并发等多种机制，优化网络包的处理效率。</li>
+<li>XDP，Linux内核提供的一种高性能网络数据路径。它允许网络包在进入内核协议栈之前就进行处理，也可以带来更高的性能。XDP底层也是基于Linux内核的eBPF机制实现的。</li>
+</ul>
+<h2 id="Lesson-36-套路篇：怎么评估系统的网络性能？"><a href="#Lesson-36-套路篇：怎么评估系统的网络性能？" class="headerlink" title="Lesson 36 套路篇：怎么评估系统的网络性能？"></a>Lesson 36 套路篇：怎么评估系统的网络性能？</h2><h3 id="各协议层的性能测试"><a href="#各协议层的性能测试" class="headerlink" title="各协议层的性能测试"></a>各协议层的性能测试</h3><h4 id="转发性能"><a href="#转发性能" class="headerlink" title="转发性能"></a>转发性能</h4><p>网络接口和网络层，主要负责网络包的封装、寻址、路由以及发送和接收。在这两个网络协议中，每秒可处理的网络包数PPS就是最重要的性能指标。特别是64B小包的处理能力，值得我们特别关注。如何来测试网络包的处理能力呢？</p>
+<p>Linux内核自带的高性能网络测试工具pktgen,但是并不能直接找到pktgen命令，需要加载pktgen内核模块后，再通过/proc文件系统来交互</p>
+<pre><code>modprobe pktgen
+ps -ef | grep pktgen | grep -v grep
+ls /proc/net/pktgen/
+</code></pre><h3 id="TCP-UDP性能"><a href="#TCP-UDP性能" class="headerlink" title="TCP/UDP性能"></a>TCP/UDP性能</h3><pre><code>iperf
+netperf
+</code></pre><h3 id="HTTP性能"><a href="#HTTP性能" class="headerlink" title="HTTP性能"></a>HTTP性能</h3><p>在应用层，有的应用程序会直接基于TCP或UDP构建服务，也有大量的应用基于应用层的协议来构建服务。HTTP就是一个最常用的应用层协议，要测试HTTP性能可以通过ab、webbench等。</p>
+<pre><code>ab
+webbench
+</code></pre><h3 id="应用负载性能"><a href="#应用负载性能" class="headerlink" title="应用负载性能"></a>应用负载性能</h3><pre><code>wrk
+TCPCopy
+Jmeter
+</code></pre>
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux性能优化实战/" rel="tag">#Linux性能优化实战</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/06/21/Linux性能优化实战第四周--IO性能篇/" rel="next" title="《Linux 性能优化实战》第四周--IO性能篇">
+                <i class="fa fa-chevron-left"></i> 《Linux 性能优化实战》第四周--IO性能篇
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">Artikel</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">Tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#新工具GET"><span class="nav-number">1.1.</span> <span class="nav-text">新工具GET</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-33-34-关于网络，你必须知道这些"><span class="nav-number">2.</span> <span class="nav-text">Lesson 33/34 关于网络，你必须知道这些</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#网络模型"><span class="nav-number">2.1.</span> <span class="nav-text">网络模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux网络栈"><span class="nav-number">2.2.</span> <span class="nav-text">Linux网络栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux网络收发流程"><span class="nav-number">2.3.</span> <span class="nav-text">Linux网络收发流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#网络包的接收流程"><span class="nav-number">2.3.1.</span> <span class="nav-text">网络包的接收流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网络包的发送流程"><span class="nav-number">2.3.2.</span> <span class="nav-text">网络包的发送流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能指标"><span class="nav-number">2.4.</span> <span class="nav-text">性能指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络配置"><span class="nav-number">2.5.</span> <span class="nav-text">网络配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#套接字信息"><span class="nav-number">2.6.</span> <span class="nav-text">套接字信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#协议栈统计信息"><span class="nav-number">2.7.</span> <span class="nav-text">协议栈统计信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#吞吐量和PPS"><span class="nav-number">2.8.</span> <span class="nav-text">吞吐量和PPS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#连通性和延时"><span class="nav-number">2.9.</span> <span class="nav-text">连通性和延时</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-35-基础篇：C10K和C1000K回顾"><span class="nav-number">3.</span> <span class="nav-text">Lesson 35 基础篇：C10K和C1000K回顾</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O模型优化"><span class="nav-number">3.1.</span> <span class="nav-text">I/O模型优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#工作模型优化"><span class="nav-number">3.2.</span> <span class="nav-text">工作模型优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C1000K"><span class="nav-number">3.3.</span> <span class="nav-text">C1000K</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C10M"><span class="nav-number">3.4.</span> <span class="nav-text">C10M</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-36-套路篇：怎么评估系统的网络性能？"><span class="nav-number">4.</span> <span class="nav-text">Lesson 36 套路篇：怎么评估系统的网络性能？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#各协议层的性能测试"><span class="nav-number">4.1.</span> <span class="nav-text">各协议层的性能测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#转发性能"><span class="nav-number">4.1.1.</span> <span class="nav-text">转发性能</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-UDP性能"><span class="nav-number">4.2.</span> <span class="nav-text">TCP/UDP性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP性能"><span class="nav-number">4.3.</span> <span class="nav-text">HTTP性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应用负载性能"><span class="nav-number">4.4.</span> <span class="nav-text">应用负载性能</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            ホーム
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            アーカイブ
+            Archiv
           </a>
         </li>
       
@@ -192,7 +192,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
             
-            タグ
+            Tags
           </a>
         </li>
       
@@ -235,6 +235,277 @@
             
               
                 
+                <a class="post-title-link" href="/2020/06/27/Linux性能优化实战第五周--网络性能篇/" itemprop="url">
+                  《Linux 性能优化实战》第五周--网络性能篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-06-27T15:26:55+08:00" content="2020-06-27">
+              2020-06-27
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周的学习首先了解了Linux网络的工作原理，<strong>OSI七层网络模型</strong>，<strong>TCP/IP模型</strong>以及<strong>网络包的收发流程</strong>。应用程序通过Socket接口发送数据包时先要在网络协议栈从上到下逐层处理最终到网卡上发送，接收也要经过网络协议栈从下到上逐层解析，最后送到应用程序。以及网络传输相关性能指标和响应的查看工具。</p>
+<p>并且学习了经典的C10K问题，以及延伸的C1000K和C10M问题。这个印象中研究生毕业面试B家的时候被问到过。C10K问题的根源一方面在于系统有限的资源，另一方面，同步阻塞I/O模型以及轮询的套接字接口限制了网络事件的处理效率。目前高性能网络方法都基于epoll。从10K到100K，增加物理资源就能解决，但是到1000K时就需要多方面的优化工作，从硬件中断处理和网络功能卸载、到网络协议栈的文件描述符数量、连接状态跟踪、缓存队列等内核的优化，再到应用程序的工作模型优化，都需要考虑。</p>
+<p>再进一步实现10M，就需要用XDP的方式，在内核协议栈之前处理网络包；或者用DPDK直接跳过网络协议栈在用户空间通过轮询的方式直接处理网络包。其中DPDK时目前最主流的高性能网络解决方案，但是需要能支持DPDK的网卡配合使用。</p>
+<p>对于网络性能评估，一般情况需要从上到下对每个协议层进行性能测试，然后根据性能测试结果结合Linux网络协议栈原理，找出导致性能瓶颈的根源。</p>
+<h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><pre><code>查看网络配置
+ifconfig/ip
+套接字信息/协议栈统计信息
+netstat/ss
+网络吞吐量和PPS
+sar
+带宽
+ethtool
+连通性和延时
+ping
+应用层性能
+wrk/jmeter
+传输层性能
+iperf
+转发性能
+pktgen
+</code></pre><hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-33-34-关于网络，你必须知道这些"><a href="#Lesson-33-34-关于网络，你必须知道这些" class="headerlink" title="Lesson 33/34 关于网络，你必须知道这些"></a>Lesson 33/34 关于网络，你必须知道这些</h2><h3 id="网络模型"><a href="#网络模型" class="headerlink" title="网络模型"></a>网络模型</h3><p>开放式系统互联通信参考模型（Open System Interconnection Reference Model），简称<strong>OSI网络模型</strong></p>
+<p>为了解决网络互联中异构设备的兼容性，并解耦复杂的网络包处理流程，OSI模型把网络互联的框架分为应用层、表示层、会话层、传输层、网络层、数据链路层以及物理层等七层。</p>
+<ul>
+<li>应用层，负责为应用程序提供统一的接口</li>
+<li>表示层，负责把数据转换成兼容接收系统的格式</li>
+<li>会话层，负责维护计算机之间的通信连接</li>
+<li>传输层，负责为数据加上传输表头，形成数据包</li>
+<li>网络层，负责数据的路由和转发</li>
+<li>数据链路层，负责MAC寻址，错误侦测和改错</li>
+<li>物理层，负责在物理网络中传输数据帧</li>
+</ul>
+<p>在Linux中我们实际上使用的是一个更实用的四层模型，即TCP/IP网络模型。</p>
+<p>TCP/IP模型把网络互联的框架分为应用层、传输层、网络层、网络接口层等四层。</p>
+<ul>
+<li>应用层，负责向用户提供一组应用程序，如HTTP，FTP，DNS等</li>
+<li>传输层，负责端到端的通信，如TCP，UDP</li>
+<li>网络层，负责网络包的封装、寻址和路由，如IP，ICMP</li>
+<li>网络接口层，负责网络包在物理网络中的传输，比如MAC寻址、错误侦测以及通过网卡传输网络帧等</li>
+</ul>
+<h3 id="Linux网络栈"><a href="#Linux网络栈" class="headerlink" title="Linux网络栈"></a>Linux网络栈</h3><ul>
+<li>传输层在应用数据前面增加了TCP头</li>
+<li>网络层在TCP数据包前增加了IP头</li>
+<li>网络接口层在IP数据包前后分别增加了帧头和帧尾</li>
+</ul>
+<p>网络接口配置的最大传输单元MTU规定了最大的IP包大小，以太网中MTU默认时1500</p>
+<h3 id="Linux网络收发流程"><a href="#Linux网络收发流程" class="headerlink" title="Linux网络收发流程"></a>Linux网络收发流程</h3><h4 id="网络包的接收流程"><a href="#网络包的接收流程" class="headerlink" title="网络包的接收流程"></a>网络包的接收流程</h4><ul>
+<li>当一个网络帧到达网卡后，网卡通过DMA方式，把网络包放到收包队列中；然后通过硬中断告诉中断处理程序已经接收到了网络包。</li>
+<li>网卡中断处理程序为网络帧分配内核数据结构sk_buff，并将其拷贝到sk_buff缓冲区中；再通过软中断通知内核接收到了新的网络帧。</li>
+<li>内核协议栈从缓冲区中取出网络帧，并通过网络协议，从上到下处理这个网络帧<ul>
+<li>链路层检查报文合法性，找出上层协议的类型（IPv4 or IPv6），再去掉帧头和帧尾，交给网络层；</li>
+<li>网络层取出IP头，判断网络包的下一步走向，比如是交给上层处理还是转发。当网络层确认这个包发送本机后，取出上层协议的类型（TCP or UDP），去掉IP头再交给传输层处理。</li>
+<li>传输层取出TCP/UDP头之后根据&lt;源IP，源端口，目的IP，目的端口&gt;四元组作为标识，找出对应的Socket，并把数据拷贝到Socket接收缓存中</li>
+</ul>
+</li>
+<li>应用程序使用Socket接口读取到新收到的数据</li>
+</ul>
+<h4 id="网络包的发送流程"><a href="#网络包的发送流程" class="headerlink" title="网络包的发送流程"></a>网络包的发送流程</h4><ul>
+<li>应用程序通过调用Socket API发送网络包</li>
+<li>由于这是系统调用，会陷入内核态的套接字层中。套接字层把数据包放到Socket发送缓冲区中</li>
+<li>网络协议栈从Socket发送缓冲区中取出数据包，再按照TCP/IP栈，从上到下逐层处理</li>
+<li>分片后的网络包再发送到网络接口层，进行物理地址寻址，找到下一跳的MAC地址，然后添加帧头和帧尾，放到发包队列中。这一切完成后会有软中断通知驱动程序</li>
+<li>驱动程序通过DMA从发包队列中读出网络帧，并通过物理网卡发送出去</li>
+</ul>
+<h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><ul>
+<li>带宽， 表示链路的最大传输速率，单位b/s</li>
+<li>吞吐量，表示单位时间内成功传输的数据量，单位b/s或者B/s 吞吐量/带宽=网络使用率</li>
+<li>延时，表示从网络请求发出后，一直到收到远端响应，所需要的时间延迟。<ul>
+<li>建立连接需要的时间， TCP握手延时</li>
+<li>一个数据包往返所需的时间，RTT</li>
+</ul>
+</li>
+<li>PPS，Packet Per Second，表示以网络包为单位的传输速率。通常用来评估网络的转发能力</li>
+</ul>
+<p>此外，<strong>网络的可用性、并发连接数、丢包率、重传率</strong>也是常用的性能指标。</p>
+<h3 id="网络配置"><a href="#网络配置" class="headerlink" title="网络配置"></a>网络配置</h3><pre><code>ifconfig eth0
+ip -s addr show dev eth0
+</code></pre><ul>
+<li>网络接口的状态标志， ifconfig输出中的RUNNING，ip输出中的LOWER_UP，都表示物理网络是联通的</li>
+<li>MTU大小</li>
+<li>网络接口的IP地址、子网、以及MAC地址</li>
+<li>网络收发的字节数、包数、错误数以及丢包情况，特别是TX和RX部分的errors、dropped、overruns、carrier以及collisions等指标不为0时，通常表示出现了网络I/O问题<ul>
+<li><strong>errors</strong>表示发生错误的数据包数，比如校验错误、帧同步错误等</li>
+<li><strong>dropped</strong>表示丢弃的数据包数，即数据包已经收到了Ring Buffer，但是因为内存不足等原因丢包</li>
+<li><strong>overruns</strong>表示超限数据包数，即网络I/O速度过快，导致RingBuffer中的数据包来不及处理导致的丢包</li>
+<li><strong>carrier</strong>表示发生carrier错误的数据包数，比如双工模式不匹配、物理电缆出问题</li>
+<li><strong>collisions</strong>表示碰撞数据包数</li>
+</ul>
+</li>
+</ul>
+<h3 id="套接字信息"><a href="#套接字信息" class="headerlink" title="套接字信息"></a>套接字信息</h3><pre><code>netstat -nlp | head -n 3
+ss -ltnp | head -n 3
+</code></pre><p>netstat和ss用来查看套接字、网络栈、网络接口以及路由表的信息。其中Recv-Q和Send-Q信息需要特别关注，如果不是0的话说明有网络包的堆积发生。</p>
+<p>当Socket处于Established时，Recv-Q表示套接字缓冲中还没有被应用取走的字节数，Send-Q表示还没有被远端主机确认的字节数。<br>当Socket处于Listening时，Recv-Q表示全连接队列的长度，Send-Q表示全连接队列的最大长度。</p>
+<h3 id="协议栈统计信息"><a href="#协议栈统计信息" class="headerlink" title="协议栈统计信息"></a>协议栈统计信息</h3><pre><code>netstat -s 
+ss -s
+</code></pre><h3 id="吞吐量和PPS"><a href="#吞吐量和PPS" class="headerlink" title="吞吐量和PPS"></a>吞吐量和PPS</h3><pre><code>sar -n DEV 1 
+</code></pre><p>带宽可以用ethtool来查询</p>
+<pre><code>ethtool eth0 | grep Speed
+</code></pre><h3 id="连通性和延时"><a href="#连通性和延时" class="headerlink" title="连通性和延时"></a>连通性和延时</h3><pre><code>ping -c3 XXX.XXX.XXX.XXX
+</code></pre><h2 id="Lesson-35-基础篇：C10K和C1000K回顾"><a href="#Lesson-35-基础篇：C10K和C1000K回顾" class="headerlink" title="Lesson 35 基础篇：C10K和C1000K回顾"></a>Lesson 35 基础篇：C10K和C1000K回顾</h2><p>C10K问题最早由Dan Kegel在1999年提出，那是服务器还是32位系统，运行Linux2.2版本，只配置的很少的内存(2G)和千兆网卡。怎样在这样的系统中支持并发1万的请求？</p>
+<p>从资源上说，2G内存和千兆网卡服务器，同时处理1w请求，只要每个请求处理占用不超200KB内存和100Kbit的网络带宽就可以。所以物理资源充足，接下来时软件的问题。</p>
+<p>如果每个请求分配一个进程/线程，1w个请求会涉及1w个进程/线程的调度、上下文切换乃至它们占用的内存都会成为瓶颈。</p>
+<ul>
+<li>怎样在一个线程内处理多个请求？非阻塞I/O或者异步I/O？</li>
+<li>怎么更节省资源地处理用户请求？用最少的线程来服务这些请求？</li>
+</ul>
+<h3 id="I-O模型优化"><a href="#I-O模型优化" class="headerlink" title="I/O模型优化"></a>I/O模型优化</h3><p>I/O事件的通知方式：</p>
+<ul>
+<li><strong>水平触发</strong>：只要文件描述符可以非阻塞的执行I/O，就会触发通知 </li>
+<li><strong>边缘出发</strong>：只有在文件描述符发生改变时(I/O请求到达时)，才发送一次通知。</li>
+</ul>
+<p>I/O多路复用的方法：</p>
+<ul>
+<li><strong>使用非阻塞I/O和水平触发通知，比如使用select和poll</strong><ul>
+<li>select和 poll从文件描述符列表中，找出哪些可以执行IO，然后进行真正的网络I/O读写。由于I/O是非阻塞的，一个线程中就可以同时监控一批套接字的文件描述符，达到了单线程处理多请求的目的。 </li>
+<li>优点：对程序友好，API简单。</li>
+<li>缺点：需要对文件描述符列表轮询，请求多时较为耗时，且select和poll还有一些限制。以及应用程序每次调用select和poll时还需要把文件描述符的集合从用户空间传入内核空间，由内核修改后再传回用户空间。增加了处理成本。</li>
+</ul>
+</li>
+<li><strong>使用非阻塞I/O和边缘触发通知，如epoll</strong><ul>
+<li>epoll使用红黑树在内核中管理文件描述符的集合，使用事件驱动的机制，只关注有I/O事件发生的文件描述符，不需要轮询整个集合</li>
+<li>epoll在Linux2.6之后提供，由于边缘触发只在文件描述符可读或可写事件发生时才通知，应用程序需要尽可能多地执行I/O并要处理更多的异常事件</li>
+</ul>
+</li>
+<li><strong>使用异步I/O</strong><ul>
+<li>异步I/O也是在Linux2.6后提供，和直观逻辑不太一样，使用时要小心设计，难度较高</li>
+</ul>
+</li>
+</ul>
+<h3 id="工作模型优化"><a href="#工作模型优化" class="headerlink" title="工作模型优化"></a>工作模型优化</h3><ul>
+<li>主进程+多个worker子进程<ul>
+<li>主进程执行bind()+listen()后创建多个子进程</li>
+<li>每个子进程中都通过accept()和epoll_wait（）来处理相同的套接字</li>
+<li>Nginx就是采取这种模式，主进程用来初始化套接字并管理子进程的生命周期，worker进程用来负责实际的请求处理</li>
+<li>accept和epoll_wait调用存在一个惊群问题，当网络I/O事件发生时多个进程被同时唤醒，但实际上只有一个进程来响应事件，其他被唤醒的进程都会重新休眠。<ul>
+<li>accept惊群问题在Linux2.6中解决了</li>
+<li>epoll_wait到Linux4.5才通过EPOLLEXCLUSIVE解决</li>
+<li>nginx通过在worker进程中增加一个全局锁来解决，worker进程首先要竞争到锁，然后才加入到epoll中，确保只有一个worker子进程被唤醒</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>监听相同端口的多进程模型<ul>
+<li>所有进程都监听相同的接口，并且开启SO_REUSEPORT选项，由内核将请求负载均衡到这些监听进程中</li>
+<li>不会存在惊群问题，Nginx1.9.1中支持该模式，SO_REUSEPORT选项在Linux3.9以上版本才有</li>
+</ul>
+</li>
+</ul>
+<h3 id="C1000K"><a href="#C1000K" class="headerlink" title="C1000K"></a>C1000K</h3><p>基于I/O多路复用和请求处理的优化，C10K问题很容易解决，那么C1000K呢？</p>
+<p>100万个请求需要大量的系统资源</p>
+<ul>
+<li>假设一个请求16KB，需要15GB内存</li>
+<li>带宽上来看，假设只有20%的活跃连接，即使每个连接只需要1KB/s的吞吐量，总共也需要1.6Gb/s的吞吐量。因此还需要配置万兆网卡，或者基于多网卡bonding承载更大的吞吐量。</li>
+</ul>
+<p>C1000K的解决方法，本质上还是构建在epoll的非阻塞I/O模型上，只不过除了I/O模型外还需要从应用程序到Linux内核，再到CPU、内存和网络各个层次的深度优化，特别是需要借助硬件来卸载哪些通过软件处理的大量功能。</p>
+<h3 id="C10M"><a href="#C10M" class="headerlink" title="C10M"></a>C10M</h3><p>同时处理1000w条请求呢？在C1000K时各种软件硬件的优化可能已经做到极致了，此时无论怎么优化应用程序和内核中各种网络参数，想实现1000万请求的并发都是及其困难的。</p>
+<p>究其根本，还是Linux内核协议栈做了太多太多繁重的工作，从网卡中断带来的硬中断处理程序开始到软中断中的各层网络协议处理，最后再到应用程序，这个路径太长导致网络包的处理优化到一定程度后就无法再进一步。</p>
+<p>要解决这个问题，就要跳过内核协议栈的冗长路径，把网络包直接发送到要处理的应用程序那里。</p>
+<ul>
+<li>DPDK，用户态网络的标准，跳过内核协议栈直接由用户进程通过轮询方式处理网络接收。 还通过大页、CPU绑定、内存对齐、流水线并发等多种机制，优化网络包的处理效率。</li>
+<li>XDP，Linux内核提供的一种高性能网络数据路径。它允许网络包在进入内核协议栈之前就进行处理，也可以带来更高的性能。XDP底层也是基于Linux内核的eBPF机制实现的。</li>
+</ul>
+<h2 id="Lesson-36-套路篇：怎么评估系统的网络性能？"><a href="#Lesson-36-套路篇：怎么评估系统的网络性能？" class="headerlink" title="Lesson 36 套路篇：怎么评估系统的网络性能？"></a>Lesson 36 套路篇：怎么评估系统的网络性能？</h2><h3 id="各协议层的性能测试"><a href="#各协议层的性能测试" class="headerlink" title="各协议层的性能测试"></a>各协议层的性能测试</h3><h4 id="转发性能"><a href="#转发性能" class="headerlink" title="转发性能"></a>转发性能</h4><p>网络接口和网络层，主要负责网络包的封装、寻址、路由以及发送和接收。在这两个网络协议中，每秒可处理的网络包数PPS就是最重要的性能指标。特别是64B小包的处理能力，值得我们特别关注。如何来测试网络包的处理能力呢？</p>
+<p>Linux内核自带的高性能网络测试工具pktgen,但是并不能直接找到pktgen命令，需要加载pktgen内核模块后，再通过/proc文件系统来交互</p>
+<pre><code>modprobe pktgen
+ps -ef | grep pktgen | grep -v grep
+ls /proc/net/pktgen/
+</code></pre><h3 id="TCP-UDP性能"><a href="#TCP-UDP性能" class="headerlink" title="TCP/UDP性能"></a>TCP/UDP性能</h3><pre><code>iperf
+netperf
+</code></pre><h3 id="HTTP性能"><a href="#HTTP性能" class="headerlink" title="HTTP性能"></a>HTTP性能</h3><p>在应用层，有的应用程序会直接基于TCP或UDP构建服务，也有大量的应用基于应用层的协议来构建服务。HTTP就是一个最常用的应用层协议，要测试HTTP性能可以通过ab、webbench等。</p>
+<pre><code>ab
+webbench
+</code></pre><h3 id="应用负载性能"><a href="#应用负载性能" class="headerlink" title="应用负载性能"></a>应用负载性能</h3><pre><code>wrk
+TCPCopy
+Jmeter
+</code></pre>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/06/21/Linux性能优化实战第四周--IO性能篇/" itemprop="url">
                   《Linux 性能优化实战》第四周--IO性能篇
                 </a>
@@ -248,7 +519,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-21T10:57:55+08:00" content="2020-06-21">
               2020-06-21
             </time>
@@ -483,9 +754,112 @@ nsenter --target $PID --net -- lsof -i
 </code></pre><p>综合分析可知，首先redis配置always不太合理，本案例不需要这么高频的同步写，改为1s时间间隔足够；其次python应用在查询接口中会调用Redis的SADD命令，这很可能是不合理使用缓存导致。</p>
 <p>修改配置后请求时间降低到0.9s，接着通过分析源码解决第二个问题。代码中Python应用将Redis当成临时空间，用来存储查询过程中找到的数据。优化将其放在内存中，再次查看响应时间已经降低到了0.2s。</p>
 <hr>
-<h2 id="Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><a href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈" class="headerlink" title="Lesson 30 套路篇：如何迅速分析出系统IO瓶颈"></a>Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</h2><hr>
-<h2 id="Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><a href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路" class="headerlink" title="Lesson 31 套路篇： 磁盘I/O性能优化的几个思路"></a>Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</h2><hr>
-<h2 id="Lesson-32-答疑-（略）"><a href="#Lesson-32-答疑-（略）" class="headerlink" title="Lesson 32 答疑 （略）"></a>Lesson 32 答疑 （略）</h2>
+<h2 id="Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><a href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈" class="headerlink" title="Lesson 30 套路篇：如何迅速分析出系统IO瓶颈"></a>Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</h2><h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><h4 id="文件系统IO性能指标"><a href="#文件系统IO性能指标" class="headerlink" title="文件系统IO性能指标"></a>文件系统IO性能指标</h4><ul>
+<li>存储空间的使用情况，容量、使用量以及剩余空间等<ul>
+<li>文件系统向外展示的空间使用，而非磁盘空间的真实用量</li>
+<li>索引节点的使用情况，包括容量、使用量以及剩余量 （如果文件系统中存储过多的小文件，就能碰到索引节点容量已满的问题）</li>
+</ul>
+</li>
+<li>缓存使用情况，页缓存、目录项缓存、索引节点缓存以及各个具体文件系统的缓存</li>
+<li>文件系统IO， IOPS、响应延迟时间、以及吞吐量</li>
+</ul>
+<p>Linux文件系统并没有提供直接查看这些指标的方法，只能通过系统调用、动态跟踪或者基准测试的方法来间接观察评估。</p>
+<h4 id="磁盘IO性能指标"><a href="#磁盘IO性能指标" class="headerlink" title="磁盘IO性能指标"></a>磁盘IO性能指标</h4><ul>
+<li>使用率</li>
+<li>IOPS</li>
+<li>吞吐量</li>
+<li>响应时间</li>
+<li>Buffer也常出现在内存和磁盘问题的分析中</li>
+</ul>
+<h3 id="性能工具"><a href="#性能工具" class="headerlink" title="性能工具"></a>性能工具</h3><ul>
+<li><strong>df</strong>，既可以查看文件系统数据的空间容量，也可以查看索引节点的容量</li>
+<li><strong>/proc/meminfo，/proc/slabinfo及slaptop</strong>，观察页缓存、目录项缓存、索引节点缓存以及具体的文件系统的缓存</li>
+<li><strong>iostat，pidstat</strong>观察磁盘和进程的IO情况<ul>
+<li><strong>iostat</strong>查看磁盘的IO使用率、吞吐量、响应时间以及IOPS性能指标</li>
+<li><strong>pidstat</strong>查看进程的IO吞吐量以及块设备的IO延迟     </li>
+</ul>
+</li>
+<li><strong>strace+lsof</strong>定位问题进程正在读写的文件</li>
+<li><strong>filetop+opensnoop</strong>，从内核中跟踪系统调用，最终找出瓶颈来源</li>
+</ul>
+<h3 id="性能指标和工具的联系"><a href="#性能指标和工具的联系" class="headerlink" title="性能指标和工具的联系"></a>性能指标和工具的联系</h3><h4 id="根据指标找工具"><a href="#根据指标找工具" class="headerlink" title="根据指标找工具"></a>根据指标找工具</h4><h4 id="根据工具查指标"><a href="#根据工具查指标" class="headerlink" title="根据工具查指标"></a>根据工具查指标</h4><h3 id="如何迅速分析I-O的性能瓶颈"><a href="#如何迅速分析I-O的性能瓶颈" class="headerlink" title="如何迅速分析I/O的性能瓶颈"></a>如何迅速分析I/O的性能瓶颈</h3><ul>
+<li>先用iostat发现磁盘IO性能瓶颈</li>
+<li>再借助pidstat定位出导致瓶颈的进程</li>
+<li>随后分析进程的IO行为</li>
+<li>最后结合应用程序的原理，分析这些IO的来源</li>
+</ul>
+<p>为了缩小排查范围，通常先运行几个支持指标较多的工具，如iostat、vmstat、pidstat等，然后再根据观察到的现象，结合系统和应用程序的原理，寻找下一步的分析方向。</p>
+<p>例如MYSQL和Redis案例中，通过iostat确认磁盘出现IO性能瓶颈，然后用pidstat找出I/O最大的进程，接着借助strace找出该进程正在读写的文件，最后结合应用程序的原理找出大量IO的原因。</p>
+<p>当用iostat发现磁盘IO性能瓶颈后，再用pidstat和vmstat检查，可能会发现IO来自内核线程。如Swap使用大量升高。这种情况下，就得进行内存分析，先找出占用大量内存的进程，再设法减少内存的使用。</p>
+<hr>
+<h2 id="Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><a href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路" class="headerlink" title="Lesson 31 套路篇： 磁盘I/O性能优化的几个思路"></a>Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</h2><h3 id="IO基准测试"><a href="#IO基准测试" class="headerlink" title="IO基准测试"></a>IO基准测试</h3><p>为了更客观的评估优化效果，首先应该对磁盘和文件系统进行基准测试，得到文件系统或磁盘IO的极限性能。<br>fio（Flexible I/O Tester）是最常用的基准测试工具</p>
+<pre><code># 随机读
+fio -name=randread -direct=1 -iodepth=64 -rw=randread -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+# 随机写
+fio -name=randwrite -direct=1 -iodepth=64 -rw=randwrite -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+#顺序读
+fio -name=read -direct=1 -iodepth=64 -rw=read -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+#顺序写
+fio -name=write -direct=1 -iodepth=64 -rw=write -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+</code></pre><ul>
+<li>direct表示是否跳过系统缓存，1表示跳过</li>
+<li>iodepth表示使用异步I/O（asynchronous I/O）时同时发出的IO请求上限</li>
+<li>rw表示I/O模式</li>
+<li>ioengine表示I/O引擎，支持同步sync，异步libaio，内存映射mmap，网络net等</li>
+<li>bs表示I/O的大小</li>
+</ul>
+<p>结果报告中</p>
+<ul>
+<li>slat表示从I/O提交到实际执行I/O的时长。 submission latency</li>
+<li>clat表示从I/O提交到I/O完成的时长。 completion latency</li>
+<li>lat表示从fio创建IO到IO完成的总时长</li>
+</ul>
+<p>fio支持I/O的重放，先用blktrace记录磁盘设备的I/O访问情况，然后使用fio重放blktrace的记录。</p>
+<pre><code>blktrace /dev/sdb #跟踪磁盘IO
+ls #查看blktrace记录的结果
+blkparse sdb -d sdb.bin #将结果转化为二进制文件
+fio --name=reply --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin #使用fio重放日志
+</code></pre><h3 id="I-O性能优化"><a href="#I-O性能优化" class="headerlink" title="I/O性能优化"></a>I/O性能优化</h3><h4 id="应用程序优化"><a href="#应用程序优化" class="headerlink" title="应用程序优化"></a>应用程序优化</h4><ul>
+<li>可以用追加写代替随机写，减少寻址开销，加快I/O写的速度</li>
+<li>可以借助缓存I/O，充分利用系统缓存，降低实际I/O的次数 </li>
+<li>在应用程序内部构建自己的缓存，或者用Redis等外部缓存。一方面能在应用程序内部控制缓存的数据和生命周期，另一方面可以降低其他应用程序使用缓存对自身的影响</li>
+<li>需要频繁读写同一块磁盘空间时，可以用mmap代替read/write，减少内存的拷贝次数</li>
+<li>在需要写同步的场景中，尽量将写请求合并，即可以用fsync()取代O_SYNC</li>
+<li>在多个应用程序共享磁盘时，为了保证I/O不被某个应用完全占用，推荐使用cgroups的I/O子系统来限制进程/进程组的IOPS以及吞吐量</li>
+<li>在使用CFQ调度器时，可以用ionice来调整进程的调度优先级，提高核心应用的I/O优先级。</li>
+</ul>
+<h4 id="文件系统优化"><a href="#文件系统优化" class="headerlink" title="文件系统优化"></a>文件系统优化</h4><ul>
+<li>根据实际负载场景不同选择最适合的文件系统</li>
+<li>选好文件系统后进一步优化文件系统的配置选项，包括文件系统的特性、日志模式、挂载选项等</li>
+<li>优化文件系统的缓存</li>
+<li>不需要持久化时可以用内存文件系统tmpfs来获取更好的IO性能。</li>
+</ul>
+<h4 id="磁盘优化"><a href="#磁盘优化" class="headerlink" title="磁盘优化"></a>磁盘优化</h4><ul>
+<li>换用性能更好的磁盘， 如SSD替换HDD</li>
+<li>使用RAID将多块磁盘组合成一个逻辑磁盘，构成冗余独立磁盘阵列。既可以提高数据的可靠性，又可以提升数据的访问性能</li>
+<li>针对磁盘和应用程序IO模式特征，选择最合适的IO调度算法<ul>
+<li>SSD和虚拟机中的磁盘，用noop调度算法</li>
+<li>数据库应用，用deadline算法</li>
+</ul>
+</li>
+<li>对应用程序的数据进行磁盘级别的隔离。 为日志、数据库等I/O压力大的应用配置单独的磁盘</li>
+<li>顺序读多的场景增大磁盘的预读数据<ul>
+<li>调整内核选项/sys/block/sdb/queue/read_ahead_kb， 默认为128KB</li>
+<li>blockdev工具设置， blockdev –setra 8192 /dev/sdb， 这里单位为512B</li>
+</ul>
+</li>
+<li>优化块设备的I/O选项<ul>
+<li>调整磁盘队列的长度，/sys/block/sdb/queue/nr_requests</li>
+</ul>
+</li>
+</ul>
+<p>最后要注意磁盘本身是否存在硬件错误。 可以查看dmesg中是否有硬件I/O故障的日志。还可以用badblocks、smartctl等工具检测磁盘的硬件问题，或者用e2fsck来检测文件系统的错误。 如果发现问题可以用fsck来修复。</p>
+<hr>
+<h2 id="Lesson-32-答疑-（略）"><a href="#Lesson-32-答疑-（略）" class="headerlink" title="Lesson 32 答疑 （略）"></a>Lesson 32 答疑 （略）</h2><p>捞评论学习：</p>
+<ol>
+<li>数据写ES，运行一段时间后发现写入很慢，查IO时发现读IO很高写IO很少。用iotop定位es一些写的线程，将线程id转成16进制，用jstack打印出ES的堆栈信息，查处16进程的线程号的堆栈。发现原来时ES会根据doc id查数据，然后选择更新或新插入。ES数据量大时，会占用很多的读IO。 解决方法：写ES时不传入id，让es自动生成来解决。</li>
+</ol>
+
           
         
       
@@ -547,7 +921,7 @@ nsenter --target $PID --net -- lsof -i
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-14T10:57:55+08:00" content="2020-06-14">
               2020-06-14
             </time>
@@ -898,7 +1272,7 @@ watch -d grep -A 15 ‘Normal’ /proc/zoneinfo #观察内存指标变化
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-03T22:57:55+08:00" content="2020-06-03">
               2020-06-03
             </time>
@@ -1277,7 +1651,7 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-05-31T22:57:55+08:00" content="2020-05-31">
               2020-05-31
             </time>
@@ -1545,7 +1919,7 @@ ps aux | grep &apos;/app&apos;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-06-16T22:57:55+08:00" content="2019-06-16">
               2019-06-16
             </time>
@@ -1735,7 +2109,7 @@ ps aux | grep &apos;/app&apos;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-04-18T23:31:19+08:00" content="2019-04-18">
               2019-04-18
             </time>
@@ -1875,7 +2249,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-04-17T23:38:48+08:00" content="2019-04-17">
               2019-04-17
             </time>
@@ -1971,7 +2345,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-31T15:54:03+08:00" content="2016-12-31">
               2016-12-31
             </time>
@@ -2079,7 +2453,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-23T15:53:56+08:00" content="2016-12-23">
               2016-12-23
             </time>
@@ -2118,163 +2492,6 @@ There are two ways to reach the bottom-right corner:
 <p>Learning rate α is tapically held constant. Can slowly descrease α over time if we want θ to converge.</p>
 <h2 id="10-2、Online-Learning"><a href="#10-2、Online-Learning" class="headerlink" title="10.2、Online Learning"></a>10.2、Online Learning</h2><p>上述方法可以应用在实时在线学习上，数据集大小不固定，以数据流的形式出现。</p>
 <h2 id="10-3、Map-reduce-and-data-parallelism"><a href="#10-3、Map-reduce-and-data-parallelism" class="headerlink" title="10.3、Map-reduce and data parallelism"></a>10.3、Map-reduce and data parallelism</h2><p>在进行梯度下降计算时，中间有步骤需要求和，我们可以利用Map-reduce和并行计算来缩短处理时间。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">投稿日</span>
-            <time itemprop="dateCreated" datetime="2016-12-16T10:56:39+08:00" content="2016-12-16">
-              2016-12-16
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="9、Anomaly-detection"><a href="#9、Anomaly-detection" class="headerlink" title="9、Anomaly detection"></a>9、Anomaly detection</h1><h2 id="9-1、Density-Estimation"><a href="#9-1、Density-Estimation" class="headerlink" title="9.1、Density Estimation"></a>9.1、Density Estimation</h2><h3 id="9-1-1、Problem-motivation"><a href="#9-1-1、Problem-motivation" class="headerlink" title="9.1.1、Problem motivation"></a>9.1.1、Problem motivation</h3><p>密度估计，判断一个test实例是否为不正常的。</p>
-<p>Anomaly detection example：</p>
-<ol>
-<li><p>Fraud detection</p>
-<pre><code>xi = features of user i&apos;s ativities.
-Model p(x) from data.
-Identify unusual users by checking which have p(x)&lt;ε
-</code></pre></li>
-<li><p>Manufacturing</p>
-</li>
-<li><p>Monitoring computers in a data center.</p>
-<pre><code>xi = features of machine i.
-memory use,number of disk access/sec,cpu load...
-</code></pre></li>
-</ol>
-<h3 id="9-1-2、Gaussian-distribution"><a href="#9-1-2、Gaussian-distribution" class="headerlink" title="9.1.2、Gaussian distribution"></a>9.1.2、Gaussian distribution</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_1.png" alt="9_1"></p>
-<h3 id="9-1-3、Anomaly-detection-algorithm"><a href="#9-1-3、Anomaly-detection-algorithm" class="headerlink" title="9.1.3、Anomaly detection algorithm"></a>9.1.3、Anomaly detection algorithm</h3><ol>
-<li>Choose features xi that might be indicative of anomalous examples.</li>
-<li><p>Fit parameters μ1, … μn,σ12,…σn2</p>
-<pre><code>μj = 1/m ξxji
-σj2 = 1/m ξ(xji-μj)2
-</code></pre></li>
-<li>Given new example x, compute p(x),Anomaly if p(x)&lt;ε.</li>
-</ol>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_2.png" alt="9_2"></p>
-<h3 id="9-1-4、Developing-and-evaluating-an-anomaly-detection-system"><a href="#9-1-4、Developing-and-evaluating-an-anomaly-detection-system" class="headerlink" title="9.1.4、Developing and evaluating an anomaly detection system"></a>9.1.4、Developing and evaluating an anomaly detection system</h3><ol>
-<li>The importance of real-number evaluation</li>
-</ol>
-<p>例如 10000 good engines， 20 flawed engines，我们可以进行如下划分：</p>
-<pre><code>Training set：6000 good engines
-CV:2000 good engines,10 anomalous
-Test:2000 good engines,10 anomalous
-</code></pre><ol>
-<li>Algorithm evaluation  </li>
-</ol>
-<p>可以利用F1-score来评估算法，我们也可以用CV来选择参数ε。</p>
-<h3 id="9-1-5、Anomaly-detection-VS-supervised-learning"><a href="#9-1-5、Anomaly-detection-VS-supervised-learning" class="headerlink" title="9.1.5、Anomaly detection VS supervised learning"></a>9.1.5、Anomaly detection VS supervised learning</h3><p>Anomaly detection:</p>
-<ol>
-<li>Very small number of positive example.</li>
-<li>Large number of negative example.</li>
-<li>Many different types od anomalies. 很难通过positive实例来学习异常的特征</li>
-<li>未来和异常和目前的异常实例不相关</li>
-</ol>
-<p>Supervised Learning：</p>
-<ol>
-<li>Large number of positive and negative examples.</li>
-<li>可以根据大量的positive值推断出其特征值，未来的positive和现在的训练集非常相似</li>
-</ol>
-<h3 id="9-1-6、多元高斯分布"><a href="#9-1-6、多元高斯分布" class="headerlink" title="9.1.6、多元高斯分布"></a>9.1.6、多元高斯分布</h3><p>通过μ矩阵和ξ矩阵来对多远高斯分布进行调整。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_3.png" alt="9_3"></p>
-<h2 id="9-2-推荐系统"><a href="#9-2-推荐系统" class="headerlink" title="9.2 推荐系统"></a>9.2 推荐系统</h2><h3 id="9-3-1-基于内容的推荐"><a href="#9-3-1-基于内容的推荐" class="headerlink" title="9.3.1 基于内容的推荐"></a>9.3.1 基于内容的推荐</h3><p>问题描述：</p>
-<ol>
-<li>r(i,j)=1 if user j has rated movie i</li>
-<li>y(i,j)=rating by user j on movie i</li>
-<li>θ(j)=paramater vector for user j</li>
-<li>x(i)=feature vector for movie i</li>
-<li>For user j,movie i, predicted rating θ(j)T(x(i))</li>
-<li>m(j)=no. of movies rated by user j</li>
-</ol>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_4.png" alt="9_4"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_5.png" alt="9_5"></p>
-<h3 id="9-3-2-正交过滤"><a href="#9-3-2-正交过滤" class="headerlink" title="9.3.2 正交过滤"></a>9.3.2 正交过滤</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_6.png" alt="9_6"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_7.png" alt="9_7"></p>
-<h3 id="9-3-2-实现技巧"><a href="#9-3-2-实现技巧" class="headerlink" title="9.3.2 实现技巧"></a>9.3.2 实现技巧</h3><p>归一化，计算平均值，然后同时减去该值</p>
 
           
         
@@ -2348,8 +2565,8 @@ Test:2000 good engines,10 anomalous
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">23</span>
-              <span class="site-state-item-name">ポスト</span>
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -2359,7 +2576,7 @@ Test:2000 good engines,10 anomalous
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">タグ</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -2403,7 +2620,7 @@ Test:2000 good engines,10 anomalous
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

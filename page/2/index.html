@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            ホーム
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            アーカイブ
+            Archiv
           </a>
         </li>
       
@@ -192,7 +192,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
             
-            タグ
+            Tags
           </a>
         </li>
       
@@ -235,6 +235,163 @@
             
               
                 
+                <a class="post-title-link" href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2016-12-16T10:56:39+08:00" content="2016-12-16">
+              2016-12-16
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="9、Anomaly-detection"><a href="#9、Anomaly-detection" class="headerlink" title="9、Anomaly detection"></a>9、Anomaly detection</h1><h2 id="9-1、Density-Estimation"><a href="#9-1、Density-Estimation" class="headerlink" title="9.1、Density Estimation"></a>9.1、Density Estimation</h2><h3 id="9-1-1、Problem-motivation"><a href="#9-1-1、Problem-motivation" class="headerlink" title="9.1.1、Problem motivation"></a>9.1.1、Problem motivation</h3><p>密度估计，判断一个test实例是否为不正常的。</p>
+<p>Anomaly detection example：</p>
+<ol>
+<li><p>Fraud detection</p>
+<pre><code>xi = features of user i&apos;s ativities.
+Model p(x) from data.
+Identify unusual users by checking which have p(x)&lt;ε
+</code></pre></li>
+<li><p>Manufacturing</p>
+</li>
+<li><p>Monitoring computers in a data center.</p>
+<pre><code>xi = features of machine i.
+memory use,number of disk access/sec,cpu load...
+</code></pre></li>
+</ol>
+<h3 id="9-1-2、Gaussian-distribution"><a href="#9-1-2、Gaussian-distribution" class="headerlink" title="9.1.2、Gaussian distribution"></a>9.1.2、Gaussian distribution</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_1.png" alt="9_1"></p>
+<h3 id="9-1-3、Anomaly-detection-algorithm"><a href="#9-1-3、Anomaly-detection-algorithm" class="headerlink" title="9.1.3、Anomaly detection algorithm"></a>9.1.3、Anomaly detection algorithm</h3><ol>
+<li>Choose features xi that might be indicative of anomalous examples.</li>
+<li><p>Fit parameters μ1, … μn,σ12,…σn2</p>
+<pre><code>μj = 1/m ξxji
+σj2 = 1/m ξ(xji-μj)2
+</code></pre></li>
+<li>Given new example x, compute p(x),Anomaly if p(x)&lt;ε.</li>
+</ol>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_2.png" alt="9_2"></p>
+<h3 id="9-1-4、Developing-and-evaluating-an-anomaly-detection-system"><a href="#9-1-4、Developing-and-evaluating-an-anomaly-detection-system" class="headerlink" title="9.1.4、Developing and evaluating an anomaly detection system"></a>9.1.4、Developing and evaluating an anomaly detection system</h3><ol>
+<li>The importance of real-number evaluation</li>
+</ol>
+<p>例如 10000 good engines， 20 flawed engines，我们可以进行如下划分：</p>
+<pre><code>Training set：6000 good engines
+CV:2000 good engines,10 anomalous
+Test:2000 good engines,10 anomalous
+</code></pre><ol>
+<li>Algorithm evaluation  </li>
+</ol>
+<p>可以利用F1-score来评估算法，我们也可以用CV来选择参数ε。</p>
+<h3 id="9-1-5、Anomaly-detection-VS-supervised-learning"><a href="#9-1-5、Anomaly-detection-VS-supervised-learning" class="headerlink" title="9.1.5、Anomaly detection VS supervised learning"></a>9.1.5、Anomaly detection VS supervised learning</h3><p>Anomaly detection:</p>
+<ol>
+<li>Very small number of positive example.</li>
+<li>Large number of negative example.</li>
+<li>Many different types od anomalies. 很难通过positive实例来学习异常的特征</li>
+<li>未来和异常和目前的异常实例不相关</li>
+</ol>
+<p>Supervised Learning：</p>
+<ol>
+<li>Large number of positive and negative examples.</li>
+<li>可以根据大量的positive值推断出其特征值，未来的positive和现在的训练集非常相似</li>
+</ol>
+<h3 id="9-1-6、多元高斯分布"><a href="#9-1-6、多元高斯分布" class="headerlink" title="9.1.6、多元高斯分布"></a>9.1.6、多元高斯分布</h3><p>通过μ矩阵和ξ矩阵来对多远高斯分布进行调整。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_3.png" alt="9_3"></p>
+<h2 id="9-2-推荐系统"><a href="#9-2-推荐系统" class="headerlink" title="9.2 推荐系统"></a>9.2 推荐系统</h2><h3 id="9-3-1-基于内容的推荐"><a href="#9-3-1-基于内容的推荐" class="headerlink" title="9.3.1 基于内容的推荐"></a>9.3.1 基于内容的推荐</h3><p>问题描述：</p>
+<ol>
+<li>r(i,j)=1 if user j has rated movie i</li>
+<li>y(i,j)=rating by user j on movie i</li>
+<li>θ(j)=paramater vector for user j</li>
+<li>x(i)=feature vector for movie i</li>
+<li>For user j,movie i, predicted rating θ(j)T(x(i))</li>
+<li>m(j)=no. of movies rated by user j</li>
+</ol>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_4.png" alt="9_4"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_5.png" alt="9_5"></p>
+<h3 id="9-3-2-正交过滤"><a href="#9-3-2-正交过滤" class="headerlink" title="9.3.2 正交过滤"></a>9.3.2 正交过滤</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_6.png" alt="9_6"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_7.png" alt="9_7"></p>
+<h3 id="9-3-2-实现技巧"><a href="#9-3-2-实现技巧" class="headerlink" title="9.3.2 实现技巧"></a>9.3.2 实现技巧</h3><p>归一化，计算平均值，然后同时减去该值</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周
                 </a>
@@ -248,7 +405,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
               2016-12-08
             </time>
@@ -436,7 +593,7 @@ xj&apos; = xj - uj
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
               2016-12-04
             </time>
@@ -566,7 +723,7 @@ but many slower to train.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-27T15:46:44+08:00" content="2016-11-27">
               2016-11-27
             </time>
@@ -704,7 +861,7 @@ It&apos;s who has the most data.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-24T15:10:34+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -805,7 +962,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-24T14:14:40+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -974,7 +1131,7 @@ struct list_head cg_list;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-13T15:48:54+08:00" content="2016-11-13">
               2016-11-13
             </time>
@@ -1080,7 +1237,7 @@ output层
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-07T10:31:30+08:00" content="2016-11-07">
               2016-11-07
             </time>
@@ -1258,7 +1415,7 @@ end
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-01T15:30:52+08:00" content="2016-11-01">
               2016-11-01
             </time>
@@ -1378,7 +1535,7 @@ but fail to generalize to new examples.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-10-31T10:50:02+08:00" content="2016-10-31">
               2016-10-31
             </time>
@@ -1502,146 +1659,6 @@ end
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">投稿日</span>
-            <time itemprop="dateCreated" datetime="2016-10-24T14:00:42+08:00" content="2016-10-24">
-              2016-10-24
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="课程内容简介"><a href="#课程内容简介" class="headerlink" title="课程内容简介"></a>课程内容简介</h2><p>课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：<br>i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）<br>ii）无监督学习（集群、降维、推荐系统、深度学习）<br>iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）</p>
-<h3 id="课程学习"><a href="#课程学习" class="headerlink" title="课程学习"></a>课程学习</h3><h4 id="第二周"><a href="#第二周" class="headerlink" title="第二周"></a>第二周</h4><p>1、环境搭建</p>
-<p>2、Multivariate Linear Regression，多元线性回归。 </p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9.png" alt="9"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/10.png" alt="10"></p>
-<pre><code>Feature Scaling:
-Make sure features are on a similar scale.
-
-为什么使用feature scaling？
-It speeds up gradient by making it require fewer
-iterations to get to 
-
-
-(Get every feature into approximately a -1&lt;= xi &lt;=1)
-(Mean normalization: replace xi with xi-ui to make
- features have approximately zero mean.)
-</code></pre><p>如何保证梯度下降正确完成？</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/11.png" alt="11"></p>
-<pre><code>Making sure gradient descent is working correctly.
-如果随着迭代次数的增加J(θ)反而越来越大，应该用更小的α。
-If α is too small: slow convergence.
-If α is too large: J(θ) may be not decrease on
-            every interation, may not converge.
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/12.png" alt="12"></p>
-<p>3、Computing Parameters Analytically    </p>
-<p>正态方程<br><img src="http://ofacak8l3.bkt.clouddn.com/13.png" alt="13"></p>
-<p>Octave: pinv(X’ <em> X) </em> X’ * Y   (X’ 即XT)</p>
-<p>什么时候用梯度下降？什么时候用正态方程？</p>
-<pre><code>m training examples, n features.
-
-Gradient Descent
-* Need to choose α.
-* Need many iterations.
-* Work well even when n is large.
-
-Normal Equation
-* No need to choose α.
-* Don&apos;t need to iterate.
-* Need to cumpute (XTX)-1.   O(n3) 
-* Slow if n is very large.
-</code></pre><p>如果XTX是不可逆的怎么办？</p>
-<pre><code>Octave 有两种计算矩阵逆的函数——pinv、inv
-如果使用pinv计算的话都会得到实际的结果，不管矩阵是否可逆。
-
-* Redundant features(linearly dependent).
-* Too many features(eg. m &lt;= n)
-    delete some features,or use regularization.
-</code></pre>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1687,8 +1704,8 @@ Normal Equation
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">23</span>
-              <span class="site-state-item-name">ポスト</span>
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -1698,7 +1715,7 @@ Normal Equation
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">タグ</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -1742,7 +1759,7 @@ Normal Equation
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

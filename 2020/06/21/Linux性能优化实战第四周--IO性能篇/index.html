@@ -92,7 +92,7 @@
 <meta property="og:site_name" content="Frances Hu's Blog">
 <meta property="og:description" content="个人感悟本周主要学习Linux I/O相关的基础知识以及遇到I/O异常问题如何分析解决。Linux一切皆文件。为了支持不同的文件系统，首先Linux在用户进程和文件系统之间实现了一层虚拟文件系统。用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互。其次，为了降低慢速磁盘对性能的影响，文件系统又通过页缓存、目录项缓存以及索引节点缓存来减少对应用程序性能的影响。
 文件系统层、通用块层和块">
-<meta property="og:updated_time" content="2020-06-21T12:51:33.461Z">
+<meta property="og:updated_time" content="2020-06-27T07:24:49.330Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Linux 性能优化实战》第四周--IO性能篇">
 <meta name="twitter:description" content="个人感悟本周主要学习Linux I/O相关的基础知识以及遇到I/O异常问题如何分析解决。Linux一切皆文件。为了支持不同的文件系统，首先Linux在用户进程和文件系统之间实现了一层虚拟文件系统。用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互。其次，为了降低慢速磁盘对性能的影响，文件系统又通过页缓存、目录项缓存以及索引节点缓存来减少对应用程序性能的影响。
@@ -177,7 +177,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            ホーム
+            Startseite
           </a>
         </li>
       
@@ -187,7 +187,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            アーカイブ
+            Archiv
           </a>
         </li>
       
@@ -197,7 +197,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
             
-            タグ
+            Tags
           </a>
         </li>
       
@@ -250,7 +250,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-21T10:57:55+08:00" content="2020-06-21">
               2020-06-21
             </time>
@@ -483,9 +483,112 @@ nsenter --target $PID --net -- lsof -i
 </code></pre><p>综合分析可知，首先redis配置always不太合理，本案例不需要这么高频的同步写，改为1s时间间隔足够；其次python应用在查询接口中会调用Redis的SADD命令，这很可能是不合理使用缓存导致。</p>
 <p>修改配置后请求时间降低到0.9s，接着通过分析源码解决第二个问题。代码中Python应用将Redis当成临时空间，用来存储查询过程中找到的数据。优化将其放在内存中，再次查看响应时间已经降低到了0.2s。</p>
 <hr>
-<h2 id="Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><a href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈" class="headerlink" title="Lesson 30 套路篇：如何迅速分析出系统IO瓶颈"></a>Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</h2><hr>
-<h2 id="Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><a href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路" class="headerlink" title="Lesson 31 套路篇： 磁盘I/O性能优化的几个思路"></a>Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</h2><hr>
-<h2 id="Lesson-32-答疑-（略）"><a href="#Lesson-32-答疑-（略）" class="headerlink" title="Lesson 32 答疑 （略）"></a>Lesson 32 答疑 （略）</h2>
+<h2 id="Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><a href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈" class="headerlink" title="Lesson 30 套路篇：如何迅速分析出系统IO瓶颈"></a>Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</h2><h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><h4 id="文件系统IO性能指标"><a href="#文件系统IO性能指标" class="headerlink" title="文件系统IO性能指标"></a>文件系统IO性能指标</h4><ul>
+<li>存储空间的使用情况，容量、使用量以及剩余空间等<ul>
+<li>文件系统向外展示的空间使用，而非磁盘空间的真实用量</li>
+<li>索引节点的使用情况，包括容量、使用量以及剩余量 （如果文件系统中存储过多的小文件，就能碰到索引节点容量已满的问题）</li>
+</ul>
+</li>
+<li>缓存使用情况，页缓存、目录项缓存、索引节点缓存以及各个具体文件系统的缓存</li>
+<li>文件系统IO， IOPS、响应延迟时间、以及吞吐量</li>
+</ul>
+<p>Linux文件系统并没有提供直接查看这些指标的方法，只能通过系统调用、动态跟踪或者基准测试的方法来间接观察评估。</p>
+<h4 id="磁盘IO性能指标"><a href="#磁盘IO性能指标" class="headerlink" title="磁盘IO性能指标"></a>磁盘IO性能指标</h4><ul>
+<li>使用率</li>
+<li>IOPS</li>
+<li>吞吐量</li>
+<li>响应时间</li>
+<li>Buffer也常出现在内存和磁盘问题的分析中</li>
+</ul>
+<h3 id="性能工具"><a href="#性能工具" class="headerlink" title="性能工具"></a>性能工具</h3><ul>
+<li><strong>df</strong>，既可以查看文件系统数据的空间容量，也可以查看索引节点的容量</li>
+<li><strong>/proc/meminfo，/proc/slabinfo及slaptop</strong>，观察页缓存、目录项缓存、索引节点缓存以及具体的文件系统的缓存</li>
+<li><strong>iostat，pidstat</strong>观察磁盘和进程的IO情况<ul>
+<li><strong>iostat</strong>查看磁盘的IO使用率、吞吐量、响应时间以及IOPS性能指标</li>
+<li><strong>pidstat</strong>查看进程的IO吞吐量以及块设备的IO延迟     </li>
+</ul>
+</li>
+<li><strong>strace+lsof</strong>定位问题进程正在读写的文件</li>
+<li><strong>filetop+opensnoop</strong>，从内核中跟踪系统调用，最终找出瓶颈来源</li>
+</ul>
+<h3 id="性能指标和工具的联系"><a href="#性能指标和工具的联系" class="headerlink" title="性能指标和工具的联系"></a>性能指标和工具的联系</h3><h4 id="根据指标找工具"><a href="#根据指标找工具" class="headerlink" title="根据指标找工具"></a>根据指标找工具</h4><h4 id="根据工具查指标"><a href="#根据工具查指标" class="headerlink" title="根据工具查指标"></a>根据工具查指标</h4><h3 id="如何迅速分析I-O的性能瓶颈"><a href="#如何迅速分析I-O的性能瓶颈" class="headerlink" title="如何迅速分析I/O的性能瓶颈"></a>如何迅速分析I/O的性能瓶颈</h3><ul>
+<li>先用iostat发现磁盘IO性能瓶颈</li>
+<li>再借助pidstat定位出导致瓶颈的进程</li>
+<li>随后分析进程的IO行为</li>
+<li>最后结合应用程序的原理，分析这些IO的来源</li>
+</ul>
+<p>为了缩小排查范围，通常先运行几个支持指标较多的工具，如iostat、vmstat、pidstat等，然后再根据观察到的现象，结合系统和应用程序的原理，寻找下一步的分析方向。</p>
+<p>例如MYSQL和Redis案例中，通过iostat确认磁盘出现IO性能瓶颈，然后用pidstat找出I/O最大的进程，接着借助strace找出该进程正在读写的文件，最后结合应用程序的原理找出大量IO的原因。</p>
+<p>当用iostat发现磁盘IO性能瓶颈后，再用pidstat和vmstat检查，可能会发现IO来自内核线程。如Swap使用大量升高。这种情况下，就得进行内存分析，先找出占用大量内存的进程，再设法减少内存的使用。</p>
+<hr>
+<h2 id="Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><a href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路" class="headerlink" title="Lesson 31 套路篇： 磁盘I/O性能优化的几个思路"></a>Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</h2><h3 id="IO基准测试"><a href="#IO基准测试" class="headerlink" title="IO基准测试"></a>IO基准测试</h3><p>为了更客观的评估优化效果，首先应该对磁盘和文件系统进行基准测试，得到文件系统或磁盘IO的极限性能。<br>fio（Flexible I/O Tester）是最常用的基准测试工具</p>
+<pre><code># 随机读
+fio -name=randread -direct=1 -iodepth=64 -rw=randread -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+# 随机写
+fio -name=randwrite -direct=1 -iodepth=64 -rw=randwrite -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+#顺序读
+fio -name=read -direct=1 -iodepth=64 -rw=read -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+#顺序写
+fio -name=write -direct=1 -iodepth=64 -rw=write -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+</code></pre><ul>
+<li>direct表示是否跳过系统缓存，1表示跳过</li>
+<li>iodepth表示使用异步I/O（asynchronous I/O）时同时发出的IO请求上限</li>
+<li>rw表示I/O模式</li>
+<li>ioengine表示I/O引擎，支持同步sync，异步libaio，内存映射mmap，网络net等</li>
+<li>bs表示I/O的大小</li>
+</ul>
+<p>结果报告中</p>
+<ul>
+<li>slat表示从I/O提交到实际执行I/O的时长。 submission latency</li>
+<li>clat表示从I/O提交到I/O完成的时长。 completion latency</li>
+<li>lat表示从fio创建IO到IO完成的总时长</li>
+</ul>
+<p>fio支持I/O的重放，先用blktrace记录磁盘设备的I/O访问情况，然后使用fio重放blktrace的记录。</p>
+<pre><code>blktrace /dev/sdb #跟踪磁盘IO
+ls #查看blktrace记录的结果
+blkparse sdb -d sdb.bin #将结果转化为二进制文件
+fio --name=reply --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin #使用fio重放日志
+</code></pre><h3 id="I-O性能优化"><a href="#I-O性能优化" class="headerlink" title="I/O性能优化"></a>I/O性能优化</h3><h4 id="应用程序优化"><a href="#应用程序优化" class="headerlink" title="应用程序优化"></a>应用程序优化</h4><ul>
+<li>可以用追加写代替随机写，减少寻址开销，加快I/O写的速度</li>
+<li>可以借助缓存I/O，充分利用系统缓存，降低实际I/O的次数 </li>
+<li>在应用程序内部构建自己的缓存，或者用Redis等外部缓存。一方面能在应用程序内部控制缓存的数据和生命周期，另一方面可以降低其他应用程序使用缓存对自身的影响</li>
+<li>需要频繁读写同一块磁盘空间时，可以用mmap代替read/write，减少内存的拷贝次数</li>
+<li>在需要写同步的场景中，尽量将写请求合并，即可以用fsync()取代O_SYNC</li>
+<li>在多个应用程序共享磁盘时，为了保证I/O不被某个应用完全占用，推荐使用cgroups的I/O子系统来限制进程/进程组的IOPS以及吞吐量</li>
+<li>在使用CFQ调度器时，可以用ionice来调整进程的调度优先级，提高核心应用的I/O优先级。</li>
+</ul>
+<h4 id="文件系统优化"><a href="#文件系统优化" class="headerlink" title="文件系统优化"></a>文件系统优化</h4><ul>
+<li>根据实际负载场景不同选择最适合的文件系统</li>
+<li>选好文件系统后进一步优化文件系统的配置选项，包括文件系统的特性、日志模式、挂载选项等</li>
+<li>优化文件系统的缓存</li>
+<li>不需要持久化时可以用内存文件系统tmpfs来获取更好的IO性能。</li>
+</ul>
+<h4 id="磁盘优化"><a href="#磁盘优化" class="headerlink" title="磁盘优化"></a>磁盘优化</h4><ul>
+<li>换用性能更好的磁盘， 如SSD替换HDD</li>
+<li>使用RAID将多块磁盘组合成一个逻辑磁盘，构成冗余独立磁盘阵列。既可以提高数据的可靠性，又可以提升数据的访问性能</li>
+<li>针对磁盘和应用程序IO模式特征，选择最合适的IO调度算法<ul>
+<li>SSD和虚拟机中的磁盘，用noop调度算法</li>
+<li>数据库应用，用deadline算法</li>
+</ul>
+</li>
+<li>对应用程序的数据进行磁盘级别的隔离。 为日志、数据库等I/O压力大的应用配置单独的磁盘</li>
+<li>顺序读多的场景增大磁盘的预读数据<ul>
+<li>调整内核选项/sys/block/sdb/queue/read_ahead_kb， 默认为128KB</li>
+<li>blockdev工具设置， blockdev –setra 8192 /dev/sdb， 这里单位为512B</li>
+</ul>
+</li>
+<li>优化块设备的I/O选项<ul>
+<li>调整磁盘队列的长度，/sys/block/sdb/queue/nr_requests</li>
+</ul>
+</li>
+</ul>
+<p>最后要注意磁盘本身是否存在硬件错误。 可以查看dmesg中是否有硬件I/O故障的日志。还可以用badblocks、smartctl等工具检测磁盘的硬件问题，或者用e2fsck来检测文件系统的错误。 如果发现问题可以用fsck来修复。</p>
+<hr>
+<h2 id="Lesson-32-答疑-（略）"><a href="#Lesson-32-答疑-（略）" class="headerlink" title="Lesson 32 答疑 （略）"></a>Lesson 32 答疑 （略）</h2><p>捞评论学习：</p>
+<ol>
+<li>数据写ES，运行一段时间后发现写入很慢，查IO时发现读IO很高写IO很少。用iotop定位es一些写的线程，将线程id转成16进制，用jstack打印出ES的堆栈信息，查处16进程的线程号的堆栈。发现原来时ES会根据doc id查数据，然后选择更新或新插入。ES数据量大时，会占用很多的读IO。 解决方法：写ES时不传入id，让es自动生成来解决。</li>
+</ol>
+
       
     </div>
 
@@ -523,6 +626,10 @@ nsenter --target $PID --net -- lsof -i
           </div>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/06/27/Linux性能优化实战第五周--网络性能篇/" rel="prev" title="《Linux 性能优化实战》第五周--网络性能篇">
+                《Linux 性能优化实战》第五周--网络性能篇 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -571,10 +678,10 @@ nsenter --target $PID --net -- lsof -i
       
         <ul class="sidebar-nav motion-element">
           <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
-            見出し
+            Inhaltsverzeichnis
           </li>
           <li class="sidebar-nav-overview" data-target="site-overview">
-            概要
+            Übersicht
           </li>
         </ul>
       
@@ -590,8 +697,8 @@ nsenter --target $PID --net -- lsof -i
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">23</span>
-              <span class="site-state-item-name">ポスト</span>
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -601,7 +708,7 @@ nsenter --target $PID --net -- lsof -i
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">タグ</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -629,7 +736,7 @@ nsenter --target $PID --net -- lsof -i
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#新工具GET"><span class="nav-number">1.1.</span> <span class="nav-text">新工具GET</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#思考"><span class="nav-number">1.2.</span> <span class="nav-text">思考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-23-Linux文件系统是怎么工作的"><span class="nav-number">2.</span> <span class="nav-text">Lesson 23 Linux文件系统是怎么工作的</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#索引节点和目录项"><span class="nav-number">2.1.</span> <span class="nav-text">索引节点和目录项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟文件系统"><span class="nav-number">2.2.</span> <span class="nav-text">虚拟文件系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件系统I-O"><span class="nav-number">2.3.</span> <span class="nav-text">文件系统I/O</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能观测"><span class="nav-number">2.4.</span> <span class="nav-text">性能观测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-24-25-Linux磁盘I-O时怎么工作的？"><span class="nav-number">3.</span> <span class="nav-text">Lesson 24/25 Linux磁盘I/O时怎么工作的？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IO栈"><span class="nav-number">3.1.</span> <span class="nav-text">IO栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘性能指标"><span class="nav-number">3.2.</span> <span class="nav-text">磁盘性能指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘I-O观测"><span class="nav-number">3.3.</span> <span class="nav-text">磁盘I/O观测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#进程I-O观测"><span class="nav-number">3.4.</span> <span class="nav-text">进程I/O观测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-26-案例篇：如何找出狂打日志的内鬼"><span class="nav-number">4.</span> <span class="nav-text">Lesson 26 案例篇：如何找出狂打日志的内鬼</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验"><span class="nav-number">4.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-27-案例篇：为什么我的磁盘IO延迟很高？"><span class="nav-number">5.</span> <span class="nav-text">Lesson 27 案例篇：为什么我的磁盘IO延迟很高？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-1"><span class="nav-number">5.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-28-案例篇：一个SQL查询要15s是怎么回事？"><span class="nav-number">6.</span> <span class="nav-text">Lesson 28 案例篇：一个SQL查询要15s是怎么回事？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-2"><span class="nav-number">6.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-29-案例篇：Redis响应验证延迟，如何解决？"><span class="nav-number">7.</span> <span class="nav-text">Lesson 29 案例篇：Redis响应验证延迟，如何解决？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-3"><span class="nav-number">7.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><span class="nav-number">8.</span> <span class="nav-text">Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><span class="nav-number">9.</span> <span class="nav-text">Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-32-答疑-（略）"><span class="nav-number">10.</span> <span class="nav-text">Lesson 32 答疑 （略）</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#新工具GET"><span class="nav-number">1.1.</span> <span class="nav-text">新工具GET</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#思考"><span class="nav-number">1.2.</span> <span class="nav-text">思考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-23-Linux文件系统是怎么工作的"><span class="nav-number">2.</span> <span class="nav-text">Lesson 23 Linux文件系统是怎么工作的</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#索引节点和目录项"><span class="nav-number">2.1.</span> <span class="nav-text">索引节点和目录项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟文件系统"><span class="nav-number">2.2.</span> <span class="nav-text">虚拟文件系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#文件系统I-O"><span class="nav-number">2.3.</span> <span class="nav-text">文件系统I/O</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能观测"><span class="nav-number">2.4.</span> <span class="nav-text">性能观测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-24-25-Linux磁盘I-O时怎么工作的？"><span class="nav-number">3.</span> <span class="nav-text">Lesson 24/25 Linux磁盘I/O时怎么工作的？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IO栈"><span class="nav-number">3.1.</span> <span class="nav-text">IO栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘性能指标"><span class="nav-number">3.2.</span> <span class="nav-text">磁盘性能指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#磁盘I-O观测"><span class="nav-number">3.3.</span> <span class="nav-text">磁盘I/O观测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#进程I-O观测"><span class="nav-number">3.4.</span> <span class="nav-text">进程I/O观测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-26-案例篇：如何找出狂打日志的内鬼"><span class="nav-number">4.</span> <span class="nav-text">Lesson 26 案例篇：如何找出狂打日志的内鬼</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验"><span class="nav-number">4.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-27-案例篇：为什么我的磁盘IO延迟很高？"><span class="nav-number">5.</span> <span class="nav-text">Lesson 27 案例篇：为什么我的磁盘IO延迟很高？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-1"><span class="nav-number">5.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-28-案例篇：一个SQL查询要15s是怎么回事？"><span class="nav-number">6.</span> <span class="nav-text">Lesson 28 案例篇：一个SQL查询要15s是怎么回事？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-2"><span class="nav-number">6.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-29-案例篇：Redis响应验证延迟，如何解决？"><span class="nav-number">7.</span> <span class="nav-text">Lesson 29 案例篇：Redis响应验证延迟，如何解决？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-3"><span class="nav-number">7.1.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><span class="nav-number">8.</span> <span class="nav-text">Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#性能指标"><span class="nav-number">8.1.</span> <span class="nav-text">性能指标</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#文件系统IO性能指标"><span class="nav-number">8.1.1.</span> <span class="nav-text">文件系统IO性能指标</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#磁盘IO性能指标"><span class="nav-number">8.1.2.</span> <span class="nav-text">磁盘IO性能指标</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能工具"><span class="nav-number">8.2.</span> <span class="nav-text">性能工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能指标和工具的联系"><span class="nav-number">8.3.</span> <span class="nav-text">性能指标和工具的联系</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#根据指标找工具"><span class="nav-number">8.3.1.</span> <span class="nav-text">根据指标找工具</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#根据工具查指标"><span class="nav-number">8.3.2.</span> <span class="nav-text">根据工具查指标</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何迅速分析I-O的性能瓶颈"><span class="nav-number">8.4.</span> <span class="nav-text">如何迅速分析I/O的性能瓶颈</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><span class="nav-number">9.</span> <span class="nav-text">Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IO基准测试"><span class="nav-number">9.1.</span> <span class="nav-text">IO基准测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O性能优化"><span class="nav-number">9.2.</span> <span class="nav-text">I/O性能优化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#应用程序优化"><span class="nav-number">9.2.1.</span> <span class="nav-text">应用程序优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#文件系统优化"><span class="nav-number">9.2.2.</span> <span class="nav-text">文件系统优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#磁盘优化"><span class="nav-number">9.2.3.</span> <span class="nav-text">磁盘优化</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-32-答疑-（略）"><span class="nav-number">10.</span> <span class="nav-text">Lesson 32 答疑 （略）</span></a></li></ol></div>
             
           </div>
         </section>
@@ -656,7 +763,7 @@ nsenter --target $PID --net -- lsof -i
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

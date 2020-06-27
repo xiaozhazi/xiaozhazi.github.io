@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            ホーム
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            アーカイブ
+            Archiv
           </a>
         </li>
       
@@ -192,7 +192,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
             
-            タグ
+            Tags
           </a>
         </li>
       
@@ -235,6 +235,146 @@
             
               
                 
+                <a class="post-title-link" href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2016-10-24T14:00:42+08:00" content="2016-10-24">
+              2016-10-24
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="课程内容简介"><a href="#课程内容简介" class="headerlink" title="课程内容简介"></a>课程内容简介</h2><p>课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：<br>i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）<br>ii）无监督学习（集群、降维、推荐系统、深度学习）<br>iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）</p>
+<h3 id="课程学习"><a href="#课程学习" class="headerlink" title="课程学习"></a>课程学习</h3><h4 id="第二周"><a href="#第二周" class="headerlink" title="第二周"></a>第二周</h4><p>1、环境搭建</p>
+<p>2、Multivariate Linear Regression，多元线性回归。 </p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9.png" alt="9"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/10.png" alt="10"></p>
+<pre><code>Feature Scaling:
+Make sure features are on a similar scale.
+
+为什么使用feature scaling？
+It speeds up gradient by making it require fewer
+iterations to get to 
+
+
+(Get every feature into approximately a -1&lt;= xi &lt;=1)
+(Mean normalization: replace xi with xi-ui to make
+ features have approximately zero mean.)
+</code></pre><p>如何保证梯度下降正确完成？</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/11.png" alt="11"></p>
+<pre><code>Making sure gradient descent is working correctly.
+如果随着迭代次数的增加J(θ)反而越来越大，应该用更小的α。
+If α is too small: slow convergence.
+If α is too large: J(θ) may be not decrease on
+            every interation, may not converge.
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/12.png" alt="12"></p>
+<p>3、Computing Parameters Analytically    </p>
+<p>正态方程<br><img src="http://ofacak8l3.bkt.clouddn.com/13.png" alt="13"></p>
+<p>Octave: pinv(X’ <em> X) </em> X’ * Y   (X’ 即XT)</p>
+<p>什么时候用梯度下降？什么时候用正态方程？</p>
+<pre><code>m training examples, n features.
+
+Gradient Descent
+* Need to choose α.
+* Need many iterations.
+* Work well even when n is large.
+
+Normal Equation
+* No need to choose α.
+* Don&apos;t need to iterate.
+* Need to cumpute (XTX)-1.   O(n3) 
+* Slow if n is very large.
+</code></pre><p>如果XTX是不可逆的怎么办？</p>
+<pre><code>Octave 有两种计算矩阵逆的函数——pinv、inv
+如果使用pinv计算的话都会得到实际的结果，不管矩阵是否可逆。
+
+* Redundant features(linearly dependent).
+* Too many features(eg. m &lt;= n)
+    delete some features,or use regularization.
+</code></pre>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/10/18/AI入门笔记一/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第一周
                 </a>
@@ -248,7 +388,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-10-18T10:44:48+08:00" content="2016-10-18">
               2016-10-18
             </time>
@@ -361,7 +501,7 @@ take smaller steps. So, no need to decrease a over time.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-09-05T16:41:16+08:00" content="2016-09-05">
               2016-09-05
             </time>
@@ -492,7 +632,7 @@ hexo d -g
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">投稿日</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-09-04T16:41:16+08:00" content="2016-09-04">
               2016-09-04
             </time>
@@ -605,8 +745,8 @@ hexo d -g
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">23</span>
-              <span class="site-state-item-name">ポスト</span>
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -616,7 +756,7 @@ hexo d -g
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">タグ</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -660,7 +800,7 @@ hexo d -g
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
