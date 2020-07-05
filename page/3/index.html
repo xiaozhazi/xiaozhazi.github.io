@@ -235,6 +235,164 @@
             
               
                 
+                <a class="post-title-link" href="/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" itemprop="url">
+                  Machine Learning编程作业1——Linear Regression
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2016-10-31T10:50:02+08:00" content="2016-10-31">
+              2016-10-31
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="作业源码"><a href="#作业源码" class="headerlink" title="作业源码"></a>作业源码</h2><h3 id="warmUpExercise-m-basic-function"><a href="#warmUpExercise-m-basic-function" class="headerlink" title="warmUpExercise.m   ____basic function"></a>warmUpExercise.m   ____basic function</h3><p>fprintf(‘Running warmUpExercise …\n’);</p>
+<p>fprintf(‘5*5 Identity Matrix: \n”);</p>
+<p>warmUpExercise()</p>
+<pre><code>function A = warmUpExercise()
+
+A = [];
+A = eye(5);
+
+end
+</code></pre><h3 id="plotData-m-Plotting"><a href="#plotData-m-Plotting" class="headerlink" title="plotData.m ____Plotting"></a>plotData.m ____Plotting</h3><p>fprintf(‘Plotting Data…\n’)</p>
+<p>data = load(‘ex1data1.txt’);</p>
+<p>X = data(:,1); y = data(;,2);</p>
+<p>m = length(y); %num of training examples</p>
+<p>plotData(X,y)</p>
+<pre><code>function plotData(x,y)
+
+figure;
+plot(x,y,&apos;rx&apos;,&apos;MarkerSize&apos;,10);
+ylabel(&apos;Profit in $10,000s&apos;);
+xlabel(&apos;Poputation of City in 10,000s&apos;);
+
+end
+</code></pre><h3 id="gradientDescent-m-Gradient-Descent"><a href="#gradientDescent-m-Gradient-Descent" class="headerlink" title="gradientDescent.m ____Gradient Descent"></a>gradientDescent.m ____Gradient Descent</h3><p>fprintf(‘Running Gradient Descent …\n’)</p>
+<p>X = [ones[m,1],data(;,1)];</p>
+<p>theta = zeros(2,1);</p>
+<p>iterations = 1500;</p>
+<p>alpha = 0.01;</p>
+<p>computeCost(X,y,theta);</p>
+<h4 id="computeCost-m-compute-initial-cost"><a href="#computeCost-m-compute-initial-cost" class="headerlink" title="computeCost.m ____compute initial cost"></a>computeCost.m ____compute initial cost</h4><pre><code>function J = computeCost(X,y,theta)
+
+m = length(y);
+J = 0;
+cost = 0;
+for i = 1 : m
+    cost += (theta(1,1) * X(i,1) + theta(2,1) * X(i,2)
+            - y(i))^2;
+end
+
+J = 1/(2*m) * cost;
+
+end
+</code></pre><p>theta = gradientDescent(X,y,theta,alpha,iterations);</p>
+<pre><code>function [theta,J_history] = gradientDescent(X,y,theta,
+                alpha,num_iters)
+
+m = length(y);
+J_history = zeros(num_iters,1);
+
+for iter = 1 : num_iters
+    cost_theta1 = 0;
+    cost_theta2 = 0;
+    for i = 1 : m
+        cost_theta1 += (theta(1,1) * X(i,1) + 
+            theta(2,1) * X(i,2) - y(i)) * X(i,1);
+        cost_theta2 += (theta(1,1) * X(i,1) +
+            theta(2,1) * X(i,2) - y(i)) * X(i,2);
+    end
+    new_theta1 = theta(1,1) - alpha*cost_theta1 * 1/m;
+    new_theta2 = theta(2,1) - alpha*cost_theta2 * 1/m;
+    theta(1,1) = new_theta1;
+    theta(2,1) = new_theta2;
+
+    J_history(iter) = computeCost(X,y,theta);
+end
+end
+</code></pre>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周
                 </a>
@@ -745,7 +903,7 @@ hexo d -g
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-count">25</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>

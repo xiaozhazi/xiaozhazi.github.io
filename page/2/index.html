@@ -235,6 +235,107 @@
             
               
                 
+                <a class="post-title-link" href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2016-12-23T15:53:56+08:00" content="2016-12-23">
+              2016-12-23
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="10、Large-Scale-Machine-Learning"><a href="#10、Large-Scale-Machine-Learning" class="headerlink" title="10、Large Scale Machine Learning"></a>10、Large Scale Machine Learning</h1><h2 id="10-1、Gradient-Descent-with-Large-Datasets"><a href="#10-1、Gradient-Descent-with-Large-Datasets" class="headerlink" title="10.1、Gradient Descent with Large Datasets"></a>10.1、Gradient Descent with Large Datasets</h2><h3 id="10-1-1、Learning-with-large-dataset"><a href="#10-1-1、Learning-with-large-dataset" class="headerlink" title="10.1.1、Learning with large dataset"></a>10.1.1、Learning with large dataset</h3><p>It’s not who has the best algorithm that wins.<br>It’s who has the most data.</p>
+<h3 id="10-1-2、Stochastic-gradient-descent"><a href="#10-1-2、Stochastic-gradient-descent" class="headerlink" title="10.1.2、Stochastic gradient descent"></a>10.1.2、Stochastic gradient descent</h3><p>不像Batch gradient descent每次迭代时都需要将数据集代入计算。</p>
+<p>当数据集大的时候我们需要随机shuffle数据集，<br>然后选取第一个数据进行计算，然后进行梯度下降，再接着使用接下来的数据依次进行此过程。</p>
+<h3 id="10-1-3、Mini-batch-gradient-descent"><a href="#10-1-3、Mini-batch-gradient-descent" class="headerlink" title="10.1.3、Mini-batch gradient descent"></a>10.1.3、Mini-batch gradient descent</h3><p>batch 和  stochastic的结合。每次选一组数据进行计算，然后再接着使用下一组重复此过程。</p>
+<h3 id="10-1-4、Stochastic-gradient-descent-convergence"><a href="#10-1-4、Stochastic-gradient-descent-convergence" class="headerlink" title="10.1.4、Stochastic gradient descent convergence"></a>10.1.4、Stochastic gradient descent convergence</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/10_1.png" alt="10_1"></p>
+<p>Learning rate α is tapically held constant. Can slowly descrease α over time if we want θ to converge.</p>
+<h2 id="10-2、Online-Learning"><a href="#10-2、Online-Learning" class="headerlink" title="10.2、Online Learning"></a>10.2、Online Learning</h2><p>上述方法可以应用在实时在线学习上，数据集大小不固定，以数据流的形式出现。</p>
+<h2 id="10-3、Map-reduce-and-data-parallelism"><a href="#10-3、Map-reduce-and-data-parallelism" class="headerlink" title="10.3、Map-reduce and data parallelism"></a>10.3、Map-reduce and data parallelism</h2><p>在进行梯度下降计算时，中间有步骤需要求和，我们可以利用Map-reduce和并行计算来缩短处理时间。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周
                 </a>
@@ -1501,164 +1602,6 @@ but fail to generalize to new examples.
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" itemprop="url">
-                  Machine Learning编程作业1——Linear Regression
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-10-31T10:50:02+08:00" content="2016-10-31">
-              2016-10-31
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="作业源码"><a href="#作业源码" class="headerlink" title="作业源码"></a>作业源码</h2><h3 id="warmUpExercise-m-basic-function"><a href="#warmUpExercise-m-basic-function" class="headerlink" title="warmUpExercise.m   ____basic function"></a>warmUpExercise.m   ____basic function</h3><p>fprintf(‘Running warmUpExercise …\n’);</p>
-<p>fprintf(‘5*5 Identity Matrix: \n”);</p>
-<p>warmUpExercise()</p>
-<pre><code>function A = warmUpExercise()
-
-A = [];
-A = eye(5);
-
-end
-</code></pre><h3 id="plotData-m-Plotting"><a href="#plotData-m-Plotting" class="headerlink" title="plotData.m ____Plotting"></a>plotData.m ____Plotting</h3><p>fprintf(‘Plotting Data…\n’)</p>
-<p>data = load(‘ex1data1.txt’);</p>
-<p>X = data(:,1); y = data(;,2);</p>
-<p>m = length(y); %num of training examples</p>
-<p>plotData(X,y)</p>
-<pre><code>function plotData(x,y)
-
-figure;
-plot(x,y,&apos;rx&apos;,&apos;MarkerSize&apos;,10);
-ylabel(&apos;Profit in $10,000s&apos;);
-xlabel(&apos;Poputation of City in 10,000s&apos;);
-
-end
-</code></pre><h3 id="gradientDescent-m-Gradient-Descent"><a href="#gradientDescent-m-Gradient-Descent" class="headerlink" title="gradientDescent.m ____Gradient Descent"></a>gradientDescent.m ____Gradient Descent</h3><p>fprintf(‘Running Gradient Descent …\n’)</p>
-<p>X = [ones[m,1],data(;,1)];</p>
-<p>theta = zeros(2,1);</p>
-<p>iterations = 1500;</p>
-<p>alpha = 0.01;</p>
-<p>computeCost(X,y,theta);</p>
-<h4 id="computeCost-m-compute-initial-cost"><a href="#computeCost-m-compute-initial-cost" class="headerlink" title="computeCost.m ____compute initial cost"></a>computeCost.m ____compute initial cost</h4><pre><code>function J = computeCost(X,y,theta)
-
-m = length(y);
-J = 0;
-cost = 0;
-for i = 1 : m
-    cost += (theta(1,1) * X(i,1) + theta(2,1) * X(i,2)
-            - y(i))^2;
-end
-
-J = 1/(2*m) * cost;
-
-end
-</code></pre><p>theta = gradientDescent(X,y,theta,alpha,iterations);</p>
-<pre><code>function [theta,J_history] = gradientDescent(X,y,theta,
-                alpha,num_iters)
-
-m = length(y);
-J_history = zeros(num_iters,1);
-
-for iter = 1 : num_iters
-    cost_theta1 = 0;
-    cost_theta2 = 0;
-    for i = 1 : m
-        cost_theta1 += (theta(1,1) * X(i,1) + 
-            theta(2,1) * X(i,2) - y(i)) * X(i,1);
-        cost_theta2 += (theta(1,1) * X(i,1) +
-            theta(2,1) * X(i,2) - y(i)) * X(i,2);
-    end
-    new_theta1 = theta(1,1) - alpha*cost_theta1 * 1/m;
-    new_theta2 = theta(2,1) - alpha*cost_theta2 * 1/m;
-    theta(1,1) = new_theta1;
-    theta(2,1) = new_theta2;
-
-    J_history(iter) = computeCost(X,y,theta);
-end
-end
-</code></pre>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1704,7 +1647,7 @@ end
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-count">25</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>

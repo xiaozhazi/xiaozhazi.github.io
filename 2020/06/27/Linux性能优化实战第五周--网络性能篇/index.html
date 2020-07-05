@@ -92,7 +92,7 @@
 <meta property="og:site_name" content="Frances Hu's Blog">
 <meta property="og:description" content="个人感悟本周的学习首先了解了Linux网络的工作原理，OSI七层网络模型，TCP/IP模型以及网络包的收发流程。应用程序通过Socket接口发送数据包时先要在网络协议栈从上到下逐层处理最终到网卡上发送，接收也要经过网络协议栈从下到上逐层解析，最后送到应用程序。以及网络传输相关性能指标和响应的查看工具。
 并且学习了经典的C10K问题，以及延伸的C1000K和C10M问题。这个印象中研究生毕业面试B家">
-<meta property="og:updated_time" content="2020-06-27T09:44:25.756Z">
+<meta property="og:updated_time" content="2020-07-05T10:32:12.055Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Linux 性能优化实战》第五周--网络性能篇">
 <meta name="twitter:description" content="个人感悟本周的学习首先了解了Linux网络的工作原理，OSI七层网络模型，TCP/IP模型以及网络包的收发流程。应用程序通过Socket接口发送数据包时先要在网络协议栈从上到下逐层处理最终到网卡上发送，接收也要经过网络协议栈从下到上逐层解析，最后送到应用程序。以及网络传输相关性能指标和响应的查看工具。
@@ -282,7 +282,6 @@
         <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周的学习首先了解了Linux网络的工作原理，<strong>OSI七层网络模型</strong>，<strong>TCP/IP模型</strong>以及<strong>网络包的收发流程</strong>。应用程序通过Socket接口发送数据包时先要在网络协议栈从上到下逐层处理最终到网卡上发送，接收也要经过网络协议栈从下到上逐层解析，最后送到应用程序。以及网络传输相关性能指标和响应的查看工具。</p>
 <p>并且学习了经典的C10K问题，以及延伸的C1000K和C10M问题。这个印象中研究生毕业面试B家的时候被问到过。C10K问题的根源一方面在于系统有限的资源，另一方面，同步阻塞I/O模型以及轮询的套接字接口限制了网络事件的处理效率。目前高性能网络方法都基于epoll。从10K到100K，增加物理资源就能解决，但是到1000K时就需要多方面的优化工作，从硬件中断处理和网络功能卸载、到网络协议栈的文件描述符数量、连接状态跟踪、缓存队列等内核的优化，再到应用程序的工作模型优化，都需要考虑。</p>
 <p>再进一步实现10M，就需要用XDP的方式，在内核协议栈之前处理网络包；或者用DPDK直接跳过网络协议栈在用户空间通过轮询的方式直接处理网络包。其中DPDK时目前最主流的高性能网络解决方案，但是需要能支持DPDK的网卡配合使用。</p>
-<p>对于网络性能评估，一般情况需要从上到下对每个协议层进行性能测试，然后根据性能测试结果结合Linux网络协议栈原理，找出导致性能瓶颈的根源。</p>
 <h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><pre><code>查看网络配置
 ifconfig/ip
 套接字信息/协议栈统计信息
@@ -299,7 +298,9 @@ wrk/jmeter
 iperf
 转发性能
 pktgen
-</code></pre><hr>
+</code></pre><h3 id="捞评论GET"><a href="#捞评论GET" class="headerlink" title="捞评论GET"></a>捞评论GET</h3><p>1、客户端的网络环境复杂，出现网络抖动如何分析解决？</p>
+<p>在第一个网络出入口记录每次收发消息的内容和具体时间戳(精确到ms)，遇到玩家反馈时根据id及发生的大致时间在日志中查找响应记录，看是服务器响应慢还是客户端到服务器的线路慢。可以考虑更多的接入点、专线、CDN等优化公网的链路延迟问题。</p>
+<hr>
 <p>接下来是本周读书笔记</p>
 <hr>
 <h2 id="Lesson-33-34-关于网络，你必须知道这些"><a href="#Lesson-33-34-关于网络，你必须知道这些" class="headerlink" title="Lesson 33/34 关于网络，你必须知道这些"></a>Lesson 33/34 关于网络，你必须知道这些</h2><h3 id="网络模型"><a href="#网络模型" class="headerlink" title="网络模型"></a>网络模型</h3><p>开放式系统互联通信参考模型（Open System Interconnection Reference Model），简称<strong>OSI网络模型</strong></p>
@@ -457,6 +458,54 @@ webbench
 </code></pre><h3 id="应用负载性能"><a href="#应用负载性能" class="headerlink" title="应用负载性能"></a>应用负载性能</h3><pre><code>wrk
 TCPCopy
 Jmeter
+</code></pre><hr>
+<h2 id="Lesson-36-套路篇：怎么评估系统的网络性能"><a href="#Lesson-36-套路篇：怎么评估系统的网络性能" class="headerlink" title="Lesson 36 套路篇：怎么评估系统的网络性能"></a>Lesson 36 套路篇：怎么评估系统的网络性能</h2><p>上节课学习了C10M的解决方案，不过在大多数场景下，我们并不需要单机并发1000万请求。通过调整系统架构，把请求分发到多台服务器中并行处理，才是更简单、扩展性更好的方案。</p>
+<p>这就需要我们评估系统的网络性能，以便考察系统的处理能力，并为容量规划提供基准数据。</p>
+<h3 id="性能指标回顾"><a href="#性能指标回顾" class="headerlink" title="性能指标回顾"></a>性能指标回顾</h3><p><strong>带宽、吞吐量、延时、PPS</strong>，这四个性能指标中带宽跟物理网卡配置直接关联；Linux服务器的网络吞吐量一般会比带宽小，交换机等专门的网络设备吞吐量一般接近带宽；PPS以网络包为单位的网络传输速率，通常用在需要大量转发的场景中；对于TCP或者Web服务来说通常会用并发连接数和每秒请求数QPS等指标。</p>
+<h3 id="网络基准测试"><a href="#网络基准测试" class="headerlink" title="网络基准测试"></a>网络基准测试</h3><p>在测试之前需要弄清楚需要测试的应用程序基于协议栈的哪一层？</p>
+<ul>
+<li>基于HTTP和HTTPS的Web应用程序，属于应用层，需要测试HTTP/HTTPS的性能；</li>
+<li>大多数游戏服务器，为了支持更大的在线人数。通常会基于TCP/UDP与客户端交互，需要测试TCP/UDP性能</li>
+<li>还有一些场景将Linux作为一个软交换机或者路由器来使用，此时要更关注网络包的处理能力。即PPS，关注网络层的转发能力。</li>
+</ul>
+<h3 id="各协议层性能测试"><a href="#各协议层性能测试" class="headerlink" title="各协议层性能测试"></a>各协议层性能测试</h3><h4 id="转发性能-1"><a href="#转发性能-1" class="headerlink" title="转发性能"></a>转发性能</h4><p>网络接口层和网络层，主要负责网络包的封装、寻址、路由以及发送和接收。这里最重要的性能指标就是PPS每秒可处理的网络包数。</p>
+<p>可以用hping3或者pktgen来测试网络包处理能力。其中pktgen作为一个Linux内核自带的高性能网络测试工具，需要加载pktgen内核模块后再通过/proc文件系统交互。</p>
+<pre><code>modprobe pktgen
+ls /proc/net/pktgen
+</code></pre><p>在测试时，需要先给每个内核线程kpktgend_X以及测试网卡，配置pktgen选项。再通过pgctrl启动测试。</p>
+<p>假设发包及其使用网卡eth0，目标机器的IP为192.168.0.30， MAC地址为11:11:11:11:11:11</p>
+<pre><code>#define function for test options
+function pgset() {
+    local result
+    echo $1 &gt; $PGDEV
+    result=`cat $PGDEV | fgrep &quot;Result: OK:&quot;`
+
+    if [ &quot;$result&quot; = &quot;&quot; ]; then 
+        cat $PGDEV | fgrep Result:
+    fi
+} 
+
+#bind eth0 for thread 0
+PGDEV=/proc/net/pktgen/eht0
+pgset &quot;count 1000000&quot; #total packages
+pgset &quot;delay 5000&quot;
+pgset &quot;clone_skb 0&quot;
+pgset &quot;pkt_size 64&quot;
+pgset &quot;dst 192.168.0.30&quot;
+pgset &quot;dst_mac 11.11.11.11.11.11&quot;
+
+#Start test
+PGDEV=/proc/net/pktgen/pgctrl
+pgset &quot;start&quot;
+
+#Check result
+cat /proc/net/pktgen/eth0
+</code></pre><h4 id="TCP-UDP性能-1"><a href="#TCP-UDP性能-1" class="headerlink" title="TCP/UDP性能"></a>TCP/UDP性能</h4><pre><code>iperf
+netperf
+</code></pre><h4 id="HTTP性能-1"><a href="#HTTP性能-1" class="headerlink" title="HTTP性能"></a>HTTP性能</h4><pre><code>ab -c 1000 -n 10000 http://www.baidu.com
+webbench
+</code></pre><h4 id="应用负载性能-1"><a href="#应用负载性能-1" class="headerlink" title="应用负载性能"></a>应用负载性能</h4><pre><code>wrk TCPCopy Jmeter LoadRunner
+工作中用过Jmeter进行测试
 </code></pre>
       
     </div>
@@ -495,6 +544,10 @@ Jmeter
           </div>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/07/04/Linux性能优化实战第六周--网络性能篇实战/" rel="prev" title="《Linux 性能优化实战》第六周--网络性能实战篇">
+                《Linux 性能优化实战》第六周--网络性能实战篇 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -562,7 +615,7 @@ Jmeter
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-count">25</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
@@ -601,7 +654,7 @@ Jmeter
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#新工具GET"><span class="nav-number">1.1.</span> <span class="nav-text">新工具GET</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-33-34-关于网络，你必须知道这些"><span class="nav-number">2.</span> <span class="nav-text">Lesson 33/34 关于网络，你必须知道这些</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#网络模型"><span class="nav-number">2.1.</span> <span class="nav-text">网络模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux网络栈"><span class="nav-number">2.2.</span> <span class="nav-text">Linux网络栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux网络收发流程"><span class="nav-number">2.3.</span> <span class="nav-text">Linux网络收发流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#网络包的接收流程"><span class="nav-number">2.3.1.</span> <span class="nav-text">网络包的接收流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网络包的发送流程"><span class="nav-number">2.3.2.</span> <span class="nav-text">网络包的发送流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能指标"><span class="nav-number">2.4.</span> <span class="nav-text">性能指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络配置"><span class="nav-number">2.5.</span> <span class="nav-text">网络配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#套接字信息"><span class="nav-number">2.6.</span> <span class="nav-text">套接字信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#协议栈统计信息"><span class="nav-number">2.7.</span> <span class="nav-text">协议栈统计信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#吞吐量和PPS"><span class="nav-number">2.8.</span> <span class="nav-text">吞吐量和PPS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#连通性和延时"><span class="nav-number">2.9.</span> <span class="nav-text">连通性和延时</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-35-基础篇：C10K和C1000K回顾"><span class="nav-number">3.</span> <span class="nav-text">Lesson 35 基础篇：C10K和C1000K回顾</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O模型优化"><span class="nav-number">3.1.</span> <span class="nav-text">I/O模型优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#工作模型优化"><span class="nav-number">3.2.</span> <span class="nav-text">工作模型优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C1000K"><span class="nav-number">3.3.</span> <span class="nav-text">C1000K</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C10M"><span class="nav-number">3.4.</span> <span class="nav-text">C10M</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-36-套路篇：怎么评估系统的网络性能？"><span class="nav-number">4.</span> <span class="nav-text">Lesson 36 套路篇：怎么评估系统的网络性能？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#各协议层的性能测试"><span class="nav-number">4.1.</span> <span class="nav-text">各协议层的性能测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#转发性能"><span class="nav-number">4.1.1.</span> <span class="nav-text">转发性能</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-UDP性能"><span class="nav-number">4.2.</span> <span class="nav-text">TCP/UDP性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP性能"><span class="nav-number">4.3.</span> <span class="nav-text">HTTP性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应用负载性能"><span class="nav-number">4.4.</span> <span class="nav-text">应用负载性能</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#新工具GET"><span class="nav-number">1.1.</span> <span class="nav-text">新工具GET</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#捞评论GET"><span class="nav-number">1.2.</span> <span class="nav-text">捞评论GET</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-33-34-关于网络，你必须知道这些"><span class="nav-number">2.</span> <span class="nav-text">Lesson 33/34 关于网络，你必须知道这些</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#网络模型"><span class="nav-number">2.1.</span> <span class="nav-text">网络模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux网络栈"><span class="nav-number">2.2.</span> <span class="nav-text">Linux网络栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux网络收发流程"><span class="nav-number">2.3.</span> <span class="nav-text">Linux网络收发流程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#网络包的接收流程"><span class="nav-number">2.3.1.</span> <span class="nav-text">网络包的接收流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网络包的发送流程"><span class="nav-number">2.3.2.</span> <span class="nav-text">网络包的发送流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#性能指标"><span class="nav-number">2.4.</span> <span class="nav-text">性能指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络配置"><span class="nav-number">2.5.</span> <span class="nav-text">网络配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#套接字信息"><span class="nav-number">2.6.</span> <span class="nav-text">套接字信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#协议栈统计信息"><span class="nav-number">2.7.</span> <span class="nav-text">协议栈统计信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#吞吐量和PPS"><span class="nav-number">2.8.</span> <span class="nav-text">吞吐量和PPS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#连通性和延时"><span class="nav-number">2.9.</span> <span class="nav-text">连通性和延时</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-35-基础篇：C10K和C1000K回顾"><span class="nav-number">3.</span> <span class="nav-text">Lesson 35 基础篇：C10K和C1000K回顾</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#I-O模型优化"><span class="nav-number">3.1.</span> <span class="nav-text">I/O模型优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#工作模型优化"><span class="nav-number">3.2.</span> <span class="nav-text">工作模型优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C1000K"><span class="nav-number">3.3.</span> <span class="nav-text">C1000K</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C10M"><span class="nav-number">3.4.</span> <span class="nav-text">C10M</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-36-套路篇：怎么评估系统的网络性能？"><span class="nav-number">4.</span> <span class="nav-text">Lesson 36 套路篇：怎么评估系统的网络性能？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#各协议层的性能测试"><span class="nav-number">4.1.</span> <span class="nav-text">各协议层的性能测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#转发性能"><span class="nav-number">4.1.1.</span> <span class="nav-text">转发性能</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-UDP性能"><span class="nav-number">4.2.</span> <span class="nav-text">TCP/UDP性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP性能"><span class="nav-number">4.3.</span> <span class="nav-text">HTTP性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应用负载性能"><span class="nav-number">4.4.</span> <span class="nav-text">应用负载性能</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-36-套路篇：怎么评估系统的网络性能"><span class="nav-number">5.</span> <span class="nav-text">Lesson 36 套路篇：怎么评估系统的网络性能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#性能指标回顾"><span class="nav-number">5.1.</span> <span class="nav-text">性能指标回顾</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#网络基准测试"><span class="nav-number">5.2.</span> <span class="nav-text">网络基准测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#各协议层性能测试"><span class="nav-number">5.3.</span> <span class="nav-text">各协议层性能测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#转发性能-1"><span class="nav-number">5.3.1.</span> <span class="nav-text">转发性能</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TCP-UDP性能-1"><span class="nav-number">5.3.2.</span> <span class="nav-text">TCP/UDP性能</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HTTP性能-1"><span class="nav-number">5.3.3.</span> <span class="nav-text">HTTP性能</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#应用负载性能-1"><span class="nav-number">5.3.4.</span> <span class="nav-text">应用负载性能</span></a></li></ol></li></ol></li></ol></div>
             
           </div>
         </section>
