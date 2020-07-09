@@ -235,6 +235,124 @@
             
               
                 
+                <a class="post-title-link" href="/2020/07/09/Linux性能优化实战第七周--综合实战篇/" itemprop="url">
+                  《Linux 性能优化实战》第七周--综合实战篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-07-09T21:55:00+08:00" content="2020-07-09">
+              2020-07-09
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-46-案例篇：为什么应用容器化后，启动慢了很多？"><a href="#Lesson-46-案例篇：为什么应用容器化后，启动慢了很多？" class="headerlink" title="Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？"></a>Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？</h2><p>本课主要学习如何分析应用程序容器化后的性能问题。</p>
+<h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><pre><code>sudo docker run --name tomcat --cpus 0.1 -m 512M -p 8080:8080 -itd feisky/tomcat:8
+curl localhost:8080
+</code></pre><p>容器内核心应用逻辑比较简单，申请一个256M的内存然后输出“HelloWorld”。等待容器启动后运行curl命令给出了结果“HelloWorld”，但是随后出现Empty reply from server一直connection refused。</p>
+<p>查看tomcat log并没有发现问题并且容器状态为Exited，此时利用docker inspect查看容器信息，发现State信息中OOMKilled为true，说明容器是被OOM杀死。但是我们已经指定了-m为512M正常不会遇到OOM问题。</p>
+<p>此时利用dmesg命令查看系统日志，定位OOM相关日志，可以看到输出显示：</p>
+<ul>
+<li>mem_cgroup_out_of_memory，超出了cgroup内存限制</li>
+<li>java进程在容器内运行，容器内存的使用和限制都是512M，当前使用量已经超过该限制</li>
+<li>被杀死的进程，虚拟内存为4.3G，匿名内存页为505M，页内存为19M。</li>
+</ul>
+<p>分析可知，Tomcat容器的内存主要用在了匿名内存，其实就是主动申请分配的堆内存。Tomcat是基于JAVA开发，自然想到JVM堆内存配置问题。</p>
+<pre><code>重新启动容器，执行下列命令查看JVM堆配置
+sudo docker exec tomcat java -XX:+PrintFlagsFinal -version | grep HeapSize
+sudo docker exec tomcat free -m #容器内部看到的仍然是主机内存
+</code></pre><p>看到初始堆内存大小InitialHeapSize为126MB，最大堆内存大小为1.95GB，比容器限制要大。因为容器看不到该配置，虽然在启动容器时设置了内存限制，但是并不影响JVM使用。</p>
+<p><strong>解决方法：</strong>在运行容器时加上 -e JAVA_OPT限制即可</p>
+<p>重新启动容器后，查看tomcat log发现能正常启动，但是启动时间需要22s。</p>
+<p>再次重启容器并使用top来观察输出，发现机器中CPU使用率并不高且内存也非常充足，再看进程上Java进程的CPU使用率为10%，内存使用率0.9%。 其他进程使用率几乎可以忽略。</p>
+<p>继续重启容器，top拿到JAVA进程PID之后，再用pidstat分析该进程，发现虽然CPU使用率很低，只有10%，但是wait%却非常高达到了87%，说明线程大部分时间都在等待调度，没有真正运行。 </p>
+<p>再看我们运行容器时限制了–cpus 0.1,限制了CPU使用。将该值增加大1再重启此时只需要2s即可完成。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>在容器平台中最常见的一个问题就是刚开始图省事不进行资源限制，当容器数量增长之后就会经常出现各种异常问题，最终查下来可能就是某个应用资源使用过高，导致整台机器短时间无法响应。因此使用Docker运行Java应用时一定要确保设置容器资源限制的同时，配置好JVM选项。 也可以升级JAVA版本到JAVA10，即可自动解决类似问题。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/07/04/Linux性能优化实战第六周--网络性能篇实战/" itemprop="url">
                   《Linux 性能优化实战》第六周--网络性能实战篇
                 </a>
@@ -2761,114 +2879,6 @@ There are two ways to reach the bottom-right corner:
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-12-31T15:54:03+08:00" content="2016-12-31">
-              2016-12-31
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="11、Application-Example-Photo-OCR"><a href="#11、Application-Example-Photo-OCR" class="headerlink" title="11、Application Example: Photo OCR"></a>11、Application Example: Photo OCR</h1><h2 id="11-1、Photo-OCR"><a href="#11-1、Photo-OCR" class="headerlink" title="11.1、Photo OCR"></a>11.1、Photo OCR</h2><h3 id="11-1-1、problem-description-and-pipeline"><a href="#11-1-1、problem-description-and-pipeline" class="headerlink" title="11.1.1、problem description and pipeline"></a>11.1.1、problem description and pipeline</h3><p>photo OCR pipeline </p>
-<ol>
-<li>Text detection</li>
-<li>Character segmentation</li>
-<li>Character classification</li>
-</ol>
-<h3 id="11-1-2、sliding-window"><a href="#11-1-2、sliding-window" class="headerlink" title="11.1.2、sliding window"></a>11.1.2、sliding window</h3><p>对整个图片进行分别窗口化检测</p>
-<h3 id="11-1-3、Getting-lots-of-data-Artificial-data-synthesis"><a href="#11-1-3、Getting-lots-of-data-Artificial-data-synthesis" class="headerlink" title="11.1.3、Getting lots of data: Artificial data synthesis"></a>11.1.3、Getting lots of data: Artificial data synthesis</h3><p>Synthesizing data by introducing distortions</p>
-<ol>
-<li>Distortion introduced should be representation of the type of noise/distortions in the test set.</li>
-<li>Usually does not help to add purely random/meaningless noise to your data. </li>
-</ol>
-<h3 id="11-1-4、What-part-of-the-pipeline-to-work-on-next"><a href="#11-1-4、What-part-of-the-pipeline-to-work-on-next" class="headerlink" title="11.1.4、What part of the pipeline to work on next"></a>11.1.4、What part of the pipeline to work on next</h3><p>进行分块处理的目的是，我们可以很容易的分析出那一步骤是系统性能瓶颈，需要在那一步骤上投入更多的精力。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/11_1.png" alt="11_1"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/11_2.png" alt="11_2"></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2914,7 +2924,7 @@ There are two ways to reach the bottom-right corner:
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">25</span>
+              <span class="site-state-item-count">26</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>

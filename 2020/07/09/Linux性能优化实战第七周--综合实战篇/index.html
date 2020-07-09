@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="machine learning," />
+  <meta name="keywords" content="Linux性能优化实战," />
 
 
 
@@ -84,43 +84,34 @@
 
 
 
-<meta name="description" content="作业源码warmUpExercise.m   ____basic functionfprintf(‘Running warmUpExercise …\n’);
-fprintf(‘5*5 Identity Matrix: \n”);
-warmUpExercise()
-function A = warmUpExercise()
+<meta name="description" content="个人感悟新工具GET
+接下来是本周读书笔记
 
-A = [];
-A = eye(5);
-
-end
-plotData.m">
+Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？本课主要学习如何分析应用程序容器化后的性能问题。
+实验sudo docker run --name tomcat --cpus 0.1 -m 512M -p 8080:8080 -itd feisky/tomcat:8
+curl localhost:8080
+容器内核心应用逻辑比较简单，申请">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Machine Learning编程作业1——Linear Regression">
-<meta property="og:url" content="http://xiaozhazi.github.io/2016/10/31/Machine-Learning编程作业1——Linear-Regression/index.html">
+<meta property="og:title" content="《Linux 性能优化实战》第七周--综合实战篇">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/07/09/Linux性能优化实战第七周--综合实战篇/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
-<meta property="og:description" content="作业源码warmUpExercise.m   ____basic functionfprintf(‘Running warmUpExercise …\n’);
-fprintf(‘5*5 Identity Matrix: \n”);
-warmUpExercise()
-function A = warmUpExercise()
+<meta property="og:description" content="个人感悟新工具GET
+接下来是本周读书笔记
 
-A = [];
-A = eye(5);
-
-end
-plotData.m">
-<meta property="og:updated_time" content="2019-04-19T16:39:41.391Z">
+Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？本课主要学习如何分析应用程序容器化后的性能问题。
+实验sudo docker run --name tomcat --cpus 0.1 -m 512M -p 8080:8080 -itd feisky/tomcat:8
+curl localhost:8080
+容器内核心应用逻辑比较简单，申请">
+<meta property="og:updated_time" content="2020-07-09T15:53:53.346Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Machine Learning编程作业1——Linear Regression">
-<meta name="twitter:description" content="作业源码warmUpExercise.m   ____basic functionfprintf(‘Running warmUpExercise …\n’);
-fprintf(‘5*5 Identity Matrix: \n”);
-warmUpExercise()
-function A = warmUpExercise()
+<meta name="twitter:title" content="《Linux 性能优化实战》第七周--综合实战篇">
+<meta name="twitter:description" content="个人感悟新工具GET
+接下来是本周读书笔记
 
-A = [];
-A = eye(5);
-
-end
-plotData.m">
+Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？本课主要学习如何分析应用程序容器化后的性能问题。
+实验sudo docker run --name tomcat --cpus 0.1 -m 512M -p 8080:8080 -itd feisky/tomcat:8
+curl localhost:8080
+容器内核心应用逻辑比较简单，申请">
 
 
 
@@ -141,9 +132,9 @@ plotData.m">
 
 
 
-  <link rel="canonical" href="http://xiaozhazi.github.io/2016/10/31/Machine-Learning编程作业1——Linear-Regression/"/>
+  <link rel="canonical" href="http://xiaozhazi.github.io/2020/07/09/Linux性能优化实战第七周--综合实战篇/"/>
 
-  <title> Machine Learning编程作业1——Linear Regression | Frances Hu's Blog </title>
+  <title> 《Linux 性能优化实战》第七周--综合实战篇 | Frances Hu's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
@@ -263,7 +254,7 @@ plotData.m">
             
             
               
-                Machine Learning编程作业1——Linear Regression
+                《Linux 性能优化实战》第七周--综合实战篇
               
             
           </h1>
@@ -275,8 +266,8 @@ plotData.m">
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-10-31T10:50:02+08:00" content="2016-10-31">
-              2016-10-31
+            <time itemprop="dateCreated" datetime="2020-07-09T21:55:00+08:00" content="2020-07-09">
+              2020-07-09
             </time>
           </span>
 
@@ -303,72 +294,32 @@ plotData.m">
       
 
       
-        <h2 id="作业源码"><a href="#作业源码" class="headerlink" title="作业源码"></a>作业源码</h2><h3 id="warmUpExercise-m-basic-function"><a href="#warmUpExercise-m-basic-function" class="headerlink" title="warmUpExercise.m   ____basic function"></a>warmUpExercise.m   ____basic function</h3><p>fprintf(‘Running warmUpExercise …\n’);</p>
-<p>fprintf(‘5*5 Identity Matrix: \n”);</p>
-<p>warmUpExercise()</p>
-<pre><code>function A = warmUpExercise()
+        <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-46-案例篇：为什么应用容器化后，启动慢了很多？"><a href="#Lesson-46-案例篇：为什么应用容器化后，启动慢了很多？" class="headerlink" title="Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？"></a>Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？</h2><p>本课主要学习如何分析应用程序容器化后的性能问题。</p>
+<h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><pre><code>sudo docker run --name tomcat --cpus 0.1 -m 512M -p 8080:8080 -itd feisky/tomcat:8
+curl localhost:8080
+</code></pre><p>容器内核心应用逻辑比较简单，申请一个256M的内存然后输出“HelloWorld”。等待容器启动后运行curl命令给出了结果“HelloWorld”，但是随后出现Empty reply from server一直connection refused。</p>
+<p>查看tomcat log并没有发现问题并且容器状态为Exited，此时利用docker inspect查看容器信息，发现State信息中OOMKilled为true，说明容器是被OOM杀死。但是我们已经指定了-m为512M正常不会遇到OOM问题。</p>
+<p>此时利用dmesg命令查看系统日志，定位OOM相关日志，可以看到输出显示：</p>
+<ul>
+<li>mem_cgroup_out_of_memory，超出了cgroup内存限制</li>
+<li>java进程在容器内运行，容器内存的使用和限制都是512M，当前使用量已经超过该限制</li>
+<li>被杀死的进程，虚拟内存为4.3G，匿名内存页为505M，页内存为19M。</li>
+</ul>
+<p>分析可知，Tomcat容器的内存主要用在了匿名内存，其实就是主动申请分配的堆内存。Tomcat是基于JAVA开发，自然想到JVM堆内存配置问题。</p>
+<pre><code>重新启动容器，执行下列命令查看JVM堆配置
+sudo docker exec tomcat java -XX:+PrintFlagsFinal -version | grep HeapSize
+sudo docker exec tomcat free -m #容器内部看到的仍然是主机内存
+</code></pre><p>看到初始堆内存大小InitialHeapSize为126MB，最大堆内存大小为1.95GB，比容器限制要大。因为容器看不到该配置，虽然在启动容器时设置了内存限制，但是并不影响JVM使用。</p>
+<p><strong>解决方法：</strong>在运行容器时加上 -e JAVA_OPT限制即可</p>
+<p>重新启动容器后，查看tomcat log发现能正常启动，但是启动时间需要22s。</p>
+<p>再次重启容器并使用top来观察输出，发现机器中CPU使用率并不高且内存也非常充足，再看进程上Java进程的CPU使用率为10%，内存使用率0.9%。 其他进程使用率几乎可以忽略。</p>
+<p>继续重启容器，top拿到JAVA进程PID之后，再用pidstat分析该进程，发现虽然CPU使用率很低，只有10%，但是wait%却非常高达到了87%，说明线程大部分时间都在等待调度，没有真正运行。 </p>
+<p>再看我们运行容器时限制了–cpus 0.1,限制了CPU使用。将该值增加大1再重启此时只需要2s即可完成。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>在容器平台中最常见的一个问题就是刚开始图省事不进行资源限制，当容器数量增长之后就会经常出现各种异常问题，最终查下来可能就是某个应用资源使用过高，导致整台机器短时间无法响应。因此使用Docker运行Java应用时一定要确保设置容器资源限制的同时，配置好JVM选项。 也可以升级JAVA版本到JAVA10，即可自动解决类似问题。</p>
 
-A = [];
-A = eye(5);
-
-end
-</code></pre><h3 id="plotData-m-Plotting"><a href="#plotData-m-Plotting" class="headerlink" title="plotData.m ____Plotting"></a>plotData.m ____Plotting</h3><p>fprintf(‘Plotting Data…\n’)</p>
-<p>data = load(‘ex1data1.txt’);</p>
-<p>X = data(:,1); y = data(;,2);</p>
-<p>m = length(y); %num of training examples</p>
-<p>plotData(X,y)</p>
-<pre><code>function plotData(x,y)
-
-figure;
-plot(x,y,&apos;rx&apos;,&apos;MarkerSize&apos;,10);
-ylabel(&apos;Profit in $10,000s&apos;);
-xlabel(&apos;Poputation of City in 10,000s&apos;);
-
-end
-</code></pre><h3 id="gradientDescent-m-Gradient-Descent"><a href="#gradientDescent-m-Gradient-Descent" class="headerlink" title="gradientDescent.m ____Gradient Descent"></a>gradientDescent.m ____Gradient Descent</h3><p>fprintf(‘Running Gradient Descent …\n’)</p>
-<p>X = [ones[m,1],data(;,1)];</p>
-<p>theta = zeros(2,1);</p>
-<p>iterations = 1500;</p>
-<p>alpha = 0.01;</p>
-<p>computeCost(X,y,theta);</p>
-<h4 id="computeCost-m-compute-initial-cost"><a href="#computeCost-m-compute-initial-cost" class="headerlink" title="computeCost.m ____compute initial cost"></a>computeCost.m ____compute initial cost</h4><pre><code>function J = computeCost(X,y,theta)
-
-m = length(y);
-J = 0;
-cost = 0;
-for i = 1 : m
-    cost += (theta(1,1) * X(i,1) + theta(2,1) * X(i,2)
-            - y(i))^2;
-end
-
-J = 1/(2*m) * cost;
-
-end
-</code></pre><p>theta = gradientDescent(X,y,theta,alpha,iterations);</p>
-<pre><code>function [theta,J_history] = gradientDescent(X,y,theta,
-                alpha,num_iters)
-
-m = length(y);
-J_history = zeros(num_iters,1);
-
-for iter = 1 : num_iters
-    cost_theta1 = 0;
-    cost_theta2 = 0;
-    for i = 1 : m
-        cost_theta1 += (theta(1,1) * X(i,1) + 
-            theta(2,1) * X(i,2) - y(i)) * X(i,1);
-        cost_theta2 += (theta(1,1) * X(i,1) +
-            theta(2,1) * X(i,2) - y(i)) * X(i,2);
-    end
-    new_theta1 = theta(1,1) - alpha*cost_theta1 * 1/m;
-    new_theta2 = theta(2,1) - alpha*cost_theta2 * 1/m;
-    theta(1,1) = new_theta1;
-    theta(2,1) = new_theta2;
-
-    J_history(iter) = computeCost(X,y,theta);
-end
-end
-</code></pre>
       
     </div>
 
@@ -390,7 +341,7 @@ end
       
         <div class="post-tags">
           
-            <a href="/tags/machine-learning/" rel="tag">#machine learning</a>
+            <a href="/tags/Linux性能优化实战/" rel="tag">#Linux性能优化实战</a>
           
         </div>
       
@@ -399,17 +350,13 @@ end
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" rel="next" title="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周">
-                <i class="fa fa-chevron-left"></i> AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周
+              <a href="/2020/07/04/Linux性能优化实战第六周--网络性能篇实战/" rel="next" title="《Linux 性能优化实战》第六周--网络性能实战篇">
+                <i class="fa fa-chevron-left"></i> 《Linux 性能优化实战》第六周--网络性能实战篇
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" rel="prev" title="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第三周">
-                AI入门之——Andrew Ng “Machine Learning”课程学习笔记第三周 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -516,7 +463,7 @@ end
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#作业源码"><span class="nav-number">1.</span> <span class="nav-text">作业源码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#warmUpExercise-m-basic-function"><span class="nav-number">1.1.</span> <span class="nav-text">warmUpExercise.m   ____basic function</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#plotData-m-Plotting"><span class="nav-number">1.2.</span> <span class="nav-text">plotData.m ____Plotting</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gradientDescent-m-Gradient-Descent"><span class="nav-number">1.3.</span> <span class="nav-text">gradientDescent.m ____Gradient Descent</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#computeCost-m-compute-initial-cost"><span class="nav-number">1.3.1.</span> <span class="nav-text">computeCost.m ____compute initial cost</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#新工具GET"><span class="nav-number">1.1.</span> <span class="nav-text">新工具GET</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-46-案例篇：为什么应用容器化后，启动慢了很多？"><span class="nav-number">2.</span> <span class="nav-text">Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验"><span class="nav-number">2.1.</span> <span class="nav-text">实验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小结"><span class="nav-number">2.2.</span> <span class="nav-text">小结</span></a></li></ol></li></ol></div>
             
           </div>
         </section>
