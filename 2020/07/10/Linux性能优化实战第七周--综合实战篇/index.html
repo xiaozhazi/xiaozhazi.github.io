@@ -102,7 +102,7 @@ iptables中的NAT会影响容器的网络性能
 叠加文件系统，会影响应用的I/O性能
 
 对于网络丢包问题分析，要从Linux网络收发的流程入手，结合TCP/IP协">
-<meta property="og:updated_time" content="2020-07-12T12:28:53.289Z">
+<meta property="og:updated_time" content="2020-07-12T13:50:09.092Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Linux 性能优化实战》第七周--综合实战篇">
 <meta name="twitter:description" content="个人感悟本周主要通过一些案例，对之前所学的知识进行复习和深化。首先容器化的应用程序性能分析，依旧可以使用之前的方法来分析和定位，不过要结合命名空间、cgroups、iptables等来综合分析。比如：
@@ -192,7 +192,7 @@ iptables中的NAT会影响容器的网络性能
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -202,7 +202,7 @@ iptables中的NAT会影响容器的网络性能
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -265,7 +265,7 @@ iptables中的NAT会影响容器的网络性能
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-07-10T21:55:00+08:00" content="2020-07-10">
               2020-07-10
             </time>
@@ -429,6 +429,31 @@ perf report
 <p>Dtrace的工作原理：它的运行常驻在内核中，用户可以用dtrace命令，把D语言编写的追踪脚本，提交到内核中的运行时来执行。Dtrace可以跟踪用户态和内核态的所有事件，并通过一些列的优化措施，保证最小的性能开销。</p>
 <p>Dtrace本身依然无法在Linux中运行，很多工程师都尝试过把Dtrace移植到Linux中，其中最著名的就是RedHat主推的SystemTap。</p>
 <p>SystemTap也定义了一种类似的脚本语言，方便用户根据需要自由扩展。不过SystemTap没有常驻内核运行时，需要先把脚本编译为内核模块，然后再插入到内核中执行。因此systemTap启动比较慢，并且依赖于完整的调试符号表。</p>
+<p>总的来说，为了追踪内核或用户空间的事件，Dtrace和SystemTap都会把用户传入的追踪处理函数，关联到被称为探针的检测点上。这些探针实际上也就是各种动态追踪技术所依赖的事件源。</p>
+<p>根据事件类型不同，动态追踪所使用的事件源，可以分为<strong>静态探针、动态探针以及硬件事件</strong>三类。</p>
+<ul>
+<li><strong>硬件事件</strong>通常由性能监控计数器PMC产生，包含了各种硬件的性能情况，比如CPU的缓存、指令周期、分支预测等；</li>
+<li><strong>静态探针</strong>，是指实现在代码中定义好，并编译到应用程序或者内核中的探针。这些探针只有在开启探测功能时才会被执行到。<ul>
+<li>跟踪点 tracepoints，实际上就是在源码中插入的一些带有控制条件的探测点，这些探测点允许时候再添加处理函数。如内核中的printk</li>
+<li>USDT探针，全称时用户级静态定义跟踪，需要在源码中插入DTRACE_PROBE()代码，并编译到应用程序中。MYSQL/PostgreSQL也内置了USDT探针</li>
+</ul>
+</li>
+<li><p><strong>动态探针</strong>，指没有事先在代码中定义，但却可以在运行时动态添加的探针。常见的动态探针都两种：</p>
+<ul>
+<li>kprobes用来跟踪内核态的函数，包括用于函数调用的kprobe和用于函数返回的kretprobe</li>
+<li><p>uprobes用来跟踪用户态的函数，包括用于函数调用的uprobe和用于函数返回的uretprobe</p>
+<p>  kprobes需要内核编译时开启CONFIG_KPROBE_EVENTS，uprobes需要内核编译中开启CONFIG_UPROBE_EVENTS</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="动态追踪机制"><a href="#动态追踪机制" class="headerlink" title="动态追踪机制"></a>动态追踪机制</h3><p>在探针基础上，Linux也提供了一系列的动态追踪机制，比如ftrace、perf、eBPF等</p>
+<ul>
+<li>ftrace最早用于函数跟踪，后来又扩展支持了各种事件跟踪功能。</li>
+<li>perf是一种最简单的静态跟踪机制，也可以通过perf来定义动态事件，只关注真正感兴趣的事件</li>
+<li>eBPF是在BPF（Berkeley Packet Filter）的基础上扩展来的，不仅支持事件跟踪机制，还可以通过自定义的BPF代码</li>
+</ul>
+<p>除此之外，还有很多内核外的工具，也提供了丰富的动态追踪功能，最常见的就是SystemTap和BCC，以及常用于容器性能分析的sysdig</p>
 
       
     </div>
@@ -515,10 +540,10 @@ perf report
       
         <ul class="sidebar-nav motion-element">
           <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
-            Table of Contents
+            Inhaltsverzeichnis
           </li>
           <li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
+            Übersicht
           </li>
         </ul>
       
@@ -535,7 +560,7 @@ perf report
           <div class="site-state-item site-state-posts">
             <a href="/archives">
               <span class="site-state-item-count">26</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -545,7 +570,7 @@ perf report
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -573,7 +598,7 @@ perf report
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-46-案例篇：为什么应用容器化后，启动慢了很多？"><span class="nav-number">2.</span> <span class="nav-text">Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验"><span class="nav-number">2.1.</span> <span class="nav-text">实验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小结"><span class="nav-number">2.2.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-47-48-案例篇：服务器总是时不时丢包怎么办？"><span class="nav-number">3.</span> <span class="nav-text">Lesson 47/48 案例篇：服务器总是时不时丢包怎么办？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-1"><span class="nav-number">3.1.</span> <span class="nav-text">实验</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#链路层分析"><span class="nav-number">3.1.1.</span> <span class="nav-text">链路层分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网络层和传输层"><span class="nav-number">3.1.2.</span> <span class="nav-text">网络层和传输层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iptables"><span class="nav-number">3.1.3.</span> <span class="nav-text">iptables</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小结-1"><span class="nav-number">3.2.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-49-案例篇：内核线程CPU利用率太高怎么办？"><span class="nav-number">4.</span> <span class="nav-text">Lesson 49 案例篇：内核线程CPU利用率太高怎么办？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内核线程"><span class="nav-number">4.1.</span> <span class="nav-text">内核线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-2"><span class="nav-number">4.2.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-50-51-案例篇：动态追踪怎么用？"><span class="nav-number">5.</span> <span class="nav-text">Lesson 50/51 案例篇：动态追踪怎么用？</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人感悟"><span class="nav-number">1.</span> <span class="nav-text">个人感悟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-46-案例篇：为什么应用容器化后，启动慢了很多？"><span class="nav-number">2.</span> <span class="nav-text">Lesson 46 案例篇：为什么应用容器化后，启动慢了很多？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验"><span class="nav-number">2.1.</span> <span class="nav-text">实验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小结"><span class="nav-number">2.2.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-47-48-案例篇：服务器总是时不时丢包怎么办？"><span class="nav-number">3.</span> <span class="nav-text">Lesson 47/48 案例篇：服务器总是时不时丢包怎么办？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-1"><span class="nav-number">3.1.</span> <span class="nav-text">实验</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#链路层分析"><span class="nav-number">3.1.1.</span> <span class="nav-text">链路层分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网络层和传输层"><span class="nav-number">3.1.2.</span> <span class="nav-text">网络层和传输层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iptables"><span class="nav-number">3.1.3.</span> <span class="nav-text">iptables</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#小结-1"><span class="nav-number">3.2.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-49-案例篇：内核线程CPU利用率太高怎么办？"><span class="nav-number">4.</span> <span class="nav-text">Lesson 49 案例篇：内核线程CPU利用率太高怎么办？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内核线程"><span class="nav-number">4.1.</span> <span class="nav-text">内核线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实验-2"><span class="nav-number">4.2.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Lesson-50-51-案例篇：动态追踪怎么用？"><span class="nav-number">5.</span> <span class="nav-text">Lesson 50/51 案例篇：动态追踪怎么用？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#动态追踪机制"><span class="nav-number">5.1.</span> <span class="nav-text">动态追踪机制</span></a></li></ol></li></ol></div>
             
           </div>
         </section>
@@ -600,7 +625,7 @@ perf report
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
