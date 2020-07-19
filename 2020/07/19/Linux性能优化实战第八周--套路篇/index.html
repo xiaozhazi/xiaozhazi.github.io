@@ -87,7 +87,7 @@
 <meta name="description" content="个人感悟在实际的性能分析中，发生性能瓶颈后登陆服务器想要排查的时候发现瓶颈已经消失且很难复现。因此要事先搭建监控系统，把系统和应用程序的运行状况监控下来，并定义一系列的策略，在发生问题第一时间告警处理。
 接下来分别介绍了系统监控和应用监控的一些综合思路。系统监控通过USE法则利用prometheus+grafana来监控系统资源。应用程序监控分为指标监控和日志监控两大块，在复杂业务场景中通常搭建全">
 <meta property="og:type" content="article">
-<meta property="og:title" content="《Linux 性能优化实战》第七周--综合实战篇">
+<meta property="og:title" content="《Linux 性能优化实战》第八周--套路篇">
 <meta property="og:url" content="http://xiaozhazi.github.io/2020/07/19/Linux性能优化实战第八周--套路篇/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
 <meta property="og:description" content="个人感悟在实际的性能分析中，发生性能瓶颈后登陆服务器想要排查的时候发现瓶颈已经消失且很难复现。因此要事先搭建监控系统，把系统和应用程序的运行状况监控下来，并定义一系列的策略，在发生问题第一时间告警处理。
@@ -105,9 +105,9 @@
 <meta property="og:image" content="http://xiaozhazi.github.io/2020/07/19/Linux性能优化实战第八周--套路篇/net_metric.png">
 <meta property="og:image" content="http://xiaozhazi.github.io/2020/07/19/Linux性能优化实战第八周--套路篇/net_tools.png">
 <meta property="og:image" content="http://xiaozhazi.github.io/2020/07/19/Linux性能优化实战第八周--套路篇/performance_tool.png">
-<meta property="og:updated_time" content="2020-07-19T09:18:04.413Z">
+<meta property="og:updated_time" content="2020-07-19T09:22:50.398Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="《Linux 性能优化实战》第七周--综合实战篇">
+<meta name="twitter:title" content="《Linux 性能优化实战》第八周--套路篇">
 <meta name="twitter:description" content="个人感悟在实际的性能分析中，发生性能瓶颈后登陆服务器想要排查的时候发现瓶颈已经消失且很难复现。因此要事先搭建监控系统，把系统和应用程序的运行状况监控下来，并定义一系列的策略，在发生问题第一时间告警处理。
 接下来分别介绍了系统监控和应用监控的一些综合思路。系统监控通过USE法则利用prometheus+grafana来监控系统资源。应用程序监控分为指标监控和日志监控两大块，在复杂业务场景中通常搭建全">
 <meta name="twitter:image" content="http://xiaozhazi.github.io/2020/07/19/Linux性能优化实战第八周--套路篇/use.png">
@@ -133,7 +133,7 @@
 
   <link rel="canonical" href="http://xiaozhazi.github.io/2020/07/19/Linux性能优化实战第八周--套路篇/"/>
 
-  <title> 《Linux 性能优化实战》第七周--综合实战篇 | Frances Hu's Blog </title>
+  <title> 《Linux 性能优化实战》第八周--套路篇 | Frances Hu's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
@@ -191,7 +191,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -201,7 +201,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -253,7 +253,7 @@
             
             
               
-                《Linux 性能优化实战》第七周--综合实战篇
+                《Linux 性能优化实战》第八周--套路篇
               
             
           </h1>
@@ -264,7 +264,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-07-19T16:55:00+08:00" content="2020-07-19">
               2020-07-19
             </time>
@@ -482,8 +482,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/07/10/Linux性能优化实战第七周--综合实战篇/" rel="next" title="《Linux 性能优化实战》第八周--套路篇">
-                <i class="fa fa-chevron-left"></i> 《Linux 性能优化实战》第八周--套路篇
+              <a href="/2020/07/10/Linux性能优化实战第七周--综合实战篇/" rel="next" title="《Linux 性能优化实战》第七周--综合实战篇">
+                <i class="fa fa-chevron-left"></i> 《Linux 性能优化实战》第七周--综合实战篇
               </a>
             
           </div>
@@ -537,10 +537,10 @@
       
         <ul class="sidebar-nav motion-element">
           <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
-            Table of Contents
+            Inhaltsverzeichnis
           </li>
           <li class="sidebar-nav-overview" data-target="site-overview">
-            Overview
+            Übersicht
           </li>
         </ul>
       
@@ -557,7 +557,7 @@
           <div class="site-state-item site-state-posts">
             <a href="/archives">
               <span class="site-state-item-count">27</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -567,7 +567,7 @@
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -622,7 +622,7 @@
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
