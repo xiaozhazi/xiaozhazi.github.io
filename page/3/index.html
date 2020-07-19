@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -235,6 +235,184 @@
             
               
                 
+                <a class="post-title-link" href="/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" itemprop="url">
+                  Machine Learning编程作业2——Logistic Regression
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2016-11-07T10:31:30+08:00" content="2016-11-07">
+              2016-11-07
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>##ex2.m<br>=============plotting================</p>
+<p>data = load(‘ex2data1.txt’);</p>
+<p>X = data(:,[1,2]);</p>
+<p>y = data(:,3);</p>
+<p>plotData(X,y);</p>
+<pre><code>plotData.m
+
+function plotData(X,y)
+figure;hold on;
+
+pos = find(y==1);
+neg = find(y==0);
+plot(X(pos,1),X(pos,2),&apos;k+&apos;,&apos;LineWidth&apos;,2,...
+    &apos;MarkerSize&apos;,7);
+plot(X(neg,1),X(neg,2),&apos;ko&apos;,&apos;MarkerFaceColor&apos;,&apos;y&apos;,...
+    &apos;MarkerSize&apos;,7);
+
+hold off;
+end
+</code></pre><p>=============compute cost and gradient===========</p>
+<p>[m,n] = size(X);</p>
+<p>X = [ones(m,1) X];</p>
+<p>initial_theta = zeros(n+1,1);</p>
+<p>[cost,grad] = costFunction(initial_theta,X,y);</p>
+<pre><code>costFunction.m
+
+function [J,grad] = costFunction(theta,X,y)
+m = length(y);
+J = 0;
+grad = zeros(size(theta));
+
+J = (-1)/m *(log(sigmoid(X*theta))&apos;*y +
+            log(1-sigmoid(X*theta))&apos;*(1-y));
+for i = 1: size(X,2)
+  grad(i) = 1/m * sum((sigmoid(X*theta)-y) .* X(:,i));
+end
+end
+</code></pre><p>plotDecisionBoundary(theta,X,y);</p>
+<p>=============predict and accuracies===============</p>
+<p>prob = sigmoid([1 45 85] * theta);</p>
+<p>p = predict(theta,X);</p>
+<pre><code>predict.m
+
+function p = predict(theta,X)
+
+m = size(X,1);
+p = zeros(m,1);
+
+for i = 1:m
+    if(sigmoid(X(i,:) * theta)) &gt;= 0.5
+        p(i) = 1;
+    else
+        p(i) = 0;
+    end
+end
+end
+</code></pre><h2 id="ex2-reg-m"><a href="#ex2-reg-m" class="headerlink" title="ex2_reg.m"></a>ex2_reg.m</h2><p>clear;</p>
+<p>data = load(‘ex2data2.txt’);</p>
+<p>X = data(:,[1,2]);</p>
+<p>y = data(:,3);</p>
+<p>plotData(X,y);</p>
+<p>=====================regularized Logistic Regression======</p>
+<p>X = mapFeature(X(:,1),X(:,2));</p>
+<p>initial_theta = zeros(size(X,2),1);</p>
+<p>lambda = 1;</p>
+<p>[cost,grad] = costFunctionReg(initial_theta,X,y,lambda);</p>
+<pre><code>costFunctionReg.m
+
+function [J,grad] = costFunctionReg(theta,X,y,lambda)
+m = length(y);
+J = 0;
+grad = zeros(size(theta));
+
+temp = theta(2:size(theta,1),:) .^2;
+value = sum(temp);
+J = (-1)/m * (log(sigmoid(X*theta))&apos;*y +
+            log(1-sigmoid(X*theta))&apos;*(1-y))
+        +lambda/(2*m) * value;
+grad(1) = 1/m*sum((sigmoid(X*theta) - y) .* X(:,1));
+
+for i = 2: size(X,2)
+    grad(i) = 1 / m *sum((sigmoid(X*theta) -y).*X(:,i))
+     +lambda/m * theta(i);
+end
+end
+</code></pre>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/11/01/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第三周/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第三周
                 </a>
@@ -248,7 +426,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-01T15:30:52+08:00" content="2016-11-01">
               2016-11-01
             </time>
@@ -368,7 +546,7 @@ but fail to generalize to new examples.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-10-31T10:50:02+08:00" content="2016-10-31">
               2016-10-31
             </time>
@@ -526,7 +704,7 @@ end
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-10-24T14:00:42+08:00" content="2016-10-24">
               2016-10-24
             </time>
@@ -666,7 +844,7 @@ Normal Equation
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-10-18T10:44:48+08:00" content="2016-10-18">
               2016-10-18
             </time>
@@ -779,7 +957,7 @@ take smaller steps. So, no need to decrease a over time.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-09-05T16:41:16+08:00" content="2016-09-05">
               2016-09-05
             </time>
@@ -910,7 +1088,7 @@ hexo d -g
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-09-04T16:41:16+08:00" content="2016-09-04">
               2016-09-04
             </time>
@@ -1023,8 +1201,8 @@ hexo d -g
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">26</span>
-              <span class="site-state-item-name">Artikel</span>
+              <span class="site-state-item-count">27</span>
+              <span class="site-state-item-name">posts</span>
             </a>
           </div>
 
@@ -1034,7 +1212,7 @@ hexo d -g
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">Tags</span>
+                <span class="site-state-item-name">tags</span>
               </a>
             </div>
           
@@ -1078,7 +1256,7 @@ hexo d -g
 </div>
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
