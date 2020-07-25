@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="machine learning," />
+  <meta name="keywords" content="Linux性能优化实战," />
 
 
 
@@ -84,36 +84,19 @@
 
 
 
-<meta name="description" content="7、Support Vector Machines7.1 Optimization objective
-7.2 Large Margin Intuition
-C如果越大，两个分类的间距越小。
-7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
-SVM Decision Bou">
+<meta name="description" content="个人总结选择加入读书会首先是本身对性能优化这个Topic比较感兴趣，另外公司底层架构升级维护也需要关注性能问题。课程计划表是两个月，一天一篇的话也不会特别占时间，但是真正执行下来才深刻体会到惰性的强大(如果不是读书会的话应该很容易就弃掉)。平时工作的话回家看书的时间也不会太多，有两三次都是周末抓紧时间搞定，尤其是后面网络那部分平时不太会去关注的指标，可能以前遇到这种章节都会直接略过。
+这个课程主要">
 <meta property="og:type" content="article">
-<meta property="og:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周">
-<meta property="og:url" content="http://xiaozhazi.github.io/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/index.html">
+<meta property="og:title" content="TalkGo读书会第一期总结">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/07/25/TalkGo读书会第一期总结/index.html">
 <meta property="og:site_name" content="Frances Hu's Blog">
-<meta property="og:description" content="7、Support Vector Machines7.1 Optimization objective
-7.2 Large Margin Intuition
-C如果越大，两个分类的间距越小。
-7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
-SVM Decision Bou">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_1.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_2.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_3.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_4.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_5.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_6.png">
-<meta property="og:image" content="http://ofacak8l3.bkt.clouddn.com/7_7.png">
-<meta property="og:updated_time" content="2019-04-19T16:40:26.318Z">
+<meta property="og:description" content="个人总结选择加入读书会首先是本身对性能优化这个Topic比较感兴趣，另外公司底层架构升级维护也需要关注性能问题。课程计划表是两个月，一天一篇的话也不会特别占时间，但是真正执行下来才深刻体会到惰性的强大(如果不是读书会的话应该很容易就弃掉)。平时工作的话回家看书的时间也不会太多，有两三次都是周末抓紧时间搞定，尤其是后面网络那部分平时不太会去关注的指标，可能以前遇到这种章节都会直接略过。
+这个课程主要">
+<meta property="og:updated_time" content="2020-07-25T14:52:48.703Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周">
-<meta name="twitter:description" content="7、Support Vector Machines7.1 Optimization objective
-7.2 Large Margin Intuition
-C如果越大，两个分类的间距越小。
-7.3 The Mathematics behind large margin classification先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.
-SVM Decision Bou">
-<meta name="twitter:image" content="http://ofacak8l3.bkt.clouddn.com/7_1.png">
+<meta name="twitter:title" content="TalkGo读书会第一期总结">
+<meta name="twitter:description" content="个人总结选择加入读书会首先是本身对性能优化这个Topic比较感兴趣，另外公司底层架构升级维护也需要关注性能问题。课程计划表是两个月，一天一篇的话也不会特别占时间，但是真正执行下来才深刻体会到惰性的强大(如果不是读书会的话应该很容易就弃掉)。平时工作的话回家看书的时间也不会太多，有两三次都是周末抓紧时间搞定，尤其是后面网络那部分平时不太会去关注的指标，可能以前遇到这种章节都会直接略过。
+这个课程主要">
 
 
 
@@ -134,9 +117,9 @@ SVM Decision Bou">
 
 
 
-  <link rel="canonical" href="http://xiaozhazi.github.io/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/"/>
+  <link rel="canonical" href="http://xiaozhazi.github.io/2020/07/25/TalkGo读书会第一期总结/"/>
 
-  <title> AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周 | Frances Hu's Blog </title>
+  <title> TalkGo读书会第一期总结 | Frances Hu's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
@@ -256,7 +239,7 @@ SVM Decision Bou">
             
             
               
-                AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周
+                TalkGo读书会第一期总结
               
             
           </h1>
@@ -268,8 +251,8 @@ SVM Decision Bou">
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
-              2016-12-04
+            <time itemprop="dateCreated" datetime="2020-07-25T16:55:00+08:00" content="2020-07-25">
+              2020-07-25
             </time>
           </span>
 
@@ -296,44 +279,11 @@ SVM Decision Bou">
       
 
       
-        <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><h3 id="7-1-Optimization-objective"><a href="#7-1-Optimization-objective" class="headerlink" title="7.1 Optimization objective"></a>7.1 Optimization objective</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
-<h3 id="7-2-Large-Margin-Intuition"><a href="#7-2-Large-Margin-Intuition" class="headerlink" title="7.2 Large Margin Intuition"></a>7.2 Large Margin Intuition</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
-<p>C如果越大，两个分类的间距越小。</p>
-<h3 id="7-3-The-Mathematics-behind-large-margin-classification"><a href="#7-3-The-Mathematics-behind-large-margin-classification" class="headerlink" title="7.3 The Mathematics behind large margin classification"></a>7.3 The Mathematics behind large margin classification</h3><p>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/7_4.png" alt="7_4"><br>SVM Decision Boundary 计算时可以利用这个特性。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/7_5.png" alt="7_5"></p>
-<h3 id="7-4-Kernels"><a href="#7-4-Kernels" class="headerlink" title="7.4 Kernels"></a>7.4 Kernels</h3><h4 id="7-4-1-Kernels-I"><a href="#7-4-1-Kernels-I" class="headerlink" title="7.4.1 Kernels I"></a>7.4.1 Kernels I</h4><p>Gaussian Kernel.</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/7_6.png" alt="7_6"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_7.png" alt="7_7"></p>
-<h4 id="7-5-Kernels-II"><a href="#7-5-Kernels-II" class="headerlink" title="7.5 Kernels II"></a>7.5 Kernels II</h4><p>SVM parameters:<br>Large C: Lower bias, high variance</p>
-<p>Small C: High bias, low variance</p>
-<p>Large segma*segma: more smoothly. High bias, low variance.</p>
-<p>Small segma*segma: less smoothly. Lower bias, higher variance.</p>
-<h3 id="7-6-Using-an-SVM"><a href="#7-6-Using-an-SVM" class="headerlink" title="7.6 Using an SVM"></a>7.6 Using an SVM</h3><p>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
-<p><strong>Need to specify:</strong></p>
-<pre><code>Choice of parameter C.
-Choice of Kernel(similarity function):
-    No Kernel(&apos;Linear Kernel&apos;)
-    Gaussian Kernel.(need to choose segma)
-</code></pre><p><strong>Note:</strong></p>
-<pre><code>Do not perform feature scaling before using the Gaussian kernel.
-</code></pre><p><strong>Other Choice of kernel:</strong></p>
-<pre><code>Not all similarity functions similarity(x,l) make valid kernels. 
-(Need to satisfy &apos;mercer&apos;s Theorem&apos; to make sure SVM package&apos;s optimications run correctly, and do not diverge)    
-</code></pre><p><strong>Multi-class classification:</strong></p>
-<p>Train K SVMs, 需要对K个类进行分类，而非k-1。</p>
-<p><strong>Logistic regression vs SVM:</strong></p>
-<p>n= number of features, m =number of training examples</p>
-<pre><code>if n is large（相对于m）:
-    using Logistic regression, or SVM without kernel.
-if n is small, m is intermediate:
-    use SVM with Gaussian Kernel.
-if n is small, m is large:
-    create/add more features,
-    then use logistic regression or SVM without kernel.
+        <h2 id="个人总结"><a href="#个人总结" class="headerlink" title="个人总结"></a>个人总结</h2><p>选择加入读书会首先是本身对性能优化这个Topic比较感兴趣，另外公司底层架构升级维护也需要关注性能问题。课程计划表是两个月，一天一篇的话也不会特别占时间，但是真正执行下来才深刻体会到惰性的强大(如果不是读书会的话应该很容易就弃掉)。平时工作的话回家看书的时间也不会太多，有两三次都是周末抓紧时间搞定，尤其是后面网络那部分平时不太会去关注的指标，可能以前遇到这种章节都会直接略过。</p>
+<p>这个课程主要还是偏向原理，基础的性能指标，主要提供了一些遇到性能问题如何下手分析解决的思路。真正在环境中遇到问题分析出原因定位代码还是需要一些经验。特别是一些开源软件遇到性能问题时定位具体代码还是需要耗费一些精力。我们组这个月正好遇到了ES小版本升级后，xpack monitor导致的内存使用问题，定位代码借助了jstack和阿里的Arthas才最终找到原因。</p>
+<p>总之，这个课程还是需要经常拿来回顾下，遇到性能问题多积攒经验才是王道。</p>
+<p>接下来的看书计划的话，正好前两天收到了一本《架构修炼之道》，准备先翻看下。</p>
 
-Neural network likely to work well for most od these settings,
-but many slower to train.
-</code></pre>
       
     </div>
 
@@ -355,7 +305,7 @@ but many slower to train.
       
         <div class="post-tags">
           
-            <a href="/tags/machine-learning/" rel="tag">#machine learning</a>
+            <a href="/tags/Linux性能优化实战/" rel="tag">#Linux性能优化实战</a>
           
         </div>
       
@@ -364,17 +314,13 @@ but many slower to train.
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" rel="next" title="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周">
-                <i class="fa fa-chevron-left"></i> AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周
+              <a href="/2020/07/19/Linux性能优化实战第八周--套路篇/" rel="next" title="《Linux 性能优化实战》第八周--套路篇">
+                <i class="fa fa-chevron-left"></i> 《Linux 性能优化实战》第八周--套路篇
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" rel="prev" title="AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周">
-                AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -481,7 +427,7 @@ but many slower to train.
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#7、Support-Vector-Machines"><span class="nav-number">1.</span> <span class="nav-text">7、Support Vector Machines</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-Optimization-objective"><span class="nav-number">1.1.</span> <span class="nav-text">7.1 Optimization objective</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-Large-Margin-Intuition"><span class="nav-number">1.2.</span> <span class="nav-text">7.2 Large Margin Intuition</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-3-The-Mathematics-behind-large-margin-classification"><span class="nav-number">1.3.</span> <span class="nav-text">7.3 The Mathematics behind large margin classification</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-4-Kernels"><span class="nav-number">1.4.</span> <span class="nav-text">7.4 Kernels</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#7-4-1-Kernels-I"><span class="nav-number">1.4.1.</span> <span class="nav-text">7.4.1 Kernels I</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-5-Kernels-II"><span class="nav-number">1.4.2.</span> <span class="nav-text">7.5 Kernels II</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-6-Using-an-SVM"><span class="nav-number">1.5.</span> <span class="nav-text">7.6 Using an SVM</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#个人总结"><span class="nav-number">1.</span> <span class="nav-text">个人总结</span></a></li></ol></div>
             
           </div>
         </section>

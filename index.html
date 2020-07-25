@@ -235,6 +235,103 @@
             
               
                 
+                <a class="post-title-link" href="/2020/07/25/TalkGo读书会第一期总结/" itemprop="url">
+                  TalkGo读书会第一期总结
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-07-25T16:55:00+08:00" content="2020-07-25">
+              2020-07-25
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人总结"><a href="#个人总结" class="headerlink" title="个人总结"></a>个人总结</h2><p>选择加入读书会首先是本身对性能优化这个Topic比较感兴趣，另外公司底层架构升级维护也需要关注性能问题。课程计划表是两个月，一天一篇的话也不会特别占时间，但是真正执行下来才深刻体会到惰性的强大(如果不是读书会的话应该很容易就弃掉)。平时工作的话回家看书的时间也不会太多，有两三次都是周末抓紧时间搞定，尤其是后面网络那部分平时不太会去关注的指标，可能以前遇到这种章节都会直接略过。</p>
+<p>这个课程主要还是偏向原理，基础的性能指标，主要提供了一些遇到性能问题如何下手分析解决的思路。真正在环境中遇到问题分析出原因定位代码还是需要一些经验。特别是一些开源软件遇到性能问题时定位具体代码还是需要耗费一些精力。我们组这个月正好遇到了ES小版本升级后，xpack monitor导致的内存使用问题，定位代码借助了jstack和阿里的Arthas才最终找到原因。</p>
+<p>总之，这个课程还是需要经常拿来回顾下，遇到性能问题多积攒经验才是王道。</p>
+<p>接下来的看书计划的话，正好前两天收到了一本《架构修炼之道》，准备先翻看下。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/07/19/Linux性能优化实战第八周--套路篇/" itemprop="url">
                   《Linux 性能优化实战》第八周--套路篇
                 </a>
@@ -3029,146 +3126,6 @@ ps aux | grep &apos;/app&apos;
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2019/04/18/Dynamic-Programming/" itemprop="url">
-                  Dynamic Programming
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2019-04-18T23:31:19+08:00" content="2019-04-18">
-              2019-04-18
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>职业规划原因今年计划自学Go语言，前两个月也断断续续用Golang刷了100道左右的算法题。然而:(最近一个月工作比较忙就搁置了一段，今天看了下<a href="https://github.com/xiaozhazi/leetcode_go" target="_blank" rel="external">https://github.com/xiaozhazi/leetcode_go</a> 距上次commit已经有近一个月的时间了 - _ -#。</p>
-<p>所以今天开始强制自己记录下个人解题过程以及go语言踩雷， 也便于随时复盘【其实是为了自我监督防止懒癌：）</p>
-<h1 id="LeetCode真题系列"><a href="#LeetCode真题系列" class="headerlink" title="LeetCode真题系列"></a>LeetCode真题系列</h1><h2 id="Minimum-Path-Sum-64"><a href="#Minimum-Path-Sum-64" class="headerlink" title="Minimum Path Sum(64)"></a>Minimum Path Sum(64)</h2><p><a href="https://leetcode.com/problems/minimum-path-sum/" target="_blank" rel="external">64 Minumum Path Sum</a></p>
-<h3 id="Question"><a href="#Question" class="headerlink" title="Question"></a>Question</h3><p>Given a m x n grid filled with non-negative numbers, find a path from top left to bottom right which minimizes the sum of all numbers along its path.</p>
-<pre><code>Note: You can only move either down or right at any point in time.
-</code></pre><h3 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h3><pre><code>Input:
-[
-  [1,3,1],
-  [1,5,1],
-  [4,2,1]
-]
-Output: 7
-Explanation: Because the path 1→3→1→1→1 minimizes the sum. 
-</code></pre><h3 id="Analysis"><a href="#Analysis" class="headerlink" title="Analysis"></a>Analysis</h3><p>从（0，0）走到（m-1，n-1）每个阶段只能选择向右或向下两种决策，且每个阶段都会对应一个状态集合。我们把状态定义为dp[i][j]表示从起点走到（i，j）位置时的最短路径长度。 因此它是一个多阶段最优解问题符合动态规划模型。</p>
-<p><code>dp[i][j] = min(dp[i-1][j],dp[i][j-1]) + grid[i][j]</code><br>直接动手上代码</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">func minPathSum(grid [][]int) int &#123;</div><div class="line">  if grid == nil || len(grid) == 0 &#123;</div><div class="line">	return 0</div><div class="line">  &#125;</div><div class="line">  m, n := len(grid), len(grid[0])</div><div class="line">  dp := make([][]int, m)</div><div class="line">	</div><div class="line">  for i := 0; i &lt; m; i++ &#123;</div><div class="line">	dp[i] = make([]int, n)</div><div class="line">  &#125;</div><div class="line">	</div><div class="line">  dp[0][0] = grid[0][0]</div><div class="line">  for i := 1; i &lt; m; i++ &#123;</div><div class="line">	dp[i][0] = dp[i-1][0] + grid[i][0]</div><div class="line">  &#125;</div><div class="line">  for i := 1; i &lt; n; i++ &#123;</div><div class="line">	dp[0][i] = dp[0][i-1] + grid[0][i]</div><div class="line">  &#125;</div><div class="line">  for i := 1; i &lt; m; i++ &#123;</div><div class="line">	for j := 1; j &lt; n; j++ &#123;</div><div class="line">	  dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + grid[i][j]</div><div class="line">	&#125;</div><div class="line">  &#125;</div><div class="line">  return dp[m-1][n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>提交后发现 <em>Runtime: 12 ms, faster than 28.57% of Go online submissions.<br>Memory Usage: 4.4 MB, less than 13.64% of Go online submissions for Minimum Path Sum</em>. 效率太低了，想办法来优化下。</p>
-<p>实际上我们只需要一个长度为n-1的一维数组来存储状态集合，状态转移的过程都可以基于这个一维数组来操作。继续上代码</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">func minPathSum(grid [][]int) int &#123;</div><div class="line">  if grid == nil || len(grid) == 0 &#123;</div><div class="line">    return 0</div><div class="line">  &#125;</div><div class="line">  m, n := len(grid), len(grid[0])</div><div class="line">  dp := make([]int, n)</div><div class="line">   </div><div class="line">  for j, _ := range dp &#123;</div><div class="line">    dp[j] = math.MaxInt32</div><div class="line">  &#125;</div><div class="line">  dp[0] = 0</div><div class="line">  for i := 0; i &lt; m; i++ &#123;</div><div class="line">    for j := 0; j &lt; n; j++ &#123;</div><div class="line">      if j == 0 &#123;</div><div class="line">        dp[j] += grid[i][j]</div><div class="line">      &#125; else &#123;</div><div class="line">        dp[j] = min(dp[j], dp[j-1]) + grid[i][j]</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  return dp[n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>再次提交后 <em>Runtime: 8 ms, faster than 100.00% of Go online submissions for Minimum Path Sum.<br>Memory Usage: 3.9 MB, less than 59.09% of Go online submissions for Minimum Path Sum.</em>  : )</p>
-<h2 id="Unique-Paths-II-63"><a href="#Unique-Paths-II-63" class="headerlink" title="Unique Paths II(63)"></a>Unique Paths II(63)</h2><p><a href="https://leetcode.com/problems/unique-paths-ii/" target="_blank" rel="external">63 Unique Paths II</a></p>
-<h3 id="Question-1"><a href="#Question-1" class="headerlink" title="Question"></a>Question</h3><p>A robot is located at the top-left corner of a m x n grid (marked ‘Start’ in the diagram below).</p>
-<p>The robot can only move either down or right at any point in time. The robot is trying to reach the bottom-right corner of the grid (marked ‘Finish’ in the diagram below).</p>
-<p>Now consider if some obstacles are added to the grids. How many unique paths would there be?</p>
-<h3 id="Example-1"><a href="#Example-1" class="headerlink" title="Example"></a>Example</h3><pre><code>Input:
-[
-  [0,0,0],
-  [0,1,0],
-  [0,0,0]
-]
-Output: 2
-Explanation:
-There is one obstacle in the middle of the 3x3 grid above.
-There are two ways to reach the bottom-right corner:
-1. Right -&gt; Right -&gt; Down -&gt; Down
-2. Down -&gt; Down -&gt; Right -&gt; Right
-</code></pre><h3 id="Analysis-1"><a href="#Analysis-1" class="headerlink" title="Analysis"></a>Analysis</h3><p>第一感觉是可以用回溯来解决此问题。对每一个点先选择向右走，如果遇到障碍物或者右边无路说明此路径不通，回退到该点选择向下走，如果遇到障碍物或下边无路可走说明不存在任何一条路径可以经过该点走到终点。依次类推，每次递归向后走到终点时count加一。</p>
-<p><strong>需要特别注意的是要开始OR结束点值为1的情况</strong></p>
-<p>核心代码如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">func DFS(obstacleGrid [][]int, i, j int) &#123;</div><div class="line">    m, n := len(obstacleGrid), len(obstacleGrid[0])</div><div class="line">    if i == m - 1 &amp;&amp; j == n - 1  &amp;&amp; obstacleGrid[i][j] != 1&#123;</div><div class="line">        count++</div><div class="line">        return </div><div class="line">    &#125;</div><div class="line">    if i &lt; m - 1 &amp;&amp; obstacleGrid[i+1][j] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i + 1, j)</div><div class="line">    &#125;</div><div class="line">    if j &lt; n - 1 &amp;&amp; obstacleGrid[i][j+1] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i, j + 1)</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>递推算法基本类似于暴力求解，无重复又没有遗漏的穷举出所有走法。果不其然代码提交后TLE : (</p>
-<p>继续分析这道题，对于图中任一个非障碍点(i,j)，从起始位置走到该点的路径个数可以通过走到该点的左边位置（i-1,j)和上方位置(i,j-1)的路径个数之和计算， 即</p>
-<p><code>dp[i][j] = dp[i-1][j] + dp[i][j-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
-<p>因此可以改用DP算法来解决，同样为了优化算法效率我们通过一个一维数组在存储状态集合，此时状态方程为<br><code>dp[i] += dp[i-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
-<p>具体代码如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">func uniquePathsWithObstacles(obstacleGrid [][]int) int &#123;</div><div class="line">    if obstacleGrid == nil || len(obstacleGrid) == 0 &#123;</div><div class="line">        return 0</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    m, n, count := len(obstacleGrid), len(obstacleGrid[0]), 0</div><div class="line">    if (obstacleGrid[0][0] == 1 || obstacleGrid[m-1][n-1] == 1) &#123;</div><div class="line">        return count</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    dp := make([]int, n)</div><div class="line">    dp[0] = 1</div><div class="line">    for i := 0; i &lt; m; i++ &#123;</div><div class="line">        for j := 0; j &lt; n; j++ &#123;</div><div class="line">            if obstacleGrid[i][j] == 1 &#123;</div><div class="line">                dp[j] = 0 </div><div class="line">            &#125; else &#123;</div><div class="line">                if j != 0 &#123;</div><div class="line">                    dp[j] += dp[j-1]</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">            </div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    return dp[n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p><em>Runtime: 0 ms, faster than 100.00% of Go online submissions for Unique Paths II.<br>Memory Usage: 2.6 MB, less than 66.67% of Go online submissions for Unique Paths II.</em></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3214,7 +3171,7 @@ There are two ways to reach the bottom-right corner:
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">27</span>
+              <span class="site-state-item-count">28</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
