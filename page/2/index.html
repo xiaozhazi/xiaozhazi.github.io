@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -235,6 +235,196 @@
             
               
                 
+                <a class="post-title-link" href="/2019/06/16/Kubernetes学习——etcd/" itemprop="url">
+                  Kubernetes学习——etcd
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2019-06-16T22:57:55+08:00" content="2019-06-16">
+              2019-06-16
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="K8S学习之——ETCD"><a href="#K8S学习之——ETCD" class="headerlink" title="K8S学习之——ETCD"></a>K8S学习之——ETCD</h2><p>Etcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  </p>
+<ul>
+<li><strong>Simple</strong>: well-defined, user-facing API (gRPC)  </li>
+<li><strong>Secure</strong>: automatic TLS with optional client cert authentication  </li>
+<li><strong>Fast</strong>: benchmarked 10,000 writes/sec  </li>
+<li><strong>Reliable</strong>: properly distributed using Raft<br>简单来说etcd是kubernetes提供默认的存储系统，通过分布式KV存储来保存集群中重要的数据，因此我们使用时需要为etcd数据提供备份计划。</li>
+</ul>
+<p>Etcd is written in Go and uses the Raft consensus algorithm to manage a highly-available replicated log.<br>它通过raft一致性算法来实现可靠的分布式存储，我们上个月在team meetup中也是主要探讨了raft算法原理以及它与zookeeper的一些区别，在此通过本文记录下。  </p>
+<h3 id="Raft算法原理"><a href="#Raft算法原理" class="headerlink" title="Raft算法原理"></a>Raft算法原理</h3><p>Raft算法和zookeeper类似，都是通过大多数机制来保证一致性。在Raft算法中通过选举出来的leader节点来接收客户端的请求日志数据，然后同步到集群中其它节点进行复制，当日志已经同步到超多半数以上节点的时候，该日志状态变为committed可提交状态，即可以提交到状态机中执行。此外leader节点还要通知其他节点哪些日志已经被复制成功。</p>
+<p><em>Raft算法将要解决的一致性问题分为以下三个子问题：</em>  </p>
+<ul>
+<li><strong>leader选举：</strong> 通过心跳机制来触发leader选举，保证集群中存在一个leader节点  </li>
+<li><strong>日志复制：</strong> leader节点将来自客户端的请求序列化成日志数据并且同步复制到其它节点  </li>
+<li><strong>安全性：</strong> 如果某个节点已经将一条日志数据提交到状态机中执行，那么其他节点不可能再将此条数据输入到状态机中重复执行。  </li>
+</ul>
+<p><em>Raft算法需要保证以下几个特性：</em>  </p>
+<ul>
+<li><strong>Election Safety：</strong>在一个任期内最多只能存在一个leader节点  </li>
+<li><strong>Leader Append-Only：</strong>leader节点只能添加日志数据，不会删除/覆盖以前的数据  </li>
+<li><strong>Log Matching：</strong>如果两个节点的日志在某个索引上的日志数据和任期号都相同，那么在此index之前的日志数据一定也匹配  </li>
+<li><strong>Leader Completeness：</strong>如果一条日志在某个任期被提交，那么该条日志数据在leader节点上更高任期号的日志数据中一定存在。  </li>
+<li><strong>State Machine Safety：</strong>一条提交到raft状态机执行过的数据不可能再被其他节点提交执行。</li>
+</ul>
+<h4 id="Leader选举"><a href="#Leader选举" class="headerlink" title="Leader选举"></a>Leader选举</h4><p><strong><em>Node节点状态</em></strong>  </p>
+<ul>
+<li>Leader： 领导者，一个集群中只能存在一个leader  </li>
+<li>Follower：跟随者，一个客户端的操作请求发送到follower上面，会首先由follwer重定向到leader上  </li>
+<li>Candidate：参与者，在此状态的节点会发起新的选举  </li>
+</ul>
+<p>节点状态切换如图所示<br><img src="/2019/06/16/Kubernetes学习——etcd/raft-states.jpg" alt>  </p>
+<ol>
+<li>所有节点启动时自动进入Follower状态</li>
+<li>Follower节点启动时会开启一个选举超时的定时器，当times out时节点切换到Candidate状态发起选举</li>
+<li>节点一旦转换为Candidate状态就开始进行选举，如果在下一次选举超时到来之前都没有选出Leader节点，那么节点会保持状态不变重新发起一次新的选举</li>
+<li>若Candidate节点收到集群中超过半数的节点选票（包含自身），那么状态切换到Leader</li>
+<li>若Candidate节点接收到来自Leader节点的消息，或者任期号更高的消息，即集群中已经存在Leader节点，此时节点状态切换回Follower</li>
+<li>Leader节点如果收到来自更高任期号的消息则切换回Follower节点（常见网络分区场景下）</li>
+</ol>
+<p><strong><em>其中节点之间的通信通过RPC来完成，etcd中主要由两种RPC请求：</em></strong>  </p>
+<ul>
+<li>RequestVote 用于Candidate节点发起选举  </li>
+<li>AppendEntries 用于Leader节点向其他节点进行复制日志数据，以及同步心跳</li>
+</ul>
+<p><strong><em>Raft算法通过心跳机制来触发Leader选举</em></strong></p>
+<p>节点启动时状态为Follower，只要一直接收到来自Leader或者Candidate的正常RPC消息，就会一直保持为Follower状态。<br>Leader节点周期性的向其它节点发送心跳请求来保持Leader状态，其中心跳请求即带有空数据的AppendEntries。<br>每个Follower节点都有一个选举超时定时器，如果在超时之前都没有接收到Leader的心跳请求将发起选举。发起选举时，Follower将自身的任期号+1并且切换到Candidate状态，然后向集群中其它节点发送RequestVote请求进行选举。  </p>
+<p><strong><em>Candidate节点保持状态不变，直到以下情况之一发生：</em></strong>   </p>
+<ul>
+<li>该节点收到集群中半数以上的节点投票，即赢得选举；  </li>
+<li>节点收到来自Leader节点的数据；  </li>
+<li>选举超时到来</li>
+</ul>
+<p>第一种情况，因为每个Follower节点在一个任期内只能给一个节点投票先来先到，通过大多数原则保证了每个任期最多只有一个节点赢得选票（存在无节点当选的情况）。当节点成为Leader后会向集群中其它节点发送心跳消息来阻止不必要的选举。<br>第二种情况，处于Candidate状态下的节点收到了来自其它节点的心跳/AppendEntries消息。如果AppendEntries请求中的任期号大于自身任期，说明集群中已经存在Leader节点，此时节点转换成Follower状态。反之如果消息中任期号小于自身，则拒绝该消息，继续保持节点状态不变。<br>第三种情况，在选举超时到来时该节点没有赢得选举且没有收到其它节点的AppendEntries消息，说明集群中没有Leader存在，该Candidate节点任期号+1，再次发起选举。<br>其中，第三种情况发生在集群节点为偶数个，且有两个Candidate节点同时选举。理论上这种无法选择Leader的情况可以无限循环下去。为了避免该情况，每个节点的选举超时时间通过随机函数决定，一般在150ms-300ms之间。 （<strong><em>我们也仔细讨论了这种情况，因为Leader发送心跳消息时间非常短暂，如果节点选举超时时间T都相同，Leader节点挂掉那么可以极端得考虑认为所有Follower节点会在同一时刻（距离上一个心跳消息T时间）得到该信息。此时会有很多Follower节点切换到Candidate状态并进行选举，任意一个节点获得大多数投票的概率都很低。 而如果每个节点的超时时间是个随机值，那么大概率集群中有一个超时时间短的节点先感知到原Leader挂掉的事实，然后首先发起选举，因为RPC消息时间耗时较短，该节点大概率能获得大多数投票。</em></strong>）  </p>
+<h4 id="日志复制"><a href="#日志复制" class="headerlink" title="日志复制"></a>日志复制</h4><p><strong><em>日志形式</em></strong></p>
+<p><img src="/2019/06/16/Kubernetes学习——etcd/log-entries.jpg" alt>  </p>
+<p>如上图所示，日志主要由以下三个成员组成：  </p>
+<ol>
+<li>index：索引号，即图中最上方的数字  </li>
+<li>term：任期号，每个日志条目中上方数字，表示该日志在哪个任期中生成  </li>
+<li>command：日志中的数据修改操作  </li>
+</ol>
+<p>如果一条日志被Leader节点同步到超过半数的节点中，被称为“<strong>成功复制</strong>”，这个日志条目就是committed状态（已经被提交）。如果某条日志条目状态为committed，那么在此日志之前的所有日志也都是committed状态。（如图中index&lt;=7的日志都是committed状态）<br>committed状态的日志可以被Leader输入到raft状态机中执行，执行过的日志状态为applied。  </p>
+<p><strong><em>日志复制过程</em></strong></p>
+<p><img src="/2019/06/16/Kubernetes学习——etcd/log-replication-1.jpg" alt><br><img src="/2019/06/16/Kubernetes学习——etcd/log-replication-2.jpg" alt><br><img src="/2019/06/16/Kubernetes学习——etcd/log-replication-3.jpg" alt></p>
+<ol>
+<li>首先客户端的消息转发到集群Leader节点上</li>
+<li>Leader节点首先在本地日志中添加一条日志</li>
+<li>Leader节点通过AppendEntries RPC消息的形式向集群中其它节点广播该日志</li>
+<li>Follower节点收到日志首先也同样在本地日志中添加一条日志</li>
+<li>Follower节点向Leader节点返回AppendEntries应答消息</li>
+<li>Leader节点收到超过半数的应答消息时认为该日志已经被成功复制，将本地的committedIndex指向该日志的index</li>
+<li>如果该committed状态的日志被提交到状态机中执行，那么Leader节点本地日志中的appliedIndex也要随之更新</li>
+<li>Leader节点在下次广播AppendEntries消息时会带上最新的committedIndex和appliedIndex，用于Follower节点本地日志的索引更新。</li>
+</ol>
+<p><strong><em>日志恢复过程</em></strong></p>
+<p>正常情况下Follower节点和Leader节点的日志会始终保持一致，但是当Leader节点突然挂掉时集群中节点日志会出现不一致的情况，当新的Leader选举出来后就需要进行相应的恢复操作。<br><img src="/2019/06/16/Kubernetes学习——etcd/inconsistentlog.jpg" alt></p>
+<p>Raft算法通过Leader节点同步来解决数据不一致问题。 对于集群中任意一个节点，Leader中都存储着两个与它们日志相关的数据。  </p>
+<ol>
+<li>nextIndex： 下一次向该Follower节点同步时的日志索引  </li>
+<li>matchIndex： 该Follower节点的最大日志索引<br>在Follower节点和Leader节点日志复制正常的情况下，nextIndex = matchIndex + 1。如果日志不一致情况出现那么该等式不成立。<br>集群中原Leader宕机，新Leader选出后将初始化nextIndex为新Leader节点的最后一条日志索引，matchIndex均为0。这样做的目的是首先从Follower节点的最后一条日志进行探索，如果不匹配则从前向后进行复制。<br>如上图所示，Leader节点存储每个Follower节点的nextIndex=10，matchIndex=0。成为Leader首次向其它节点复制日志时，会复制index&gt;=10的日志，同时带上2⃣️元组<6,10>告知Follower节点将要复制Term=6，index=10的日志数据。  </6,10></li>
+</ol>
+<ul>
+<li>只有（a）节点的最大日志数据2⃣️元组<6,9>和Leader传来的<6,10>紧邻，复制成功且matchIndex也随之更新。  </6,10></6,9></li>
+<li>其他几个节点的2⃣️元组都不匹配，返回复制失败。Leader节点收到拒绝消息后修改该follwer节点的索引数据，将nextIndex复制为matchIndex+1即1。下次同步时从索引1到10的数据给该Follwer节点，且Follower节点中未提交的数据被清除。  </li>
+</ul>
+<h4 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h4><p>Raft算法对选举进行限制来保证安全性。  </p>
+<ul>
+<li>一个节点向成为Leader就必须得到集群中超过半数的选票  </li>
+<li>节点A投票给另一个节点B的必要条件时B的日志比A的要新（首先对比任期号，相同时再比较索引）</li>
+</ul>
+<h3 id="Raft算法处理只读请求"><a href="#Raft算法处理只读请求" class="headerlink" title="Raft算法处理只读请求"></a>Raft算法处理只读请求</h3><p>一般情况下，客户端的命令需要经过日志复制过程，当集群超过半数节点应答之后才可以提交给状态机执行，执行结束后再应答给客户端。这样的流程对于只读数据来说太漫长，如果不经过这样的流程Leader节点直接将本节点上保存的数据返回给客户端又是不安全的，因为可能返回的数据已经过期。因此Raft中针对只读请求有特殊的高效处理：  </p>
+<ol>
+<li>Leader节点需要有当前已提交的日志数据。如果该节点新成为Leader需要提交一个dummy空日志来确保上一个任期的日志全部提交。  </li>
+<li>Leader节点保存该只读请求到来时的committedIndex为readIndex  </li>
+<li>Leader节点确认自己是否还是集群中的leader（广播心跳给集群中节点，收到半数以上应答即可判断）同时readIndex索引也是当前集群日志AppliedIndex的最大索引  </li>
+<li>读取Leader节点中数据  </li>
+</ol>
+<p>——————————————————————————————————————————————————————————————————<br>LastModify：2019-06-18</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2019/04/18/Dynamic-Programming/" itemprop="url">
                   Dynamic Programming
                 </a>
@@ -248,7 +438,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2019-04-18T23:31:19+08:00" content="2019-04-18">
               2019-04-18
             </time>
@@ -388,7 +578,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2019-04-17T23:38:48+08:00" content="2019-04-17">
               2019-04-17
             </time>
@@ -484,7 +674,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-31T15:54:03+08:00" content="2016-12-31">
               2016-12-31
             </time>
@@ -592,7 +782,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-23T15:53:56+08:00" content="2016-12-23">
               2016-12-23
             </time>
@@ -693,7 +883,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-16T10:56:39+08:00" content="2016-12-16">
               2016-12-16
             </time>
@@ -850,7 +1040,7 @@ Test:2000 good engines,10 anomalous
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
               2016-12-08
             </time>
@@ -1038,7 +1228,7 @@ xj&apos; = xj - uj
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
               2016-12-04
             </time>
@@ -1168,7 +1358,7 @@ but many slower to train.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-27T15:46:44+08:00" content="2016-11-27">
               2016-11-27
             </time>
@@ -1306,7 +1496,7 @@ It&apos;s who has the most data.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-24T15:10:34+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -1345,175 +1535,6 @@ Be sure to disable your gradient checking code before training your claaifier. o
 </code></pre><h3 id="5-4-Random-initialization"><a href="#5-4-Random-initialization" class="headerlink" title="5.4 Random initialization"></a>5.4 Random initialization</h3><pre><code>initial each initialtheta to a random value in[-EPSILON,EPSILON]
 </code></pre><h3 id="5-5-Put-it-together"><a href="#5-5-Put-it-together" class="headerlink" title="5.5 Put it together"></a>5.5 Put it together</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/5_4.png" alt="5_4"></p>
 <p><img src="http://ofacak8l3.bkt.clouddn.com/5_5.png" alt="5_5"></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/11/24/毕设论文相关知识索引笔记/" itemprop="url">
-                  毕设论文相关知识索引笔记
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-11-24T14:14:40+08:00" content="2016-11-24">
-              2016-11-24
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="压缩相关"><a href="#压缩相关" class="headerlink" title="压缩相关"></a>压缩相关</h2><p><a href="http://blog.csdn.net/zhangskd/article/details/17009111" target="_blank" rel="external">速度之王-lz4压缩算法</a></p>
-<p><a href="http://blog.csdn.net/zhangskd/article/details/17009111" target="_blank" rel="external">使用tar+lz4+ssh更快的数据传输</a></p>
-<p><a href="http://mogu.io/docker-162" target="_blank" rel="external">Docker源码分析之Docker daemon启动和销毁</a></p>
-<p><a href="http://www.readern.com/sublime-text-latex-chinese-under-mac.html" target="_blank" rel="external">部署MAC上的Sublime Text + LaTex 中文环境</a></p>
-<h2 id="Cgroup介绍、应用实例及原理描述"><a href="#Cgroup介绍、应用实例及原理描述" class="headerlink" title="Cgroup介绍、应用实例及原理描述"></a>Cgroup介绍、应用实例及原理描述</h2><p><a href="http://www.ibm.com/developerworks/cn/linux/1506_cgroup/index.html" target="_blank" rel="external">Cgroup介绍、应用实例及原理描述</a></p>
-<p><a href="http://tech.meituan.com/cgroups.html" target="_blank" rel="external">Linux资源管理之cgroups简介</a></p>
-<p><a href="https://www.linuxplumbersconf.org/2015/ocw//system/presentations/2619/original/2015-08-20-CRIU_Support_in_Docker_for_Native_Checkpoint_and_Restore.pdf" target="_blank" rel="external">CRIU support in Docker C/R</a></p>
-<h3 id="Cgroup设计原理分析"><a href="#Cgroup设计原理分析" class="headerlink" title="Cgroup设计原理分析"></a>Cgroup设计原理分析</h3><p>Linux中，管理进程的数据结构是task_struct</p>
-<pre><code>#ifdef CONFIG_CGROUPS
-/*Control Group info protected by css_set_lock*/
-struct css_set *cgroups;
-/*cg_list protected by css_set_lock and tsk-&gt;alloc_lock*/
-struct list_head cg_list;
-#endif
-</code></pre><p>其中*cgroups指向css_set结构，css_set存储了与进程相关的cgroups信息。cg_list是一个嵌入式的list_head结构，将链到同一个css_set的进程组织成一个链表。</p>
-<pre><code>struct css_set{
-  atomic_t refcount;
-  struct hlist_node hlist;
-  struct list_head tasks;
-  struct list_head cg_links;
-  struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
-  struct rcu_head ruc_head;
-};
-</code></pre><p>其中，refcount是该css_set的引用数，因为一个css_set可以被多个进程公用，只要这些进程的cgroups信息相同。</p>
-<p>hlist是嵌入的hlist_node，用于把所有css_set组成一个hash表，这样内核可以快速定位css_set。</p>
-<p>tasks指向所有连到此css_set的进程指向的链表。</p>
-<p>cg_links指向一个由struct_cg_group_link连城的链表。</p>
-<p>subsys是一个指针数组，存储一组指向cgroup_subsys_state的指针，一个cgroup_subsys_state就是进程与一个特定子系统相关的信息。通过这个数组，进程可以获得相应的cgroup控制信息了。</p>
-<pre><code>struct cgroup_subsys_state{
-  struct cgroup *cgroup;
-  atomic_t refcnt;
-  unsigned long flags;
-  struct css_id *id;
-};
-</code></pre><p>*cgroup指向一个cgroup结构，也就是进程属于的cgroup。</p>
-<pre><code>task_struct--&gt;css_set--&gt;cgroup_subsys_state--&gt;cgroup
-</code></pre><p>这样进程就和cgroup连接起来了。</p>
-<pre><code>struct cgroup{
-  unsigned long flags;
-  atomic_t count;
-  struct list_head sibling;
-  struct list_head children;
-  struct cgroup *parent;
-  struct dentry *dentry;
-  struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT]
-  struct cgroupfs_root *root;
-  struct cgroup *top_cgroup;
-  struct list_head css_sets;
-  struct list_head release_list;
-  struct list_head pidlists;
-  struct mutex pidlist_mutex;
-  struct rcu_head rcu_head;
-  struct list_head event_list;
-  spinlock_t event_list_lock;
-};
-</code></pre><p>sibling,children,parent三个嵌入的list_head负责将同一层级的cgroup连接成一颗cgroup树。</p>
-<p>subsys指针数组，存储一组指向cgroup_subsys_state的指针。这组指针指向了此cgroup跟各个子系统相关的信息。类似css_set中。</p>
-<p>root指向一个cgroupfs_root结构，就是cgroup所在层级对应的结构体。</p>
-<p>top_cgroup指向了所在层级的根cgroup，即创建层级时自动创建的那个cgroup。</p>
-<p>css_set指向一个由struct_cg_cgroup_link连成的链表。</p>
-<pre><code>struct cg_cgroup_link{
-  struct list_head cgrp_link_list;
-  struct cgroup *cgrp;
-  struct list_head cg_link_list;
-  struct css_set *cg;
-};
-</code></pre><p>cgrp_link_list连入到 cgroup-&gt;css_set链表，cgrp指向此cg_group_link相关的cgroup。</p>
-<p>cg_link_list连入到css_set-&gt;cg_links指向的链表，cg指向此cg_group_link相关的css_set。</p>
-<p>cgroup和css_set是一个多对多的关系，必须添加一个中间结构来将两者联系起来，这既是cg_cgroup_link的作用。cgrp和cg为此结构体的联合主键，cgrp_link_list和cg_link_list分别连入cgroup和css_set，使后两者都可以尽心遍历查询。</p>
-<p>####为什么cgroup和css_set是多对多的关系？<br>一个进程对应一个css_set，一个css_set存储了一组进程跟各个子系统相关的信息，但是这些信息由可能不是从一个cgroup那里获得的，因为一个进程可以同时属于多个cgroup，只要这些cgroup不在同一个层级。</p>
-<pre><code>eg：
-我们创建一个层级A，A上面附加了CPU和memory两个子系统，进程a属于A的根cgroup；创建一个层级B，B上面附加了ns和blkio两个子系统，进程a也属于B的根cgroup；那么进程a对应的CPU和memory是从A的根cgroup获得的，ns和blkio则是从B的根cgroup获得。因此一个css_set存储的cgroup_subsys_state可以对应多个cgroup。另一方面cgroup也存储了一组cgroup_subsys_state，这一组则是cgroup从所在的层级附加的子系统获得的。一个cgroup可以有多个进程，这些进程的css_set不一定都相同，因为有些进程可能还加入了其他cgroup，但是同一个cgroup中的进程与该cgroup关联的cgroup_subsys_state都受到该cgroup的管理，所以一个cgroup也可以对应多个css_set。
-</code></pre><p>从前面的分析，我们可以看出从 task 到 cgroup 是很容易定位的，但是从 cgroup 获取此 cgroup 的所有的 task 就必须通过这个结构了。每个进程都回指向一个 css_set，而与这个 css_set 关联的所有进程都会链入到 css_set-&gt;tasks 链表，而 cgroup 又通过一个中间结构 cg_cgroup_link 来寻找所有与之关联的所有 css_set，从而可以得到与 cgroup 关联的所有进程。<br><img src="http://ofacak8l3.bkt.clouddn.com/cgroups_1.png" alt="cgroups_1"></p>
-<p>上面这个图从整体结构上描述了进程与 cgroups 之间的关系。最下面的P代表一个进程。每一个进程的描述符中有一个指针指向了一个辅助数据结构css_set（cgroups subsystem set）。 指向某一个css_set的进程会被加入到当前css_set的进程链表中。一个进程只能隶属于一个css_set，一个css_set可以包含多个进程，隶属于同一css_set的进程受到同一个css_set所关联的资源限制。</p>
-<p>上图中的”M×N Linkage”说明的是css_set通过辅助数据结构可以与 cgroups 节点进行多对多的关联。但是 cgroups 的实现不允许css_set同时关联同一个cgroups层级结构下多个节点。 这是因为 cgroups 对同一种资源不允许有多个限制配置。</p>
-<p>一个css_set关联多个 cgroups 层级结构的节点时，表明需要对当前css_set下的进程进行多种资源的控制。而一个 cgroups 节点关联多个css_set时，表明多个css_set下的进程列表受到同一份资源的相同限制。</p>
 
           
         
@@ -1587,8 +1608,8 @@ struct list_head cg_list;
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">28</span>
-              <span class="site-state-item-name">Artikel</span>
+              <span class="site-state-item-count">29</span>
+              <span class="site-state-item-name">posts</span>
             </a>
           </div>
 
@@ -1597,8 +1618,8 @@ struct list_head cg_list;
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">7</span>
-                <span class="site-state-item-name">Tags</span>
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">tags</span>
               </a>
             </div>
           
@@ -1642,7 +1663,7 @@ struct list_head cg_list;
 </div>
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
