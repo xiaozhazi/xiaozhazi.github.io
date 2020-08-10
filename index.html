@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -235,6 +235,289 @@
             
               
                 
+                <a class="post-title-link" href="/2020/08/10/ES-tech_md/" itemprop="url">
+                  ES相关知识
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-08-10T21:52:00+08:00" content="2020-08-10">
+              2020-08-10
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="ES常见知识点"><a href="#ES常见知识点" class="headerlink" title="ES常见知识点"></a>ES常见知识点</h2><h3 id="ES集群-一个node一般会分配几个分片"><a href="#ES集群-一个node一般会分配几个分片" class="headerlink" title="ES集群,一个node一般会分配几个分片?"></a>ES集群,一个node一般会分配几个分片?</h3><ul>
+<li>ES中的数据组织成索引,每一个索引由一个或多个分片组成.每个分片是Luncene索引中的一个实例,可以把实例理解成自管理的搜索引擎,用于在ES集群中对一部分数据进行索引和处理查询. 分片是ES在集群周围分发数据的单位,ES在重新平衡数据时移动分片的速度取决于分片的大小,数量以及网络和磁盘性能.</li>
+<li>避免非常大的分片,因为大的分片可能会对集群从故障中恢复的能力产生负面影响.分片大小为50GB通常被界定为适用于各种用例的限制.</li>
+<li>在集群节点上保存的分片数量与可用的堆内存大小成正比,经验来说,每个节点的分片数量保持在低于每1GB堆内存对应集群的分片在20-25之间. 如30GB内存的堆内存节点最多可以有600-750个分片.</li>
+<li>参考文章: <ul>
+<li><a href="https://mp.weixin.qq.com/s/mKL2PJuNUJTl71Axv4-Rcw" target="_blank" rel="external">Elasticsearch究竟要设置多少分片数</a></li>
+<li><a href="https://www.elastic.co/blog/how-many-shards-should-i-have-in-my-elasticsearch-cluster" target="_blank" rel="external">How many shard should I have in my Elasticsearch cluster</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="Elasticsearch如何实现master选举"><a href="#Elasticsearch如何实现master选举" class="headerlink" title="Elasticsearch如何实现master选举"></a>Elasticsearch如何实现master选举</h3><ul>
+<li>Elasticsearch的任意一个节点都可以设置node.master和node.data属性<ul>
+<li>master=true,data=true:  即是Master Eligible又是data节点</li>
+<li>master=true,data=false: 单纯的Master Eligible节点</li>
+<li>master=false,data=true: 单纯的data节点</li>
+<li>master=false,data=false: 纯粹的Coordinating Node, 协调节点负责查询时的数据收集,合并,以及聚合操作. ES中所有节点都是协调节点</li>
+</ul>
+</li>
+<li>ES针对当前集群的所有Master Eligible节点进行选举,为了避免split-brain现象,ES选取QUORUM思想,只有超过半数选票的节点才能成为master.(eligibleNodesNum/2 + 1)</li>
+<li>当满足下列条件时就会触发一次master选举<ul>
+<li>当前master eligible节点不是master</li>
+<li>当前master eligible节点与其他节点通信无法发现master</li>
+<li>集群中无法连接到master的master eligible节点达到minimum_master_nodes的值</li>
+</ul>
+</li>
+<li>某个节点决定要选举时,会实现如下操作:<ul>
+<li>寻找ClusterStateVersion比自己高的master eligible节点,向其发送选举投票</li>
+<li>如果CLusterStateVersion相同,则计算自己能找到的master eligible节点(包含自己)中节点id最小的节点,向其发送选举投票</li>
+<li>如果一个节点收到足够多的选票,并且向自己也投票了,则该节点成为master开始发布集群信息</li>
+</ul>
+</li>
+<li>与其他选举方法对比<ul>
+<li>Zookeeper: ES可以使用Zookeeper来进行选举,方法如下:<ul>
+<li>所有master eligible尝试在ZK上创建指定路径</li>
+<li>只有第一个节点创建成功,该节点成为master,其余节点watch此路径</li>
+<li>一旦ZK失去master链接,该路径被删除,其他master eligible继续尝试创建路径, 重复上述操作</li>
+</ul>
+</li>
+<li>Raft: 相比ES自身的选举算法,Raft是经过严格论证的一致性算法,ES早期版本时Raft还未提出,可能后续会参考改进.</li>
+</ul>
+</li>
+</ul>
+<h3 id="如何做到ES写入调优"><a href="#如何做到ES写入调优" class="headerlink" title="如何做到ES写入调优?"></a>如何做到ES写入调优?</h3><ul>
+<li>客户端：　多线程批量写<ul>
+<li>通过性能测试,确定最佳文档数量</li>
+<li>多线程,观察HTTP429返回,实现retry以及线程数量的自动调节</li>
+</ul>
+</li>
+<li>服务器端: <ul>
+<li>降低IO操作<ul>
+<li>使用ES自动生成的文档ID(避免Get操作)</li>
+<li>调整Refresh interval等配置(降低搜索实时性)</li>
+<li>调整translog选项,降低写磁盘频率(牺牲容灾能力)</li>
+</ul>
+</li>
+<li>降低CPU和存储开销<ul>
+<li>减少不必要的分词</li>
+<li>避免不需要的doc_values</li>
+<li>文档字段尽量保持相同顺序,提高文档的压缩率</li>
+</ul>
+</li>
+<li>尽量做到写入和分片的负载均衡,实现水平扩展<ul>
+<li>Shard Filtering</li>
+<li>Write load balance</li>
+</ul>
+</li>
+<li>调整Bulk线程池和队列<ul>
+<li>客户端:<ul>
+<li>单个bulk请求体的数据量不要太大,官方建议5-15mb</li>
+<li>写入bulk请求超时时间需要足够长,建议60s以上</li>
+<li>写入端尽量将数据轮询到不同节点</li>
+</ul>
+</li>
+<li>客户端:<ul>
+<li>索引创建属于计算密集型,应该使用固定大小的线程池,来不及处理的放入队列.线程数配置为CPU核数+1,避免过多上下文切换</li>
+<li>队列大小可以适当增加,不要太大否则占用内存导致GC</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Index建模实践<ul>
+<li>如果只需要聚合不需要搜索,index设置为false</li>
+<li>如果不需要算分,Norms设为false</li>
+<li>不对字符串使用默认的dynamic mapping,字段数量过多会对性能产生较大影响</li>
+<li>Index_options控制在创建倒排索引时哪些内容会被添加到倒排索引中,节约CPU</li>
+<li>关闭_source减少IO操作,适合指标数据</li>
+</ul>
+</li>
+</ul>
+<h3 id="如何避免split-brain"><a href="#如何避免split-brain" class="headerlink" title="如何避免split-brain?"></a>如何避免split-brain?</h3><p>当节点崩溃或者节点通讯故障时,如果一个子节点无法连接到主节点,那么它会发起选举从与之连接的master eligible节点中选举一个新的主节点.新主节点将接管开始工作,如果旧的主节点重新加入集群或恢复通信,那么新主节点将降级到子节点.这过程在大多数情况下是不存在冲突,高效无缝衔接的.</p>
+<p>但是考虑集群中只有两个节点的极端情况,如果因为网络原因导致节点无响应,节点都相信对方已经挂掉.重新选举后会存在两个主节点,集群处于不一致状态,分片的两份数据分开了,如果不做全量的重索引很难进行重排序. </p>
+<p>极端情况下,客户端无法感知到这种不一致状态,因为index请求无论发往哪个节点都会成功,只有在查询时才可能发现问题.</p>
+<p>要避免脑裂,就是要关注discovery.zen.minimum_master_nodes的值,要设置为n/2+1,还有建议配置3节点以上的集群. 对于已经存在的两节点集群,可以添加一个新节点并将node.data设为false,放在一台便宜的服务器上.</p>
+<h3 id="ES对于大数据量-上亿量级-的聚合如何实现"><a href="#ES对于大数据量-上亿量级-的聚合如何实现" class="headerlink" title="ES对于大数据量(上亿量级)的聚合如何实现?"></a>ES对于大数据量(上亿量级)的聚合如何实现?</h3><p>有些算法可以分布式执行,类似一些单次请求获得精确结果的聚合.它们无需额外代价,就能在多台机器上运行,如max度量:</p>
+<ul>
+<li>请求广播到所有分片</li>
+<li>查看每个文档的price字段,如果price&gt;current_max就替换</li>
+<li>返回所有分片的最大值给协调节点</li>
+<li>找出所有分片返回的最大值即可<br>这种算法会随着机器数的线性增长而横向扩展,无需任何协调操作且内存消耗小. 但是不是所有算法都可以如此,一些复杂的算法需要在算法性能和内存使用上做出权衡.</li>
+</ul>
+<p>三角因子模型: 大数据,精确性,实时性</p>
+<ul>
+<li>精确+实时: 数据可以存入单台机器的内存中,结果会100%精确,响应会相对快速.</li>
+<li>大数据+精确: 传统的hadoop,可以处理PB级数据并且未我们提供精确的答案,但它可能需要几周的时间才能为我们提供答案.</li>
+<li>大数据+实时: 近似算法为我们提供准确但不精确的结果.</li>
+</ul>
+<p>ES目前支持两种近似算法(cardinality和percentiles),以牺牲一点小小的估算错误为代价换回高速的执行效率和极小的内存消耗.</p>
+<h4 id="Cardinality"><a href="#Cardinality" class="headerlink" title="Cardinality"></a>Cardinality</h4><p>Elasticsearch提供的首个近似聚合是Cardinality度量.它提供一个字段的基数,即该字段的distinct或者unique值的数目.基于HyperLogLog++(HLL)算法,HLL会先对用户输入做哈希运算,然后根据哈希运算结果中的bits做概率估算从而得到基数. 算法特性如下:</p>
+<ul>
+<li>可配置的精度用来控制内存的使用(更精确=更多内存)</li>
+<li>小的数据集精度非常高</li>
+<li>可以通过配置参数,来设置去重需要的固定内存使用量.无论数千还是数十亿的唯一值,内存使用量只与配置的精度相关.</li>
+</ul>
+<p>要配置精度,必须指定percision_threshold参数值,这个阈值定义了在何种基数水平下我们希望得到一个近乎精确的结果. 接受0-40,000之间的数字,更大的值还是会被当做40,000来处理.</p>
+<p>对于指定阈值,HLL的数据结构大概使用percision_threshold*8字节的内存,所以必须在牺牲内存和获得额外的准确度之间做平衡. 实际使用中,阈值=100时可以在唯一值为百万的情况下仍将误差维持在5%以内.</p>
+<p>如果想要获得唯一值的数目,通常需要查询整个数据集合,所有基于所有数据的操作都必须迅速.HyperLogLog已经很快了,它只是简单的对数据做哈希以及一些位操作,但是仍然可以进一步优化.</p>
+<p>HLL只需要字段内容的哈希值,因此我们可以在索引时就预先计算好,在查询时跳过哈希计算将哈希值直接从fielddata中加载出来. 在执行聚合时使用X.hash字段而非X字段,cardinality会读取预先计算的哈希值取代动态计算原始值的哈希. 单个文档节省时间非常少,但是如果聚合一亿数据,每个字段会多花费10ns时间,这样每次查询时都会额外增加1s. 如果我们在非常大量的数据里面使用cardinality需要权衡使用预计算的意义,是否需要提前计算hash,从而在查询中获得更好的性能.</p>
+<h4 id="Percentiles"><a href="#Percentiles" class="headerlink" title="Percentiles"></a>Percentiles</h4><p>百分位数通常用来找出异常,比如监控网站的延时来判断响应是否能保证良好的用户体验. 和基数一样,计算百分位需要一个近似算法,percentiles中使用一个TDigest算法</p>
+<ul>
+<li>百分位的准确度和百分位的极端程度相关. 1和99的百分位要比50百分位要准确</li>
+<li>数据集合小的情况,百分位非常准确</li>
+<li>随着桶里数值的增长,算法会开始对百分位进行估算.有效在准确度和内存节省之间做出权衡.</li>
+</ul>
+<p>通过修改compression参数来控制内存和准确度之间的比值.TDigest算法用节点近似计算百分比,节点越多准确度越高.compression参数限制节点的最大数目为20*compression.</p>
+<p>通过增加compression可以以消耗更多内存未代价提高百分位数准确性,更大的压缩比值会使得算法运行更慢,因为底层的树形结构的存储会增长,导致操作的代价更高.默认compression=100</p>
+<p>一个节点大约使用32字节的内存,所以在最坏情况下,默认设置会生成一个64KB的TDigest.</p>
+<h3 id="ES主分片数量可以在后期更改吗-为什么"><a href="#ES主分片数量可以在后期更改吗-为什么" class="headerlink" title="ES主分片数量可以在后期更改吗?为什么?"></a>ES主分片数量可以在后期更改吗?为什么?</h3><p>ES 2.X版本时不可以,因为ES对document的处理是通过路由算法来进行处理,更改主分片数量会导致路由被破坏,间接导致数据丢失.所以主分片数量不可以修改.</p>
+<p>如果修改分片数量后重新分配数据,分片的切分成本和reindex成本差不多,所以官方直接使用reindex. 如果数据不重复,其实新的业务数据可以切换到新的索引上继续写,查询时查询新旧两个索引.</p>
+<p>从ES6.1以后支持在线扩大shard的数量,但是操作期间需要对index锁写:</p>
+<ul>
+<li>创建一个新的目标索引,定义与源索引相同,但具有更多的主分片</li>
+<li>将段从源索引硬链接到目标索引,如果文件系统不支持hard link,则将所有段都复制到新索引中(非常耗时)</li>
+<li>创建低级文件后,再次对所有文档进行hash处理,删除属于不同分片的文档</li>
+<li>恢复目标索引</li>
+</ul>
+<h3 id="ES更新文档-删除文档的执行流程"><a href="#ES更新文档-删除文档的执行流程" class="headerlink" title="ES更新文档/删除文档的执行流程"></a>ES更新文档/删除文档的执行流程</h3><h4 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h4><ul>
+<li>在进行写操作时,ES根据传入的_routing参数按照公式计算出文档要分配的分片,从集群元数据中找出对应主分片的位置,将请求路由到该分片.</li>
+<li>文档写入Lucene后不能被立即查询,ES提供refresh操作,定时的调用Lucene的reopen(OpenIfChanged)为内存中新写入的数据生成一个新的segment.此时文档可以被检索.</li>
+<li>即使refresh后文档仍然在文件系统缓存中,如果服务器宕机这部分数据依旧会丢失. ES为此增加了translog,文档写入时会先将文档写入Lucene,然后写入一份到translog落盘.(如果可靠性要求不高可以设置异步落盘)translog是追加写入,性能比随机写入要好.先写Lucene后写translog是因为写入Lucene可能会失败,减少写入失败回滚的复杂度.</li>
+<li>间隔30分钟或者translog大小到达阈值时触发flush操作,ES会先执行refresh操作将buffer生成segment,然后调用Lucene的commit方法将所有内存中的segment fsync到磁盘中.此时Lucene中数据完成持久化,清空translog中数据(6.X版本为了实现sequenceIDs,不删除translog)</li>
+<li>由于refresh默认间隔1s,会产生大量的小segment,ES会运行一个任务检测当前磁盘中的segment,对符合条件的进行合并,减少Lucene中的segment个数,提高查询速度减少负载.</li>
+</ul>
+<p>Lucene仅支持文档整体更新,ES为了支持局部更新,在Lucene的Store索引中存储一个_source字段,key时文档ID内容是文档原文.更新时先从_source中获取原文,与更新部分合并,再调用Lucene API进行全量更新. 增加版本机制防止其他线程并发写.</p>
+<h4 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h4><ul>
+<li>提交删除操作,先查询要删除文档所属的segment</li>
+<li>commit中包含一个.del文件,记录哪些segment中的哪些文档被标记为deleted.</li>
+<li>当.del文件中存储的文档足够多时,ES执行物理删除操作,清楚文档<ul>
+<li>在删除中进行搜索操作: 依次查询所有segment,根据.del文件过滤掉标记为deleted的文档,然后返回搜索结果</li>
+<li>在删除过程中更新: 将旧文档标记为deleted,将新文档写入新的segment中.执行查询时通过.del过滤掉旧版本文档</li>
+</ul>
+</li>
+</ul>
+<h3 id="ES-shard内部是由什么组成的"><a href="#ES-shard内部是由什么组成的" class="headerlink" title="ES shard内部是由什么组成的?"></a>ES shard内部是由什么组成的?</h3><p>Shard 实际上就是一个Lucene的实例(Lucene Index),单个Lucene实例中最多包含Integer.MAX_VALUE-128个documents</p>
+<p>一个LuceneIndex在文件系统表现上来看就是存储了一系列文件的目录,由许多个独立的segments组成. segments包含了文档中的词汇字典,词汇字典的倒排索引,以及document的字段数据. 所有segments数据存储于_<segments_name>.cfs文件中</segments_name></p>
+<h4 id="Segments"><a href="#Segments" class="headerlink" title="Segments"></a>Segments</h4><p>segments直接提供了搜索功能,ES中的一个shard由大量的segments文件组成,且每一次fresh都会产生一个新的segment文件,segment文件有大有小,相当碎片化. ES内部则会开启一个线程将小的segment合并减少碎片化,降低文件打开数提升IO性能.</p>
+<p>segment文件是不可变更的,当一个document更新时,实际上是将旧的文档标记删除,索引一个新文档(在_<segment_name>.del标记某个文档删除,查询时会跳过).在Merge时会将旧文档删除掉(物理删除).</segment_name></p>
+<h3 id="ES中分析器是什么"><a href="#ES中分析器是什么" class="headerlink" title="ES中分析器是什么?"></a>ES中分析器是什么?</h3><p>分析 包含以下过程:</p>
+<ul>
+<li>将文本分成适合于倒排索引的独立词条</li>
+<li>将词条统一化为标准格式以提高可搜索性<br>分析器执行上述工作,实际上将三个功能封装到一个包中:</li>
+<li><strong>字符过滤器:</strong> 分词前整理字符串</li>
+<li><strong>分词器:</strong> 拆分字符串到单个词条</li>
+<li><strong>Token过滤器:</strong> 词条按顺序通过每个token过滤器,该过程可能会改变词条(大小写),删除此条(无用词删除),或者增加词条(同义词).</li>
+</ul>
+<p>ES附带了可以直接使用的预包装的分析器:</p>
+<ul>
+<li><strong>标准分析器:</strong> ES默认使用的分析器, 分析各语言文本最常用的选择,根据Unicode定义的单词边界划分文本. 删除绝大部分标点并将词条小写.</li>
+<li><strong>简单分析器:</strong> 在任何不是字母的地方分割文本,将词条小写</li>
+<li><strong>空格分析器:</strong> 在空格的地方划文本</li>
+<li><strong>语言分析器:</strong> 考虑指定语言的特点,如英语分析器删除无用的单词(the and…),并且提取英语单词的词干</li>
+</ul>
+<p>当我们索引一个文档,它的全文域被分析成词条以用来创建倒排索引.当全文域检索的时候,需要将查询字符串通过相同的分析过程,以保证搜索的词条格式和索引中词条格式一致.</p>
+<h3 id="客户端和集群连接时-如果选择特定的节点执行请求"><a href="#客户端和集群连接时-如果选择特定的节点执行请求" class="headerlink" title="客户端和集群连接时,如果选择特定的节点执行请求?"></a>客户端和集群连接时,如果选择特定的节点执行请求?</h3><p>TransportClient利用transport模块远程连接一个elasticsearch集群。它并不加入到集群中，只是简单的获得一个或者多个初始化的transport地址，并以 轮询 的方式与这些地址进行通信。</p>
+<h3 id="ES中倒排索引是什么"><a href="#ES中倒排索引是什么" class="headerlink" title="ES中倒排索引是什么?"></a>ES中倒排索引是什么?</h3><p>Inverted Index也叫反向索引,通过value找key. 对比词典的话,Term就相当于词语,Term Dictionary相当于词典,Term Index相当于词典的目录索引, Posting List相当于词语在字典的页数集合.</p>
+<ul>
+<li>Term: 一段文本经过分析器分析后会输出一串单词,单词即是Term</li>
+<li>Term Dictionary: 里面维护的Term,可以理解为Term集合. </li>
+<li>Term Index: 为了更快的找到某个单词,我们为单词建立索引.B-Tree通过减少磁盘寻道次数来提高查询性能. ES也是采用同样思路,直接通过内存查找Term,不读磁盘. 如果term过多,Term dictionary会很大无法都放入内存,因此通过TermIndex(字典树). 这棵树不会包含所有的Term,包含的是一些Term的前缀,通过term index快速定位到Term dictionary的offset,然后从这个位置向后顺序查找. 再加上一些压缩基数,term index的尺寸可以只有所有Term尺寸的几十分之一,使得内存可以缓存整个term index.</li>
+<li>PostingList(倒排列表):记录了出现过某个单词的所有文档的文档列表,以及该单词出现的位置信息,每条记录成为一个倒排项Posting.</li>
+</ul>
+<p>为什么Elasticsearch/Lucene检索可以比mysql快了? Mysql只有term dictionary这一层，是以b-tree排序的方式存储在磁盘上的。检索一个term需要若干次的random access的磁盘操作。而Lucene在term dictionary的基础上添加了term index来加速检索，term index以树的形式缓存在内存中。从term index查到对应的term dictionary的block位置之后，再去磁盘上找term，大大减少了磁盘的random access次数。</p>
+<p>ES在建立倒排索引时，会对拆分的各个单词进行相应处理，以提升后面搜索的时候能够搜索到相关联的文档的概率，这就是标准化规则转换，主要包括：时态的转换（例如liked转换为like）、单复数的转换（hospitals转换为hospitals）、同义词的转换（small转换为little）、大小写的转换（默认转换为小写）</p>
+<p>当利用ES进行查询时，查询结果都会返回一个对应词条的相关度分数（score）。相关度分数的计算基于TF/IDF算法（Term Frequence&amp;Inverse Doucument Frequency）</p>
+<ul>
+<li>Term Frequence ，TF(t in f)：我们查询的词条在文本中出现多少次，出现次数越多，相关度越高.</li>
+<li>Inverse Doucument Frequency，IDF(t in all-f)：查询词条在所有文本中出现的次数，出现次数越高，相关度越低。</li>
+<li>Field-length(字段长度规约)：字段的长度越长，相关度越低。</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/08/02/设计模式之美第一周/" itemprop="url">
                   设计模式之美第一周
                 </a>
@@ -248,7 +531,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-08-02T16:55:00+08:00" content="2020-08-02">
               2020-08-02
             </time>
@@ -422,7 +705,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-07-25T16:55:00+08:00" content="2020-07-25">
               2020-07-25
             </time>
@@ -519,7 +802,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-07-19T16:55:00+08:00" content="2020-07-19">
               2020-07-19
             </time>
@@ -770,7 +1053,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-07-10T21:55:00+08:00" content="2020-07-10">
               2020-07-10
             </time>
@@ -1023,7 +1306,7 @@ perf report
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-07-04T17:26:55+08:00" content="2020-07-04">
               2020-07-04
             </time>
@@ -1421,7 +1704,7 @@ net.ipv4.tcp_rmem net.ipv4.tcp_wmem
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-06-27T15:26:55+08:00" content="2020-06-27">
               2020-06-27
             </time>
@@ -1741,7 +2024,7 @@ webbench
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-06-21T10:57:55+08:00" content="2020-06-21">
               2020-06-21
             </time>
@@ -2146,7 +2429,7 @@ fio --name=reply --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin #使用fio�
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-06-14T10:57:55+08:00" content="2020-06-14">
               2020-06-14
             </time>
@@ -2497,7 +2780,7 @@ watch -d grep -A 15 ‘Normal’ /proc/zoneinfo #观察内存指标变化
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-06-03T22:57:55+08:00" content="2020-06-03">
               2020-06-03
             </time>
@@ -2842,274 +3125,6 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/" itemprop="url">
-                  《Linux 性能优化实战》第一周--CPU性能篇(上)
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-05-31T22:57:55+08:00" content="2020-05-31">
-              2020-05-31
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>首先，非常感谢Go夜读杨文大佬组织了这样一个读书会， 可以让大家在繁忙的工作生活之余抽出时间来一起学习进步。希望能和群里小伙伴共同讨论学习，一起坚持下去。</p>
-<p>第一本严格意义上并不是书籍，而是极客时间上倪老师的专栏《Linux性能优化实战》。无论是软件业务逻辑还是底层架构实现，我们在设计时都要尽可能的考虑性能开销，性能优化是软件系统中最有挑战的工作之一，比较考验程序员的综合能力。</p>
-<p>在平时工作中我也会经常遇到一些性能相关的问题，不知如何排查和解决。希望读完这个专栏后能真正做到<strong>将性能问题和系统原理关联起来，特别是把系统从应用程序、库函数、系统调用再到内核和硬件等不同的层级贯穿起来</strong>。</p>
-<hr>
-<h2 id="Lesson-1-如何学习Linux性能优化"><a href="#Lesson-1-如何学习Linux性能优化" class="headerlink" title="Lesson 1 如何学习Linux性能优化"></a>Lesson 1 如何学习Linux性能优化</h2><p>解决性能问题首先需要理解应用程序和系统的少数几个基本原理，再<strong>进行大量的实战练习</strong>，建立起整体性能的全局观。</p>
-<h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><p>高并发和响应快对应着性能优化的两个核心指标：<strong>吞吐</strong>和<strong>延时</strong>。</p>
-<p><img src="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/week1_1.png" alt>  </p>
-<ul>
-<li><strong>应用负载</strong>角度：直接影响了产品终端的用户体验</li>
-<li><strong>系统资源</strong>角度：资源使用率、饱和度等 </li>
-</ul>
-<p><strong>性能问题的本质</strong>就是系统资源已经到达瓶颈，但请求的处理还不够快，无法支撑更多的请求。 性能分析实际上就是找出应用或系统的瓶颈，设法去避免或缓解它们。</p>
-<ul>
-<li>选择指标评估应用程序和系统性能</li>
-<li>为应用程序和系统设置性能目标</li>
-<li>进行性能基准测试</li>
-<li>性能分析定位瓶颈</li>
-<li>性能监控和告警</li>
-</ul>
-<p>对于不同的性能问题要选取不同的性能分析工具。 下面是常用的Linux Performance Tools以及对应分析的性能问题类型。</p>
-<p><img src="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/LinuxPerformanceTool.png" alt>  </p>
-<h3 id="学习重点"><a href="#学习重点" class="headerlink" title="学习重点"></a>学习重点</h3><p>建立整体系统性能的全局观：</p>
-<ul>
-<li>理解最基本的几个系统知识原理</li>
-<li>掌握必要的性能工具</li>
-<li>通过实际的场景演练，贯穿不同的组件。</li>
-</ul>
-<hr>
-<h2 id="Lesson-2-到底应该怎么理解“平均负载”"><a href="#Lesson-2-到底应该怎么理解“平均负载”" class="headerlink" title="Lesson 2 到底应该怎么理解“平均负载”"></a>Lesson 2 到底应该怎么理解“平均负载”</h2><p><strong>平均负载：</strong>单位时间内，系统处于可运行状态和不可中断状态的平均进程数，也就是平均活跃进程数。它和我们传统意义上理解的CPU使用率并没有直接关系。</p>
-<p>其中不可中断进程是正处于内核态关键流程中的进程（如常见的等待设备的I/O响应）。<strong>不可中断状态实际上是系统对进程和硬件设备的一种保护机制。</strong></p>
-<h3 id="平均负载多少时合理"><a href="#平均负载多少时合理" class="headerlink" title="平均负载多少时合理"></a>平均负载多少时合理</h3><p>实际生产环境中将系统的平均负载监控起来，根据历史数据判断负载的变化趋势。当负载存在明显升高趋势时，及时进行分析和调查。 当然也可以当设置阈值（如当平均负载高于CPU数量的70%时）</p>
-<p>现实工作中我们会经常混淆平均负载和CPU使用率的概念，其实两者并不完全对等：</p>
-<ul>
-<li>CPU密集型进程，大量CPU使用会导致平均负载升高，此时两者一致</li>
-<li>I/O密集型进程，等待I/O也会导致平均负载升高，此时CPU使用率并不一定高</li>
-<li>大量等待CPU的进程调度会导致平均负载升高，此时CPU使用率也会比较高</li>
-</ul>
-<h3 id="平均负载案例分析"><a href="#平均负载案例分析" class="headerlink" title="平均负载案例分析"></a>平均负载案例分析</h3><p>分别对上述三种场景进行分析，使用的工具为<strong>iostat，mpstat，pidstat</strong></p>
-<p>其中还用到了Linux系统压力测试工具<strong>stress</strong></p>
-<h4 id="CPU密集型进程"><a href="#CPU密集型进程" class="headerlink" title="CPU密集型进程"></a>CPU密集型进程</h4><pre><code>stress --cpu 1 --timeout 600 #模拟CPU使用率100%
-watch -d uptime              #查看平均负载变化情况
-mpstat -P ALL 5              #查看CPU使用率的变化情况
-</code></pre><p>此实验中，CPU使用率为100%，但是iowait只有0，说明平均负载高是由CPU使用率导致</p>
-<pre><code>pidstat -u 5 1               #可以查看具体哪个进程导致了CPU使用率高
-</code></pre><h4 id="I-O密集型进程"><a href="#I-O密集型进程" class="headerlink" title="I/O密集型进程"></a>I/O密集型进程</h4><pre><code>stress -i 1 --timeout 600    #模拟I/O压力，不停地执行sync
-watch -d uptime              #查看平均负载变化情况
-mpstat -P ALL 5 1              #查看CPU使用率的变化情况
-</code></pre><p>此实验中，CPU使用率为23%，而iowait高达67%，说明平均负载高是由iowait升高导致</p>
-<pre><code>pidstat -u 5 1               #可以查看具体哪个进程导致了iowait高
-</code></pre><h4 id="大量进程"><a href="#大量进程" class="headerlink" title="大量进程"></a>大量进程</h4><pre><code>stress -c 8 --timeout 600    #模拟8进程（高于CPU核数）
-watch -d uptime              #查看平均负载变化情况
-mpstat -P ALL S              #查看CPU使用率的变化情况
-</code></pre><p>此实验中，CPU严重过载，8个进程在抢占CPU，导致平均负载升高</p>
-<pre><code>pidstat -u 5 1               #可以查看具体哪个进程导致了CPU使用率高
-</code></pre><p>###总结<br> <strong>平均负载高时可能是CPU密集型进程导致，也可能是I/O繁忙导致。具体分析时可以结合mpstat/pidstat工具辅助分析负载来源。</strong></p>
-<hr>
-<h2 id="Lesson-3-经常说的CPU上下文切换是什么意思？-上"><a href="#Lesson-3-经常说的CPU上下文切换是什么意思？-上" class="headerlink" title="Lesson 3 经常说的CPU上下文切换是什么意思？(上)"></a>Lesson 3 经常说的CPU上下文切换是什么意思？(上)</h2><p><strong>CPU上下文切换</strong>，就是把前一个任务的CPU上下文（CPU寄存器和PC）保存起来，然后加载新任务的上下文到这些寄存器和程序计数器，最后再跳转到程序计数器所指的位置，运行新任务。其中，保存下来的上下文会存储在系统内核中，待任务重新调度执行时再加载，保证原来的任务状态不受影响。</p>
-<p>按照任务类型，CPU上下文切换分为：</p>
-<ul>
-<li>进程上下文切换</li>
-<li>线程上下文切换</li>
-<li>中断上下文切换</li>
-</ul>
-<h3 id="进程上下文切换"><a href="#进程上下文切换" class="headerlink" title="进程上下文切换"></a>进程上下文切换</h3><p>Linux进程按照等级权限将进程的运行空间分为内核空间和用户空间。从用户态向内核态转变时需要通过系统调用来完成。</p>
-<p>一次系统调用过程其实进行了两次CPU上下文切换：</p>
-<ul>
-<li>CPU寄存器中用户态的指令位置先保存起来，CPU寄存器更新为内核态指令的位置，跳转到内核态运行内核任务；</li>
-<li>系统调用结束后，CPU寄存器恢复原来保存的用户态数据，再切换到用户空间继续运行。</li>
-</ul>
-<p>系统调用过程中并不会涉及虚拟内存等进程用户态资源，也不会切换进程。和传统意义上的进程上下文切换不同。因此<strong>系统调用通常称为特权模式切换</strong>。</p>
-<p>进程是由内核管理和调度的，进程上下文切换只能发生在内核态。 因此相比系统调用来说，在保存当前进程的内核状态和CPU寄存器之前，需要先把该进程的虚拟内存，栈保存下来。再加载新进程的内核态后，还要刷新进程的虚拟内存和用户栈。</p>
-<p>进程只有在调度到CPU上运行时才需要切换上下文，有以下几种场景： CPU时间片轮流分配，系统资源不足导致进程挂起，进程通过sleep函数主动挂起，高优先级进程抢占时间片，硬件中断时CPU上的进程被挂起转而执行内核中的中断服务。</p>
-<h3 id="线程上下文切换"><a href="#线程上下文切换" class="headerlink" title="线程上下文切换"></a>线程上下文切换</h3><p>线程上下文切换分为两种：</p>
-<ul>
-<li>前后线程同属于一个进程，切换时虚拟内存资源不变，只需要切换线程的私有数据，寄存器等；</li>
-<li>前后线程属于不同进程，与进程上下文切换相同。</li>
-</ul>
-<p>同进程的线程切换消耗资源较少，这也是多线程的优势。</p>
-<h3 id="中断上下文切换"><a href="#中断上下文切换" class="headerlink" title="中断上下文切换"></a>中断上下文切换</h3><p>中断上下文切换并不涉及到进程的用户态，因此中断上下文只包括内核态中断服务程序执行所必须的状态（CPU寄存器，内核堆栈，硬件中断参数等）。</p>
-<p><strong>中断处理优先级比进程高，所以中断上下文切换和进程上下文切换不会同时发生。</strong></p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><strong>尽量在程序中使用多线程，因为多线程上下文切换资源消耗较少。</strong></p>
-<hr>
-<h2 id="Lesson-4-经常说的CPU上下文切换是什么意思？-下"><a href="#Lesson-4-经常说的CPU上下文切换是什么意思？-下" class="headerlink" title="Lesson 4 经常说的CPU上下文切换是什么意思？(下)"></a>Lesson 4 经常说的CPU上下文切换是什么意思？(下)</h2><p>通过vmstat可以查看系统总体的上下文切换情况。</p>
-<pre><code>vmstat 5         #每隔5s输出一组数据
-</code></pre><ul>
-<li>cs （context switch）     每秒上下文切换次数</li>
-<li>in （interrupt）          每秒中断次数</li>
-<li>r （runnning or runnable）就绪队列的长度，正在运行和等待CPU的进程数</li>
-<li>b （Blocked）             处于不可中断睡眠状态的进程数</li>
-</ul>
-<p>要查看每个进程的详细情况，需要使用pidstat来查看每个进程上下文切换情况</p>
-<pre><code>pidstat -w 5
-</code></pre><ul>
-<li>cswch   每秒自愿上下文切换次数 （进程无法获取所需资源导致的上下文切换）</li>
-<li>nvcswch 每秒非自愿上下文切换次数 （时间片轮流等系统强制调度）</li>
-</ul>
-<h3 id="实验分析"><a href="#实验分析" class="headerlink" title="实验分析"></a>实验分析</h3><pre><code>vmstat 1 1    #首先获取空闲系统的上下文切换次数
-sysbench --threads=10 --max-time=300 threads run #模拟多线程切换问题
-
-vmstat 1 1    #新终端观察上下文切换情况
-此时发现cs数据明显升高，同时观察其他指标：
-r列： 远超系统CPU个数，说明存在大量CPU竞争
-us和sy列： sy列占比80%，说明CPU主要被内核占用
-in列： 中断次数明显上升，说明中断处理也是潜在问题
-</code></pre><p>综合以上分析，说明运行/等待CPU的进程过多，导致大量的上下文切换，上下文切换导致系统的CPU占用率高。</p>
-<pre><code>pidstat -w -u 1  #查看到底哪个进程导致的问题
-</code></pre><p>从结果中看出是sysbench导致CPU使用率过高，但是pidstat输出的上下文次数加起来也并不多。分析sysbench模拟的是线程的切换，因此需要在pidstat后加-t参数查看线程指标。</p>
-<p>另外对于中断次数过多，我们可以通过/proc/interrupts文件读取</p>
-<pre><code>watch -d cat /proc/interrupts
-</code></pre><p>发现次数变化速度最快的是重调度中断（RES），该中断用来唤醒空闲状态的CPU来调度新的任务运行。分析还是因为过多任务的调度问题，和上下文切换分析一致。</p>
-<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p><strong>每秒上下文切换多少才正常呢？</strong><br><strong>经验来说，当每秒上下文切换超过1w次，或者切换次数出现数量级的增长时，系统可能出现了性能问题。此时可以根据上下文切换类型来具体分析是I/O问题还是CPU瓶颈，或者具体哪一类中断导致的异常。</strong></p>
-<hr>
-<h2 id="Lesson-5-某个应用的CPU使用率达到100-，怎么办？"><a href="#Lesson-5-某个应用的CPU使用率达到100-，怎么办？" class="headerlink" title="Lesson 5 某个应用的CPU使用率达到100%，怎么办？"></a>Lesson 5 某个应用的CPU使用率达到100%，怎么办？</h2><p>Linux作为多任务操作系统，将CPU时间划分为很短的时间片，通过调度器轮流分配给各个任务使用。为了维护CPU时间，Linux通过事先定义的节拍率，触发时间中断，并使用全局变了jiffies记录开机以来的节拍数。时间中断发生一次该值+1.</p>
-<p><strong>CPU使用率</strong>，除了空闲时间以外的其他时间占总CPU时间的百分比。可以通过/proc/stat中的数据来计算出CPU使用率。因为/proc/stat时开机以来的节拍数累加值，计算出来的是开机以来的平均CPU使用率，一般意义不大。可以间隔取一段时间的两次值作差来计算该段时间内的平均CPU使用率。 <strong>性能分析工具给出的都是间隔一段时间的平均CPU使用率，要注意间隔时间的设置。</strong></p>
-<p>CPU使用率可以通过top 或 ps来查看。分析进程的CPU问题可以通过perf，它以性能事件采样为基础，不仅可以分析系统的各种事件和内核性能，还可以用来分析指定应用程序的性能问题。</p>
-<p>perf top / perf record / perf report （-g 开启调用关系的采样）</p>
-<h3 id="实验案例"><a href="#实验案例" class="headerlink" title="实验案例"></a>实验案例</h3><pre><code>sudo docker run --name nginx -p 10000:80 -itd feisky/nginx
-sudo docker run --name phpfpm -itd --network container:nginx feisky/php-fpm
-
-ab -c 10 -n 100 http://XXX.XXX.XXX.XXX:10000/ #测试Nginx服务性能
-</code></pre><p>发现此时每秒可承受请求给长少，此时将测试的请求数从100增加到10000。 在另外一个终端运行top查看每个CPU的使用率。发现系统中几个php-fpm进程导致CPU使用率骤升。</p>
-<p>接着用perf来分析具体是php-fpm中哪个函数导致该问题。</p>
-<pre><code>perf top -g -p XXXX #对某一个php-fpm进程进行分析
-</code></pre><p>发现其中sqrt和add_function占用CPU过多， 此时查看源码找到原来是sqrt中在发布前没有删除测试代码段，存在一个百万次的循环导致。 将该无用代码删除后发现nginx负载能力明显提升。</p>
-<h3 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h3><p><strong>在碰到CPU使用率过高问题时，可以借助top pidstat确定引发CPU性能问题的来源，然后用perf来具体定位到引起性能问题的函数。可以用来代码性能进一步优化。</strong></p>
-<hr>
-<h2 id="Lesson-6-系统的CPU使用率很高，为什么找不到高CPU的应用？"><a href="#Lesson-6-系统的CPU使用率很高，为什么找不到高CPU的应用？" class="headerlink" title="Lesson 6 系统的CPU使用率很高，为什么找不到高CPU的应用？"></a>Lesson 6 系统的CPU使用率很高，为什么找不到高CPU的应用？</h2><p>按照上篇的CPU性能问题分析套路，看起来CPU使用率问题很容易排查，真实场景中却不然。</p>
-<h3 id="实验案例分析"><a href="#实验案例分析" class="headerlink" title="实验案例分析"></a>实验案例分析</h3><pre><code>sudo docker run --name nginx -p 10000:80 -itd feisky/nginx:sp
-sudo docker run --name phpfpm -itd --network container:nginx feisky/php-fpm:sp
-ab -c 100 -n 1000 http://XXX.XXX.XXX.XXX:10000/ #并发100个请求测试
-</code></pre><p>实验结果中每秒请求数依旧不高，我们将并发请求数降为5后，nginx负载能力依旧很低。</p>
-<p>此时用top和pidstat发现系统CPU使用率过高，但是并没有发现CPU使用率高的进程。</p>
-<p>出现这种情况一般时我们分析时遗漏的什么信息，重新运行top命令并观察一会。发现就绪队列中处于Running状态的进行过多，超过了我们的并发请求次数5. 再仔细查看进程运行数据，发现nginx和php-fpm都处于sleep状态，真正处于运行的却是几个stress进程。</p>
-<p>下一步就利用pidstat分析这几个stress进程，发现没有任何输出。用ps aux交叉验证发现依旧不存在该进程。说明不是工具的问题。再top查看发现stress进程的进程号变化了，此时有可能时以下两种原因导致：</p>
-<ul>
-<li>进程不停的崩溃重启（如段错误/配置错误等），此时进程退出后可能又被监控系统重启；</li>
-<li>短时进程导致，即其他应用内部通过exec调用的外面命令，这些命令一般只运行很短时间就结束，很难用top这种间隔较长的工具来发现</li>
-</ul>
-<p>可以通过pstree来查找 stress的父进程，找出调用关系。</p>
-<pre><code>pstree | grep stress
-</code></pre><p>发现是php-fpm调用的该子进程，此时去查看源码可以看出每个请求都会调用一个stress命令来模拟I/O压力。 之前top显示的结果是CPU使用率升高，是否真的是由该stress命令导致的，还需要继续分析。 代码中给每个请求加了verbose=1的参数后可以查看stress命令的输出，在中断测试该命令结果显示stress命令运行时存在因权限问题导致的文件创建失败的bug。</p>
-<p>此时依旧只是猜测，下一步继续通过perf工具来分析。性能报告显示确实时stress占用了大量的CPU，通过修复权限问题来优化解决即可。</p>
-<h3 id="总结-3"><a href="#总结-3" class="headerlink" title="总结"></a>总结</h3><p><strong>对于常规问题无法解释的CPU使用率场景，首先要想到可能时短时应用导致的问题。对于短时进程，还可以用execsnoop工具来进行监控。</strong></p>
-<hr>
-<h2 id="Lesson-7-8-系统中出现大量不可中断进程和僵尸进程怎么办？"><a href="#Lesson-7-8-系统中出现大量不可中断进程和僵尸进程怎么办？" class="headerlink" title="Lesson 7/8 系统中出现大量不可中断进程和僵尸进程怎么办？"></a>Lesson 7/8 系统中出现大量不可中断进程和僵尸进程怎么办？</h2><h3 id="进程状态"><a href="#进程状态" class="headerlink" title="进程状态"></a>进程状态</h3><ul>
-<li>R Running/Runnable，表示进程在CPU的就绪队列中，正在运行或者等待运行；</li>
-<li>D Disk Sleep，不可中断状态睡眠，一般表示进程正在跟硬件交互，并且交互过程中不允许被其他进程中断；</li>
-<li>Z Zombie，僵尸进程，表示进程实际上已经结束，但是父进程还没有回收它的资源；</li>
-<li>S Interruptible Sleep，可中断睡眠状态，表示进程因为等待某个事件而被系统挂起，当等待事件发生则会被唤醒并进入R状态；</li>
-<li>I Idle，空闲状态，用在不可中断睡眠的内核线程上。 该状态不会导致平均负载升高；</li>
-<li>T Stop/Traced，表示进程处于暂停或跟踪状态（SIGSTOP/SIGCONT， GDB调试）；</li>
-<li>X Dead，进程已经消亡，不会在top/ps中看到。</li>
-</ul>
-<p>对于不可中断状态，一般都是在很短时间内结束，可忽略。但是如果系统或硬件发生故障，进程可能会保持不可中断状态很久，甚至系统中出现大量不可中断状态，此时需注意是否出现了I/O性能问题。</p>
-<p>僵尸进程一般多进程应用容易遇到，父进程来不及处理子进程状态时子进程就提前退出，此时子进程就变成了僵尸进程。大量的僵尸进程会用尽PID进程号，导致新进程无法建立。</p>
-<h3 id="实验案例分析-1"><a href="#实验案例分析-1" class="headerlink" title="实验案例分析"></a>实验案例分析</h3><h4 id="磁盘O-DIRECT问题"><a href="#磁盘O-DIRECT问题" class="headerlink" title="磁盘O_DIRECT问题"></a>磁盘O_DIRECT问题</h4><pre><code>sudo docker run --privileged --name=app -itd feisky/app:iowait
-ps aux | grep &apos;/app&apos;
-</code></pre><p>可以看到此时有多个app进程运行，状态分别时Ss+和D+。其中后面s表示进程是一个会话的领导进程，+号表示前台进程组。</p>
-<p>其中<strong>进程组</strong>表示一组相互关联的进程，子进程是父进程所在组的组员。 <strong>会话</strong>指共享同一个控制终端的一个或多个进程组。</p>
-<p>用top查看系统资源发现：1）平均负载在逐渐增加，且1分钟内平均负载达到了CPU个数，说明系统可能已经有了性能瓶颈；2）僵尸进程比较多且在不停增加；3）us和sys CPU使用率都不高，iowait却比较高；4）每个进程CPU使用率也不高，但有两个进程处于D状态，可能在等待IO。</p>
-<p>分析目前数据可知：iowait过高导致系统平均负载升高，僵尸进程不断增长说明有程序没能正确清理子进程资源。</p>
-<p>用dstat来分析，因为它可以同时查看CPU和I/O两种资源的使用情况，便于对比分析。</p>
-<pre><code>dstat 1 10    #间隔1秒输出10组数据
-</code></pre><p>可以看到当wai（iowait）升高时磁盘请求read都会很大，说明iowait的升高和磁盘的读请求有关。接下来分析到底时哪个进程在读磁盘。</p>
-<p>之前top查看的处于D状态的进程号，用pidstat -d -p XXX 展示进程的I/O统计数据。发现处于D状态的进程都没有任何读写操作。 在用pidstat -d 查看所有进程的I/O统计数据，看到app进程在进行磁盘读操作，每秒读取32MB的数据。进程访问磁盘必须使用系统调用处于内核态，接下来重点就是找到app进程的系统调用。</p>
-<pre><code>sudo strace -p XXX #对app进程调用进行跟踪
-</code></pre><p>报错没有权限，因为已经时root权限了。所以遇到这种情况，首先要检查进程状态是否正常。 ps命令查找该进程已经处于Z状态，即僵尸进程。</p>
-<p>这种情况下top pidstat之类的工具无法给出更多的信息，此时像第5篇一样，用perf record -d和perf report进行分析，查看app进程调用栈。</p>
-<p>看到app确实在通过系统调用sys_read()读取数据，并且从new_sync_read和blkdev_direct_IO看出进程时进行直接读操作，请求直接从磁盘读，没有通过缓存导致iowait升高。</p>
-<p>通过层层分析后，root cause是app内部进行了磁盘的直接I/O。然后定位到具体代码位置进行优化即可。</p>
-<h4 id="僵尸进程"><a href="#僵尸进程" class="headerlink" title="僵尸进程"></a>僵尸进程</h4><p>上述优化后iowait显著下降，但是僵尸进程数量仍旧在增加。首先要定位僵尸进程的父进程，通过pstree -aps XXX，打印出该僵尸进程的调用树，发现父进程就是app进程。</p>
-<p>查看app代码，看看子进程结束的处理是否正确（是否调用wait()/waitpid(),有没有注册SIGCHILD信号的处理函数等）。</p>
-<h3 id="总结-4"><a href="#总结-4" class="headerlink" title="总结"></a>总结</h3><p><strong>碰到iowait升高时，先用dstat pidstat等工具确认是否存在磁盘I/O问题，再找是哪些进程导致I/O，不能用strace直接分析进程调用时可以通过perf工具分析。</strong></p>
-<p><strong>对于僵尸问题，用pstree找到父进程，然后看源码检查子进程结束的处理逻辑即可。</strong></p>
-<p>——————————————————————————————————————————————————————————————————<br>LastModify：2020-05-31</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3155,8 +3170,8 @@ ps aux | grep &apos;/app&apos;
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">29</span>
-              <span class="site-state-item-name">Artikel</span>
+              <span class="site-state-item-count">30</span>
+              <span class="site-state-item-name">posts</span>
             </a>
           </div>
 
@@ -3165,8 +3180,8 @@ ps aux | grep &apos;/app&apos;
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">8</span>
-                <span class="site-state-item-name">Tags</span>
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">tags</span>
               </a>
             </div>
           
@@ -3210,7 +3225,7 @@ ps aux | grep &apos;/app&apos;
 </div>
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
