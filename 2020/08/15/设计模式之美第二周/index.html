@@ -1,0 +1,735 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="设计模式之美," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？本文主要针对四大特性，结合实际代码，帮助我们了解每个特性存在的意义和目的，以及它们能解决哪些编程问题。
+封装 Encapsulation封装也叫作信息藏匿或者数据访问保护。类通过暴露有限的访问接口，授权外部仅能通过类提供的方式来访问内部信息或数据。
+对于封装这个特性，我们需要编程语言本身提供一定的语法机制来支持。这个语法机制就是访问权限控制。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计模式之美第二周">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/08/15/设计模式之美第二周/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？本文主要针对四大特性，结合实际代码，帮助我们了解每个特性存在的意义和目的，以及它们能解决哪些编程问题。
+封装 Encapsulation封装也叫作信息藏匿或者数据访问保护。类通过暴露有限的访问接口，授权外部仅能通过类提供的方式来访问内部信息或数据。
+对于封装这个特性，我们需要编程语言本身提供一定的语法机制来支持。这个语法机制就是访问权限控制。">
+<meta property="og:updated_time" content="2020-08-15T15:24:25.421Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="设计模式之美第二周">
+<meta name="twitter:description" content="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？本文主要针对四大特性，结合实际代码，帮助我们了解每个特性存在的意义和目的，以及它们能解决哪些编程问题。
+封装 Encapsulation封装也叫作信息藏匿或者数据访问保护。类通过暴露有限的访问接口，授权外部仅能通过类提供的方式来访问内部信息或数据。
+对于封装这个特性，我们需要编程语言本身提供一定的语法机制来支持。这个语法机制就是访问权限控制。">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2020/08/15/设计模式之美第二周/"/>
+
+  <title> 设计模式之美第二周 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Startseite
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archiv
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                设计模式之美第二周
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-08-15T23:24:00+08:00" content="2020-08-15">
+              2020-08-15
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？"><a href="#理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？" class="headerlink" title="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？"></a>理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？</h2><p>本文主要针对四大特性，结合实际代码，帮助我们了解每个特性存在的意义和目的，以及它们能解决哪些编程问题。</p>
+<h3 id="封装-Encapsulation"><a href="#封装-Encapsulation" class="headerlink" title="封装 Encapsulation"></a>封装 Encapsulation</h3><p>封装也叫作信息藏匿或者数据访问保护。类通过暴露有限的访问接口，授权外部仅能通过类提供的方式来访问内部信息或数据。</p>
+<p>对于封装这个特性，我们需要编程语言本身提供一定的语法机制来支持。这个语法机制就是访问权限控制。</p>
+<p>如果对类中属性访问不做限制，那任何代码都可以访问、修改类中的属性，虽然这样看起来更灵活，但是从另一方面来说过度灵活意味着不可控。除此之外，类仅仅通过有限的方法暴露必要的操作，也提高类的易用性。调用者不需要了解太多背后的业务细节，用错的概率也会减少。</p>
+<h3 id="抽象-Abstraction"><a href="#抽象-Abstraction" class="headerlink" title="抽象 Abstraction"></a>抽象 Abstraction</h3><p>封装主要讲的是如何隐藏信息、保护数据，而抽象讲的是如何隐藏方法的具体实现，让调用者之需要关心方法提供了哪些功能，并不需要知道这些功能是如何实现的。</p>
+<p>在面向对象编程中，我们常借助编程语言提供的接口类（Interface）或者抽象类（Abstract）这两种语法机制，来实现抽象。</p>
+<p>抽象的意义，首先作为一种只关注功能不关注实现的设计思路，正好帮我们的大脑过滤掉许多非必要的信息。其次，抽象在代码设计中起到非常重要的指导作用。很多设计原则都体现了抽象这种设计思想，比如基于接口而非实现编程、开闭原则、代码解耦等。</p>
+<p>我们在定义类的方法时，也要有抽象思维，不要在方法定义中暴露太多的实现细节，以保证在某个时间点需要修改方法的实现逻辑时不用去修改其定义。</p>
+<h3 id="继承-Inheritance"><a href="#继承-Inheritance" class="headerlink" title="继承 Inheritance"></a>继承 Inheritance</h3><p>为了实现继承特性，编程语言需要提供特殊的语法机制来支持，如Java中使用extends来实现继承，C++使用冒号，Python使用paraentheses（）等。不过有些语言只支持单继承，如Java、PHP、C#、Ruby等，有些支持多重继承，如C++、python、Perl等。</p>
+<p>继承存在的最大好处就是代码复用。不过过度使用继承层次过深过复杂，会导致代码可读性、可维护性变差。所以继承应该尽量少用，甚至不用。（多用组合少用继承）</p>
+<h3 id="多态-Polymorphism"><a href="#多态-Polymorphism" class="headerlink" title="多态 Polymorphism"></a>多态 Polymorphism</h3><p>多态能提高代码的可扩展性和复用性。除此之外多态也是很多设计模式、设计原则、编程技巧的代码实现基础。比如策略模式、基于接口而非实现编程、依赖倒置原则、里氏替换原则、利用多态去掉冗长的if-else语句等。</p>
+<h3 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h3><p>Java不支持继承的原因是多重继承存在副作用：钻石问题（菱形继承）</p>
+<p>假设B和C都继承A，且都重写了A中同一方法，类D继承类B和类C，对于B、C重写的A中的方法，类D会继承哪一个会产生歧义。但是Java支持多接口实现，因为接口中的方法是抽象的，在实现接口时需要实现类自己实现，所以不会出现二义性问题。</p>
+<h2 id="理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？"><a href="#理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？" class="headerlink" title="理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？"></a>理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？</h2><h3 id="什么是面向过程编程与面向过程编程语言？"><a href="#什么是面向过程编程与面向过程编程语言？" class="headerlink" title="什么是面向过程编程与面向过程编程语言？"></a>什么是面向过程编程与面向过程编程语言？</h3><p>面向过程编程也是一种编程范式/风格，它以过程作为组织代码的基本单元。以数据与方法相分离为最主要的特点。面向过程风格是一种流程化的编程风格，通过拼接一组顺序执行的方法来操作数据完成一项功能。<br>面向过程编程语言首先是一种编程语言。它最大的特点是不支持类和对象两个语法概念，不支持丰富的面向对象编程特性。</p>
+<h3 id="面向对象编程相比面向过程编程有哪些优势？"><a href="#面向对象编程相比面向过程编程有哪些优势？" class="headerlink" title="面向对象编程相比面向过程编程有哪些优势？"></a>面向对象编程相比面向过程编程有哪些优势？</h3><h4 id="OOP更加能够应对大规模复杂程序的开发"><a href="#OOP更加能够应对大规模复杂程序的开发" class="headerlink" title="OOP更加能够应对大规模复杂程序的开发"></a>OOP更加能够应对大规模复杂程序的开发</h4><p>对于大规模复杂程序开发来说，整个程序的处理流程错综复杂，并非只有一条主线。如果用面向过程编程这种流程化、线性的思维方式，去翻译这个网状结构，去思考如何把程序拆解为一组顺序执行的方法会比较吃力。</p>
+<p>面向对象编程以类为思考对象。在进行面向对象编程的时候，我们并不是一上来就去思考如何讲复杂的流程拆解为一个一个方法，而是采用曲线救国的策略。先去思考如何给业务建模，如何将需求翻译为类，如何给类之间建立交互关系，完成这些工作完全不需要考虑错综复杂的处理流程。</p>
+<p>除此之外，面向对象编程还提供了一种更加清晰、更加模块化的代码组织方式。</p>
+<p>实际上利用面向过程的编程语言那样，也可以写出面向对象风格的代码。只不过可能会比用面向对象编程语言付出的代价更高一些。两种编程风格并不是完全对立的。</p>
+<h4 id="OOP代码更易复用、易扩展、易维护"><a href="#OOP代码更易复用、易扩展、易维护" class="headerlink" title="OOP代码更易复用、易扩展、易维护"></a>OOP代码更易复用、易扩展、易维护</h4><p>封装特性是两种编程风格最基本的区别，面向对象将数据和方法绑定在一起，通过访问权限控制，只允许外部调用者通过类暴露的有限方法访问数据，而不会像面向过程那样，数据可以被任意方法修改。因此面向对象提供的封装特性更有利于提高代码的易维护性。</p>
+<p>函数本身就是一种抽象，它隐藏了具体实现。我们在使用函数时之需要了解函数具有什么功能，而不需要了解它是怎么实现的。从这一点上两种编程风格都支持抽象特性。只是面向对象还提供了其他抽象特性的实现方式，如基于接口实现的抽象。基于接口的抽象可以让我们在不改变原有实现的情况下，轻松替换新的实现逻辑，提高了代码的可扩展性。</p>
+<p>继承特性是面向对象特有的，能避免代码重复写很多遍，提高了代码的复用性。</p>
+<p>多态特性也是面向对象特有，在需要修改一个功能实现的时候，可以通过实现一个新的子类的方式，在子类重写原来的逻辑功能。用子类替换父类遵从了“对修改关闭，对扩展开放”的原则，提高代码的扩展性。除此之外，多态特性使得不同类对象可以传递相同的方法，执行不同的逻辑，提高代码复用性。</p>
+<h4 id="OOP语言更加人性化、更高级智能"><a href="#OOP语言更加人性化、更高级智能" class="headerlink" title="OOP语言更加人性化、更高级智能"></a>OOP语言更加人性化、更高级智能</h4><p>面向对象时，开发者是在思考如何给业务建模、如何将真实世界映射为类或者对象，能更聚焦到业务本身，而不是思考如何和机器打交道。</p>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><ul>
+<li>Unix/Linux这些复杂系统，也是基于C语言这种面向过程的编程语言开发的，怎么看待这种现象？<ul>
+<li>操作系统是业务无关的，它更接近于底层计算机，因此更适合用面向过程的语言编写。并且和硬件打交道需要考虑到语言本身翻译成机器语言的成本和执行效率。</li>
+<li>不过操作系统虽然是面向过程的C语言实现，但是其设计逻辑是面向对象的。它用结构体同样实现了信息的封装，内核源码中也不乏继承和多态思想的体现。面向对象思想并不局限于具体语言。</li>
+</ul>
+</li>
+</ul>
+<h2 id="理论四：-哪些代码设计看似面向对象，实际是面向过程的？"><a href="#理论四：-哪些代码设计看似面向对象，实际是面向过程的？" class="headerlink" title="理论四： 哪些代码设计看似面向对象，实际是面向过程的？"></a>理论四： 哪些代码设计看似面向对象，实际是面向过程的？</h2><h3 id="滥用getter、setter方法"><a href="#滥用getter、setter方法" class="headerlink" title="滥用getter、setter方法"></a>滥用getter、setter方法</h3><p>在项目开发中，有时定义完类的属性之后，就顺手将属性的getter、setter方法都定义上。IDE或者Lombok插件会自动生成所有属性的getter、setter方法。</p>
+<p>这种方法是不推荐的，因为其违反了面向对象的封装特性，相当于将面向对象编程风格退化成了面向过程编程风格。 例如下面这段代码</p>
+<pre><code>public class ShoppingCart {
+    private int itemsCount;
+    private double totalPrice;
+    private List&lt;ShoppingCartItem&gt; items = new ArrayList&lt;&gt;();
+
+    public int getItemsCount() {
+        return this.itemsCount;
+    }
+
+    public void setItemCount(int itemsCount) {
+        this.itemsCount = itemsCount;
+    }
+
+    public double getTotalPrice() {
+        return this.totalPrice;
+    }
+
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public List&lt;ShoppingCartItem&gt; getItems() {
+        return this.items;
+    }
+
+    public void addItems(ShoppingCartItem item) {
+        items.add(item);
+        itemCount++;
+        totalPrice += item.getPrice();
+    }
+    ...
+}
+</code></pre><p>在这个代码中虽然我们将itemsCount和totalPrice定义为private，但是外部可以通过setter方法随意修改这两个属性的值。可能会导致和items属性的值不一致。暴露不该暴露的setter方法明显违反了面向对象的封装特性。数据没有任何访问权限，任何代码都可以随意修改，代码就退化成了面向过程编程风格了。</p>
+<p>对于items我们没有设置setter方法，这样的设计看起来没有任何问题，而实际上并不是。items属性的getter方法返回的是一个List容器。外部调用者在拿到这个容器后，是可以操作容器内部数据的。比如obj.getItems().clear()会清空购物车，这样也会导致类属性中三个数据不一致。</p>
+<p>正确的方法是应该专门在类中提供clear方法，并且修改getItems返回类型为Collections.undermidifiableList()。此时外部调用要修改就会抛出UnsupportedOperationException异常，避免容器中的数据被修改。（这里还存在一个问题，虽然items容器中数据不会被修改，但是容器中每个对象ShoppingCartItem的数据仍然可以修改）</p>
+<h3 id="滥用全局变量和全局方法"><a href="#滥用全局变量和全局方法" class="headerlink" title="滥用全局变量和全局方法"></a>滥用全局变量和全局方法</h3><p>面向对象编程中，常见的全局变量有单例类对象、静态成员变量、常量等，常见的全局方法有静态方法。</p>
+<ul>
+<li>单例类对象在全局代码中只有一份，相当于全局变量</li>
+<li>静态成员变量归属类上的数据，被所有实例化对象共享，也相当于一定程度上的全局变量</li>
+<li>常量是非常常见的全局变量，放到一个Constant类中</li>
+<li>静态方法一般用来操作静态变量或者外部数据。如各种Utils类，里面的方法一般都会定义成静态方法。静态方法将方法和数据分离，破坏了封装特性，是典型的面向过程风格。</li>
+</ul>
+<p>如：</p>
+<pre><code>public class Constants {
+    public static final String MYSQL_ADDR_KEY = &quot;mysql_addr&quot;;
+    ...
+}
+</code></pre><p>我们会把程序中所有用到的常量都集中放到这个Constants类中，这并不是一个很好的设计思路。</p>
+<ul>
+<li>首先会影响代码的可维护性。开发同一项目的工程师很多，在开发过程中可能都要涉及修改这个类，查找修改可能比较费时，并且会增加提交代码冲突的概率。</li>
+<li>其次，这样的设计会增加代码的编译时间。 依赖这个类的代码很多，每次修改Constants类都会导致依赖它的类重新编译。</li>
+<li>最后，这样设计会影响代码的复用性。 如果我们在另一个项目中复用本项目的一个类，该类又依赖Constants类，即使只依赖其中的一部分我们仍然需要将整个Constants类也一起并入。引入许多无关的常量到新项目中。</li>
+</ul>
+<p>如何改进呢？</p>
+<ul>
+<li>将Constants类拆解为功能更加单一的多个类</li>
+<li>另一种更好的思路是，并不单独地设计Constants常量类，而是哪个类用到了某个常量，就把这个常量定义到这个类中，提高了类设计的内聚性和代码的复用性</li>
+</ul>
+<p>对于Utils类，它的出现主要是解决了多个类需要用到一块相同的功能逻辑，为了避免代码重复。通常为了复用会通过继承特性，将相同的属性和方法提取出来，定义到父类中，子类复用父类中的属性和方法。但是有时候从业务含义上，这些类并不一定具有继承关系，仅仅为了代码复用生硬地抽象一个父类，会影响代码可读性。所以只包含静态方法Utils类就出现了，它实现了公用的方法但是不需要共享任何数据，因此不需要定义任何属性。同时也要注意不要实现大而全的Utils类，最好细化一下。</p>
+<h3 id="定义数据和方法分离的类"><a href="#定义数据和方法分离的类" class="headerlink" title="定义数据和方法分离的类"></a>定义数据和方法分离的类</h3><p>传统的MVC分为Model层、Controller层、View层，在做前后端分离之后，三层结构在后端开发时会稍微有些调整，被分为Controller层、Service层、Repository层。Controller层负责暴露接口给前端调用，Service层负责核心业务逻辑，Repository层负责数据读写。在每一层中我们又会定义相应的VO（ViewObject）、BO（BusinessObject）、Entity。一般情况下VO、BO、Entity只会定义数据，不会定义方法，所有操作这些数据的业务逻辑都定义在对应的Controller类、Service类、Repository类中。这就是典型的面向过程的编程风格。</p>
+<p>实际上这种开发模式叫做基于贫血模型的开发模式，也就是我们现在非常常用的一种Web项目开发模式。</p>
+<h3 id="面向对象编程中，为什么容易写出面向过程风格的代码？"><a href="#面向对象编程中，为什么容易写出面向过程风格的代码？" class="headerlink" title="面向对象编程中，为什么容易写出面向过程风格的代码？"></a>面向对象编程中，为什么容易写出面向过程风格的代码？</h3><p>主要是面向过程符合人的流程化思维方式。面向对象则是一种自底向上的思考方式，不是先去思考执行流程来分解任务，而是将任务翻译成一个一个的小模块，设计类之间的交互，最后按照流程将类组装起来完成整个任务。这种思考路径比较适合复杂程序开发，不是特别符合人类的思考习惯。</p>
+<p>除此之外，面向对象中类的设计挺需要技巧，需要一定设计经验，要去思考如何封装合适的数据和方法到一个类里，如何设计类之间的关系，类之间的交互等诸多问题。</p>
+<p>不管使用面向过程还是面向对象，最终目的都是写出易维护、易读、易复用、易扩展的高质量代码。只要我们能避免面向过程编程风格的一些弊端，控制好它的副作用，在掌控范围内为我们所用，就大可不用避讳在面向对象编程中写面向过程风格的代码。</p>
+<h2 id="理论五：-接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？"><a href="#理论五：-接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？" class="headerlink" title="理论五： 接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？"></a>理论五： 接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？</h2><h3 id="什么是抽象类和接口？区别在哪里？"><a href="#什么是抽象类和接口？区别在哪里？" class="headerlink" title="什么是抽象类和接口？区别在哪里？"></a>什么是抽象类和接口？区别在哪里？</h3><p>抽象类</p>
+<ul>
+<li>不允许被实例化，只能被继承。</li>
+<li>抽象类可以包含属性和方法。方法既可以包含代码实现，也可以不包含代码实现。不包含代码实现的方法叫做抽象方法。</li>
+<li>子类继承抽象类，必须实现抽象类中的所有抽象方法。</li>
+</ul>
+<p>接口</p>
+<ul>
+<li>接口不能包含属性（即成员变量）</li>
+<li>接口只能声明方法，方法不能包含代码实现</li>
+<li>类实现接口的时候，必须实现接口中声明的所有方法</li>
+</ul>
+<p>抽象类实际上就是类，只不过是一种不能被实例化的特殊类，只能被子类继承，is-a的关系。接口表示has-a的关系，表示具有某些功能。对于接口，有一个更加形象的叫法，就是协议。</p>
+<h3 id="抽象类和接口能解决什么编程问题？"><a href="#抽象类和接口能解决什么编程问题？" class="headerlink" title="抽象类和接口能解决什么编程问题？"></a>抽象类和接口能解决什么编程问题？</h3><p>抽象类是为代码复用而生的，多个子类可以继承抽象类中定义的属性和方法，避免在子类中重复编写相同的代码。普通的类继承虽然也可以解决代码复用问题，但是无法使用多态特性，会增加类被无用的风险。虽然也可以通过设置私有的构造函数的方式来解决，不过显然没有抽象类优雅。</p>
+<p>接口更侧重于解耦，是对行为的一种抽象，相当于一组协议或者契约，可以类比API接口。调用者只需要关注抽象的接口，不需要了解具体的实现，具体的实现代码对调用者透明。接口实现了约定和实现相分离，可以降低代码间的耦合性，提高代码的可扩展性。</p>
+<h3 id="如何模拟抽象类和接口两个语法概念？"><a href="#如何模拟抽象类和接口两个语法概念？" class="headerlink" title="如何模拟抽象类和接口两个语法概念？"></a>如何模拟抽象类和接口两个语法概念？</h3><p>我们可以通过抽象类来模拟接口。首先接口的定义：接口中没有成员变量，只有方法声明，没有方法实现，实现接口的类必须实现接口中的所有方法。</p>
+<pre><code>class Strategy {
+    public:
+        ~Strategy();
+        virtual void algorithm() = 0;
+    protected:
+        Strategy();
+}
+</code></pre><p>上述C++代码中用抽象类模拟了一个接口，类中没有定义任何属性，并且所有方法都是virtual类型。</p>
+<p>除了用抽象类来模拟接口，我们还可以用普通类来模拟接口。类中虽然包含方法不符合接口定义，但是我们可以让类中的方法抛出异常来模拟不包含实现的接口，并且能强迫子类在继承这个父类的时候都去主动实现父类的方法，否则就会在运行时抛出异常。为了避免该类被实例化，我们将类的构造函数声明为protected方法就可以了。</p>
+<pre><code>public class MockInterface {
+    protected MockInterface() {}
+    public void funcA() {
+        throw new MethodUnSupportedException();
+    }
+} 
+</code></pre><h3 id="如何决定该用抽象类还是接口？"><a href="#如何决定该用抽象类还是接口？" class="headerlink" title="如何决定该用抽象类还是接口？"></a>如何决定该用抽象类还是接口？</h3><p>要表示一种is-a的关系，并且是为了解决代码复用的问题，就用抽象类。</p>
+<p>要表示一种has-a的关系，并且是为了解决抽象而非代码复用的问题，就可以使用接口。</p>
+<p>抽象类是一种自下而上的设计思路，现有子类的代码重复，然后再抽象成上层的父类。而接口正好相反，它是一种自上而下的设计思路，在编程的时候一般是先设计接口再去考虑具体的实现。</p>
+<h2 id="理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？"><a href="#理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？" class="headerlink" title="理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？"></a>理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？</h2><p>Program to an interface, not an implematation。这句话最早出自1994年GoF的设计模式这本书，是一种比较抽象泛化的思想。此处的interface不要局限于编程语言中的接口。</p>
+<p>如果落实到具体代码，这条原则中的接口可以理解为编程语言中的接口或者抽象类。</p>
+<p>应用这条原则可以有效地提高代码质量，实现接口和实现相分离，封装不稳定的实现，暴露稳定的接口。当实现发生变化的时候，上游系统的代码基本上不需要做改动，以此来降低耦合性，提高扩展性。</p>
+<ul>
+<li>函数的命名不能暴露任何实现细节</li>
+<li>封装具体的实现细节</li>
+<li>为实现类定义抽象的接口，具体的实现类都依赖统一的接口定义，遵从一致的上传功能协议。使用者依赖接口，而不是具体的实现类来编程。</li>
+</ul>
+<p>总之，我们在做软件开发的时候，一定要有抽象意识、封装意识、接口意识。在定义接口的时候，不要暴露任何实现细节，接口的定义只表明做什么，而不是怎么做。而且在设计接口的时候，我们要多思考一下，这样的接口设计是否足够通用，能否做到在替换具体的接口实现的时候，不需要任何接口定义的改动。</p>
+<h3 id="是否要为每个类定义接口？"><a href="#是否要为每个类定义接口？" class="headerlink" title="是否要为每个类定义接口？"></a>是否要为每个类定义接口？</h3><p>如果业务场景中某个功能只有一种实现方式，未来也不可能被其他实现方式替换，那么我们就没有必要为其设计接口，也没有必要基于接口编程，直接使用实现类就可以。</p>
+<h2 id="理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？"><a href="#理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？" class="headerlink" title="理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？"></a>理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？</h2><h3 id="为什么不推荐用继承？"><a href="#为什么不推荐用继承？" class="headerlink" title="为什么不推荐用继承？"></a>为什么不推荐用继承？</h3><p>比如，我们设计一个关于鸟的类AbstractBird，所有细分的鸟都继承这个抽象类。 大部分鸟都可以飞，我们可不可以在抽象类中定义fly()方法呢？答案是不行，因为还有特例，如果我们对所有不会飞的鸟都重写fly方法并且抛出异常也可行，但是不够优雅。一方面增加了代码量另一方面也违背的Least Knowledge Principle（最小知识原则/迪米特法则），暴露了不该暴露的接口给外部，增加了类使用过程中被误用的概率。</p>
+<p>此时再通过抽象类派生出两个细分的类，AbstractFlyableBird/AbstractUnFlyableBird()，这样继承关系就变成3层。如果此时再关注鸟会不会叫等等特点，继承关系就会越来越复杂，导致代码可读性变差。也破坏了类的封装特性，将父类的实现细节暴露给子类，子类的实现依赖父类的实现，两者高度耦合，一旦父类代码修改就会影响所有子类的逻辑。</p>
+<h3 id="组合相比继承有哪些优势？"><a href="#组合相比继承有哪些优势？" class="headerlink" title="组合相比继承有哪些优势？"></a>组合相比继承有哪些优势？</h3><p>我们可以利用组合Composition、接口、委托delegation三个技术手段，一起解决刚刚继承存在的问题。</p>
+<p>接口表示某种行为特性，针对会飞特性我们可以定义Flyable接口，只让会飞的鸟去实现这个接口，对于会叫、会下蛋这些行为特性，类似定义Tweetable接口、EggLayable接口。不过接口只声明方法，不定义实现，也就是所有会下蛋的类都要实现一遍LayEgg()方法，会导致代码重复的问题。</p>
+<p>我们可以针对三个接口再定义三个实现类，通过组合和委托技术来消除代码重复。</p>
+<pre><code>public interface Flyable() {
+    void fly();
+}
+public class FlyAbility implements Flyable {
+    @Override
+    public void fly() {...}
+}
+...
+
+public class Ostrich implements Tweetable, Egglayable {
+    private TweetAbility tweetAbility = new TweetAbility();
+    private EggLayAbility eggLayAbility = new EggLayAbility();
+
+    @Overide 
+    public void tweet() {
+        tweetAbility.tweet();
+    }
+
+    @Overide
+    public void layEgg() {
+        eggLayAbility.layEgg();
+    }
+}
+</code></pre><h3 id="如何判断该用组合还是继承？"><a href="#如何判断该用组合还是继承？" class="headerlink" title="如何判断该用组合还是继承？"></a>如何判断该用组合还是继承？</h3><p>如果类之间的继承结构稳定，继承层次比较浅（最多两层），继承关系不复杂我们就可以大胆使用继承。反之则尽量使用组合。</p>
+<p>有一些设计模式会固定使用继承或组合：</p>
+<ul>
+<li>装饰者模式decorator pattern、策略模式Strategy pattern、组合模式Composite pattern都使用了组合关系</li>
+<li>模版模式template pattern则使用了继承关系</li>
+</ul>
+<p>还有一些特殊场景必须使用继承。如果不能改变函数的入参类型，而入参又非接口，为了支持多态只能采用继承来实现。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/设计模式之美/" rel="tag">#设计模式之美</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/08/10/ES-tech_md/" rel="next" title="ES相关知识">
+                <i class="fa fa-chevron-left"></i> ES相关知识
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">31</span>
+              <span class="site-state-item-name">Artikel</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">Tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？"><span class="nav-number">1.</span> <span class="nav-text">理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#封装-Encapsulation"><span class="nav-number">1.1.</span> <span class="nav-text">封装 Encapsulation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#抽象-Abstraction"><span class="nav-number">1.2.</span> <span class="nav-text">抽象 Abstraction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#继承-Inheritance"><span class="nav-number">1.3.</span> <span class="nav-text">继承 Inheritance</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多态-Polymorphism"><span class="nav-number">1.4.</span> <span class="nav-text">多态 Polymorphism</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#思考题"><span class="nav-number">1.5.</span> <span class="nav-text">思考题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？"><span class="nav-number">2.</span> <span class="nav-text">理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是面向过程编程与面向过程编程语言？"><span class="nav-number">2.1.</span> <span class="nav-text">什么是面向过程编程与面向过程编程语言？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#面向对象编程相比面向过程编程有哪些优势？"><span class="nav-number">2.2.</span> <span class="nav-text">面向对象编程相比面向过程编程有哪些优势？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#OOP更加能够应对大规模复杂程序的开发"><span class="nav-number">2.2.1.</span> <span class="nav-text">OOP更加能够应对大规模复杂程序的开发</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#OOP代码更易复用、易扩展、易维护"><span class="nav-number">2.2.2.</span> <span class="nav-text">OOP代码更易复用、易扩展、易维护</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#OOP语言更加人性化、更高级智能"><span class="nav-number">2.2.3.</span> <span class="nav-text">OOP语言更加人性化、更高级智能</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#思考"><span class="nav-number">2.3.</span> <span class="nav-text">思考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理论四：-哪些代码设计看似面向对象，实际是面向过程的？"><span class="nav-number">3.</span> <span class="nav-text">理论四： 哪些代码设计看似面向对象，实际是面向过程的？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#滥用getter、setter方法"><span class="nav-number">3.1.</span> <span class="nav-text">滥用getter、setter方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#滥用全局变量和全局方法"><span class="nav-number">3.2.</span> <span class="nav-text">滥用全局变量和全局方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定义数据和方法分离的类"><span class="nav-number">3.3.</span> <span class="nav-text">定义数据和方法分离的类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#面向对象编程中，为什么容易写出面向过程风格的代码？"><span class="nav-number">3.4.</span> <span class="nav-text">面向对象编程中，为什么容易写出面向过程风格的代码？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理论五：-接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？"><span class="nav-number">4.</span> <span class="nav-text">理论五： 接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是抽象类和接口？区别在哪里？"><span class="nav-number">4.1.</span> <span class="nav-text">什么是抽象类和接口？区别在哪里？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#抽象类和接口能解决什么编程问题？"><span class="nav-number">4.2.</span> <span class="nav-text">抽象类和接口能解决什么编程问题？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何模拟抽象类和接口两个语法概念？"><span class="nav-number">4.3.</span> <span class="nav-text">如何模拟抽象类和接口两个语法概念？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何决定该用抽象类还是接口？"><span class="nav-number">4.4.</span> <span class="nav-text">如何决定该用抽象类还是接口？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？"><span class="nav-number">5.</span> <span class="nav-text">理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#是否要为每个类定义接口？"><span class="nav-number">5.1.</span> <span class="nav-text">是否要为每个类定义接口？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？"><span class="nav-number">6.</span> <span class="nav-text">理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么不推荐用继承？"><span class="nav-number">6.1.</span> <span class="nav-text">为什么不推荐用继承？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#组合相比继承有哪些优势？"><span class="nav-number">6.2.</span> <span class="nav-text">组合相比继承有哪些优势？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何判断该用组合还是继承？"><span class="nav-number">6.3.</span> <span class="nav-text">如何判断该用组合还是继承？</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

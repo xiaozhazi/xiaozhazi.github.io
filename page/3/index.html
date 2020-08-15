@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -235,6 +235,144 @@
             
               
                 
+                <a class="post-title-link" href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2016-11-27T15:46:44+08:00" content="2016-11-27">
+              2016-11-27
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="6、Advice-for-Applying-Machine-Learning"><a href="#6、Advice-for-Applying-Machine-Learning" class="headerlink" title="6、Advice for Applying Machine Learning"></a>6、Advice for Applying Machine Learning</h2><h3 id="6-1、Evaluating-a-learning-Algorithm"><a href="#6-1、Evaluating-a-learning-Algorithm" class="headerlink" title="6.1、Evaluating a learning Algorithm"></a>6.1、Evaluating a learning Algorithm</h3><h4 id="6-1-1、Deciding-What-to-Try-Next"><a href="#6-1-1、Deciding-What-to-Try-Next" class="headerlink" title="6.1.1、Deciding What to Try Next"></a>6.1.1、Deciding What to Try Next</h4><p>Which of the following statements about diagnostics are true? (BCD)</p>
+<p>A. It’s hard to tell what will work to improve a learning algorithm, so the best approach is to go with gut feeling and just see what works.</p>
+<p>B. Diagnostics can give guidance as to what might be more fruitful things to try to improve a learning algorithm.</p>
+<p>C. Diagnostics can be time-consuming to implement and try, but they can still be a very good use of your time.</p>
+<p>D. A diagnostic can sometimes rule out certain courses of action(changes to your learning algorithm) as being unlikely to improve its performance signigicantly.</p>
+<h4 id="6-1-2、Evaluating-a-Hypothesis"><a href="#6-1-2、Evaluating-a-Hypothesis" class="headerlink" title="6.1.2、Evaluating a Hypothesis"></a>6.1.2、Evaluating a Hypothesis</h4><p>如何评估假设函数，后面可以以此为基础讨论如何避免过拟合和欠拟合的问题。</p>
+<p>Suppose an implementation of linear regression(without reguarization) is badly overfitting the training set. In this case, we would expect:</p>
+<p>The training error to be low, and the test error to be high.</p>
+<p>数据划分为训练集和测试集，一般比例为7:3,random select。如果数据不是随机的，最好自己随机排序或打乱顺序后再选取70%.</p>
+<p>Misclassification error(0/1 misclassification error)</p>
+<h4 id="6-1-3、Model-Selection-and-Training-Validation-Test-Sets"><a href="#6-1-3、Model-Selection-and-Training-Validation-Test-Sets" class="headerlink" title="6.1.3、Model Selection and Training/Validation/Test Sets"></a>6.1.3、Model Selection and Training/Validation/Test Sets</h4><p>如何确定对于某组数据，最合适的多项式次数是几次？如何选择学习算法中的正规化参数lamda？</p>
+<p>模型选择问题。（泛化误差）</p>
+<p>我们将数据集分为三部分，training set(60%), cross validation set(20%), test set(20%).</p>
+<p>Training error</p>
+<p>cross validation error</p>
+<p>test error</p>
+<p>我们使用交叉验证集来选择模型，看这些假设在交叉验证集表现如何。选择最小交叉验证集误差的模型。</p>
+<p>Consider the model selection procedure where we choose the degree of polynomial using a cross validation set. For the final model, we might generally expect Jcv to be lower than Jtest because:</p>
+<p>An extra parameter(d,the degree of the polynomial) has been fit to the cross validation set.</p>
+<h3 id="6-2、Bias-vs-Variance-偏差和方差"><a href="#6-2、Bias-vs-Variance-偏差和方差" class="headerlink" title="6.2、Bias vs. Variance(偏差和方差)"></a>6.2、Bias vs. Variance(偏差和方差)</h3><h4 id="6-2-1、Diagnosing-Bias-vs-Variance"><a href="#6-2-1、Diagnosing-Bias-vs-Variance" class="headerlink" title="6.2.1、Diagnosing Bias vs. Variance"></a>6.2.1、Diagnosing Bias vs. Variance</h4><p>High Bias Overfitting</p>
+<p>High Variance Underfitting</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/6_1.png" alt="6_1"></p>
+<h4 id="6-2-2、Regularization-and-Bias-Variance"><a href="#6-2-2、Regularization-and-Bias-Variance" class="headerlink" title="6.2.2、Regularization and Bias/Variance"></a>6.2.2、Regularization and Bias/Variance</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_2.png" alt="6_2"></p>
+<h4 id="6-2-3、Learning-Curves"><a href="#6-2-3、Learning-Curves" class="headerlink" title="6.2.3、Learning Curves"></a>6.2.3、Learning Curves</h4><p>判断一个假设是否存在偏差方差问题</p>
+<pre><code>High Bias
+If a learning algorithm is suffering from high bias, getting more training data will not help much.
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_3.png" alt="6_3"><br>因此知道自己的假设是否存在高偏差/方差问题，非常有用。</p>
+<pre><code>High variance
+If a learning algorithm is suffering from high variance, getting more training data is likely to help.
+</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_4.png" alt="6_4"></p>
+<h4 id="6-2-4、Deciding-What-to-Do-Next-Revisited"><a href="#6-2-4、Deciding-What-to-Do-Next-Revisited" class="headerlink" title="6.2.4、Deciding What to Do Next Revisited"></a>6.2.4、Deciding What to Do Next Revisited</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_5.png" alt="6_5"></p>
+<h3 id="6-3、Machine-Learning-system-design"><a href="#6-3、Machine-Learning-system-design" class="headerlink" title="6.3、Machine Learning system design"></a>6.3、Machine Learning system design</h3><h4 id="6-3-1、Priorityzing-what-to-work-on"><a href="#6-3-1、Priorityzing-what-to-work-on" class="headerlink" title="6.3.1、Priorityzing what to work on"></a>6.3.1、Priorityzing what to work on</h4><h4 id="6-3-2、Error-Analysis"><a href="#6-3-2、Error-Analysis" class="headerlink" title="6.3.2、Error Analysis"></a>6.3.2、Error Analysis</h4><p>建议的方法：</p>
+<p>1、尽快的实现一个最基本的算法，然后在交叉验证数据集上进行验证；</p>
+<p>2、画出learning curves，看是否更多的数据、更多的features能提升正确性；</p>
+<p>3、Error Analysis：主要分析那些算法预测出错的例子，看能否发现一些系统趋势。</p>
+<pre><code>Error analysis may not be helpful for deciding is this is likely to improve performance, only solution is to try it and say if it works.
+</code></pre><h4 id="6-3-3-Error-Metrics-for-Skewed-Classes"><a href="#6-3-3-Error-Metrics-for-Skewed-Classes" class="headerlink" title="6.3.3 Error Metrics for Skewed Classes"></a>6.3.3 Error Metrics for Skewed Classes</h4><p>不能仅仅依靠错误率来判断算法的性能，还需要利用Precision 和 Recall<br><img src="http://ofacak8l3.bkt.clouddn.com/6_6.png" alt="6_6"></p>
+<h4 id="6-3-4-Trading-off-precision-and-recall"><a href="#6-3-4-Trading-off-precision-and-recall" class="headerlink" title="6.3.4 Trading off precision and recall"></a>6.3.4 Trading off precision and recall</h4><p>我们可以通过计算F1来自动选择性能较高的算法。</p>
+<pre><code>F1 = 2*(P*R)/(P+R);
+</code></pre><h4 id="6-3-5-Data-for-Machine-Learning"><a href="#6-3-5-Data-for-Machine-Learning" class="headerlink" title="6.3.5 Data for Machine Learning"></a>6.3.5 Data for Machine Learning</h4><p>Banko anf Brill 在2001年提出了一个观点：</p>
+<pre><code>It&apos;s not who has the best algorithm that wins, 
+It&apos;s who has the most data.
+</code></pre><p>这个观点有时候不一定正确：</p>
+<p>当feature很少不足以预测时（例，预测房价时仅知道尺寸），此时再多的数据可能也无法提升算法的性能； </p>
+<p>当算法参数很多时（例，逻辑回归和线性回归有很多的feature，或者神经网络有很多的隐藏单元），更大的测试集可以尽可能的减少过拟合。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第五周
                 </a>
@@ -248,7 +386,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-24T15:10:34+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -349,7 +487,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-24T14:14:40+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -518,7 +656,7 @@ struct list_head cg_list;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-13T15:48:54+08:00" content="2016-11-13">
               2016-11-13
             </time>
@@ -624,7 +762,7 @@ output层
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-07T10:31:30+08:00" content="2016-11-07">
               2016-11-07
             </time>
@@ -802,7 +940,7 @@ end
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-01T15:30:52+08:00" content="2016-11-01">
               2016-11-01
             </time>
@@ -922,7 +1060,7 @@ but fail to generalize to new examples.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-10-31T10:50:02+08:00" content="2016-10-31">
               2016-10-31
             </time>
@@ -1080,7 +1218,7 @@ end
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-10-24T14:00:42+08:00" content="2016-10-24">
               2016-10-24
             </time>
@@ -1220,7 +1358,7 @@ Normal Equation
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-10-18T10:44:48+08:00" content="2016-10-18">
               2016-10-18
             </time>
@@ -1333,7 +1471,7 @@ take smaller steps. So, no need to decrease a over time.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-09-05T16:41:16+08:00" content="2016-09-05">
               2016-09-05
             </time>
@@ -1430,113 +1568,11 @@ hexo d -g
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/09/04/hello-world/" itemprop="url">
-                  Hello World
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2016-09-04T16:41:16+08:00" content="2016-09-04">
-              2016-09-04
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1577,8 +1613,8 @@ hexo d -g
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">30</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-count">31</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -1588,7 +1624,7 @@ hexo d -g
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">9</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -1632,7 +1668,7 @@ hexo d -g
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -235,6 +235,385 @@
             
               
                 
+                <a class="post-title-link" href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" itemprop="url">
+                  《Linux 性能优化实战》第二周--CPU性能篇(下)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-06-03T22:57:55+08:00" content="2020-06-03">
+              2020-06-03
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>这两周主要围绕CPU性能优化相关基础知识进行学习。对于CPU性能问题的处理，首先我们要了解CPU相关性能指标。</p>
+<h3 id="CPU性能指标"><a href="#CPU性能指标" class="headerlink" title="CPU性能指标"></a>CPU性能指标</h3><p><strong>平均负载,上下文切换,CPU使用率,CPU缓存命中率</strong>等.</p>
+<p><strong>平均负载</strong>是指系统处于可运行状态和不可中断状态的平均进程数（一般平均负载高于CPU数量70%的时候需要注意排查）。 平均负载升高可能是<strong>CPU密集进程</strong>导致,也可能是<strong>I/O</strong>或<strong>进程过多超负载</strong>导致. 可以用<strong>mpstat</strong>和<strong>pidstat</strong>辅助分析.</p>
+<pre><code>uptime #查看最近1/5/15分钟平均负载
+watch -d uptime #实时查看变化情况
+mpstat -P ALL 5 #查看CPU使用率,间隔5秒输出
+pidstat -u 5 1  #查看进程CPU使用率/IOwait
+</code></pre><p><strong>上下文切换</strong>,主要分为进程上下文切换,线程上下文切换以及中断上下文切换（可以利用多线程替代多进程来提升性能）。可以通过vmstat查看系统总体上下文切换和中断次数. pidstat -w 查看每个进程上下文切换次数, -wt输出线程指标.</p>
+<pre><code>watch -d cat /proc/interrupts #查看中断变化具体来源
+</code></pre><ul>
+<li>系统调用涉及内核态和用户态的切换因此实际发生两次CPU上下文切换,不过不涉及虚拟内存等资源也不切换进程. </li>
+<li>进程的切换都在内核态,保存内核状态和CPU寄存器之前,先保存进程的虚拟内存,栈等 </li>
+<li>同一进程内的线程切换只需要保存线程的私有数据,寄存器等.</li>
+<li>中断上下文切换并不涉及进程的用户态,比进程优先级高</li>
+</ul>
+<p><strong>CPU使用率</strong>过高时一般都是结合top/pidstat/perf来进行分析定位. 如果定位不到CPU使用率高的进程,可以跟踪top查看是否存在短时进程. 调用pstree分析父进程. </p>
+<pre><code>perf record -g
+perf report #查看性能报告找到瓶颈
+
+execsnoop #监控短时进程
+</code></pre><p><strong>iowait</strong>升高时,可以用dstat观察CPU和I/O的使用情况. </p>
+<pre><code>pidstat -d -p XXX n m  #-d输出I/O情况,指定线程号间隔n秒输出m组数据
+strace -p XXX #跟踪系统调用
+如果定位进程状态为Z,通过perf report查看调用栈
+</code></pre><p><strong>僵尸进程</strong>, 通过pstree查看父进程,在父进程中进行解决(子进程创建和清理的地方)</p>
+<pre><code>pstree -aps XXX
+</code></pre><p><strong>中断处理</strong></p>
+<pre><code>/proc/softirqs #查看软中断
+/proc/interrupts #查看硬中断
+</code></pre><p><strong>网络监测工具</strong></p>
+<pre><code>sar -n DEV 1 #网络收发报告, 间隔1秒输出一组数据
+tcpdump -i eth0 -n tcp port 80 #指定网卡eth0,tcp协议,端口号80
+</code></pre><h3 id="CPU性能分析套路"><a href="#CPU性能分析套路" class="headerlink" title="CPU性能分析套路"></a>CPU性能分析套路</h3><p>通过几组实验分析我们发现对于CPU性能，常用的瓶颈问题有一些套路可以定位问题所在。虽然CPU性能指标很多，但是都不是孤立存在的，很多指标间都存在一定的关联。 再遇到CPU性能问题时我们可以先运行几个支持指标较多的工具(top/vmstat/pidstat)来缩小排查范围，查看是否是因为某个进程导致，找出导致性能问题的进程之后，再用进程分析工具来分析进程的行为。比如strace分析系统调用情况，或者perf分析调用链中各级函数的执行情况。 </p>
+<h3 id="CPU性能优化方案"><a href="#CPU性能优化方案" class="headerlink" title="CPU性能优化方案"></a>CPU性能优化方案</h3><p>定位到问题所在之后并不是要立即着手进行优化。在需要优化之前,要先考虑优化到底能提升多少性能(应用程序和系统资源多维度评估),选取哪些性能问题进行优化以及优化方案的取舍. 优化往往会带来复杂度的提升,所以要做好性能和复杂度的平衡.</p>
+<p><strong>CPU优化的一些常用方法</strong></p>
+<ul>
+<li>应用程序优化<ul>
+<li>编译器优化</li>
+<li>算法优化</li>
+<li>异步处理</li>
+<li>多线程代替多进程</li>
+<li>善用缓存</li>
+</ul>
+</li>
+<li>系统优化<ul>
+<li>CPU绑定</li>
+<li>CPU独占</li>
+<li>优先级调整</li>
+<li>为进程设置资源限制</li>
+<li>NUMA优化</li>
+<li>中断负载均衡</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-9-怎么理解Linux软中断"><a href="#Lesson-9-怎么理解Linux软中断" class="headerlink" title="Lesson 9 怎么理解Linux软中断"></a>Lesson 9 怎么理解Linux软中断</h2><p>本周继续学习CPU性能相关知识点,<a href="http://xiaozhazi.github.io/2020/05/31/Linux性能优化实战第一周--CPU性能篇%28上%29">Linux 性能优化实战第一周</a>第8课提到不可中断状态一般都是短时进程,主要是系统的一种保护机制,保证硬件的交互过程不被意外打断. 但是如果进程长时间处于不可中断状态就需要注意是否存在磁盘I/O问题.</p>
+<p>除了iowait,软中断softirq导致CPU使用率增加的场景也比较常见.</p>
+<p>为了解决中断处理程序执行时间过长和中断丢失的问题,Linux将中断过程分为两阶段:</p>
+<ul>
+<li><strong>快速处理中断</strong> (硬中断, 会打断CPU正在执行的任务)</li>
+<li><strong>延迟处理上半部未完成的工作, 通常以内核线程的方式运行</strong> (软中断,内核线程执行)</li>
+</ul>
+<p>以网卡接收数据包为例: 网卡接收到数据包之后,先通过硬中断通知内核新数据到达.此时内核调用中断处理程序来响应. 第一步快速处理中断,将网卡数据读到内存中,然后更新硬件寄存器的状态(表示数据已经读完); 第二步发送软中断信号,内核线程从内存中找到网络数据,按照网络协议栈对数据逐层解析和处理,直到将其发送给应用程序.</p>
+<p>软中断不仅包括上述硬件设备中断处理程序的第二阶段,还包含一些内核自定义的事件. 如内核调度,RCU锁等.</p>
+<pre><code>~ cat /proc/softirqs   #查看软中断的运行情况　10种不同软中断类型
+                CPU0       CPU1       CPU2       CPU3       
+      HI:     940848    8695970     929219     958387
+   TIMER:    6032528    8523080    6185804    7882723
+  NET_TX:         13         18         10      21655
+  NET_RX:      81303      81483      74123    5497701
+   BLOCK:        112        109    1961852         73
+IRQ_POLL:          0          0          0          0
+ TASKLET:         40        152      69233      41556
+   SCHED:    5262219    6279886    5054733    5849054
+ HRTIMER:          0          0          0          0
+     RCU:    4615615    5897520    4693046    5749548
+
+➜  ~ ps -aux | grep softirq #一个CPU对应一个软中断内核线程
+  root         7  0.0  0.0      0     0 ?        S    Jun01   0:00 [ksoftirqd/0]
+  root        16  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/1]
+  root        22  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/2]
+  root        28  0.0  0.0      0     0 ?        S    Jun01   0:02 [ksoftirqd/3]
+</code></pre><hr>
+<h2 id="Lesson-10-系统的软中断CPU使用率高，怎么解决"><a href="#Lesson-10-系统的软中断CPU使用率高，怎么解决" class="headerlink" title="Lesson 10 系统的软中断CPU使用率高，怎么解决"></a>Lesson 10 系统的软中断CPU使用率高，怎么解决</h2><h3 id="所需工具"><a href="#所需工具" class="headerlink" title="所需工具"></a>所需工具</h3><table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sar</td>
+<td>系统报告工具,实时查看当前系统活动,配置保存和报告历史统计</td>
+</tr>
+<tr>
+<td>hping3</td>
+<td>构造TCP/IP包, 对系统进行安全审计,防火墙测试等</td>
+</tr>
+<tr>
+<td>tcpdump</td>
+<td>网络抓包工具, 用来分析各种网络问题</td>
+</tr>
+</tbody>
+</table>
+<h3 id="实验与分析"><a href="#实验与分析" class="headerlink" title="实验与分析"></a>实验与分析</h3><pre><code>sudo docker run -itd --name=nginx -p 81:80 nginx  #启动nginx服务
+curl http://localhost:81  #检查nginx服务是否正常运行
+
+hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
+</code></pre><p>本机测试中并没有监测到系统响应变慢,改为1微秒时数据包全丢, 10微秒时丢包率为80%.</p>
+<p>top查看ksoftirqd软中断进程CPU使用率也不高.</p>
+<p>继续执行后续指令</p>
+<pre><code>watch -d cat /proc/softirqs #观察高亮变化
+</code></pre><p>此时发现TIMER/NET_RX/SCHED/RCU都在不停变化,且NET_RX变化速率较快,几K级别的在增加. 其它几种类型的软中断是保证linux调度,时钟,临界区保护等正常工作必须,有变化是正常的. </p>
+<p>因此我们着手分析网络接收的软中断,选取sar工具查看网络收发情况</p>
+<pre><code>sar -n DEV 1  #每隔1秒输出网络收发报告
+
+07:01:11 PM     IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s rxcmp/s   txcmp/s  rxmcst/s   %ifutil
+07:01:12 PM veth3a2b4de      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM        lo  20895.00  20895.00    843.42    843.42      0.00      0.00      0.00      0.00
+07:01:12 PM   docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM enp0s31f6      6.00      0.00      0.85      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM vethedb691a      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM br-1665f3682889      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+</code></pre><ul>
+<li>rxpck/s txpck/s　表示每秒接收/发送的网络帧数　　PPS</li>
+<li>rxkB/s  txkB/s　　表示每秒接收/发送的千字节数　BPS　</li>
+</ul>
+<p>看到网卡lo每秒接收的数据明显较多，　843*1024/20895 =41　说明每个网络帧只有41字节，小包问题．</p>
+<p>进一步通过tcpdump分析这是什么样的网络帧</p>
+<pre><code>tcpdump -i lo -n tcp port 81
+
+18:20:43.273056 IP 127.0.0.1.12537 &gt; 127.0.0.1.81: Flags [R], seq 393134060, win 0, length 0
+18:20:43.273184 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [S], seq 1240632262, win 512, length 0
+18:20:43.273193 IP 127.0.0.1.81 &gt; 127.0.0.1.12538: Flags [S.], seq 3698133257, ack 1240632263, win 65495, options [mss 65495], length 0
+18:20:43.273198 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [R], seq 1240632263, win 0, length 0
+</code></pre><p>可以看出网络帧是发送到nginx端口，Flags [S]表示这是一个ＳＹＮ包，　可以锁定是SYN FLOOD问题，最简单的解决方法就是防火墙中封锁该来源ＩＰ．</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>如果碰到软中断线程CPU使用率高的情况下, 可以借助sar和tcpdump等工具进一步分析来源.</p>
+<hr>
+<h2 id="Lesson-11-套路-如何迅速分析出系统CPU的瓶颈在哪里"><a href="#Lesson-11-套路-如何迅速分析出系统CPU的瓶颈在哪里" class="headerlink" title="Lesson 11 [套路] 如何迅速分析出系统CPU的瓶颈在哪里?"></a>Lesson 11 [套路] 如何迅速分析出系统CPU的瓶颈在哪里?</h2><p>要想分析处理CPU性能问题, 首先我们需要了解CPU性能指标.</p>
+<h3 id="CPU性能指标-1"><a href="#CPU性能指标-1" class="headerlink" title="CPU性能指标"></a>CPU性能指标</h3><p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_metric.png" alt> </p>
+<ul>
+<li>CPU使用率<ul>
+<li>用户CPU使用率, 包括用户态(user)和低优先级用户态(nice). 该指标过高说明应用程序比较繁忙.</li>
+<li>系统CPU使用率, CPU在内核态运行的时间百分比(不含中断). 该指标高说明内核比较繁忙.</li>
+<li>等待I/O的CPU使用率, iowait, 该指标高说明系统与硬件设备I/O交互时间比较长.</li>
+<li>软/硬中断CPU使用率, 该指标高说明系统中发生大量中断.</li>
+<li>steal CPU / guest CPU, 表示虚拟机占用的CPU百分比.</li>
+</ul>
+</li>
+<li><p>平均负载</p>
+<p>  理想情况下平均负载等于逻辑CPU个数,表示每个CPU都被充分利用. 若大于则说明系统负载较重.</p>
+</li>
+<li><p>进程上下文切换</p>
+<p>  包括无法获取资源的自愿切换和系统强制调度时的非自愿切换. 上下文切换本身是保证Linux正常运行的一项核心功能. 过多的切换则会将原本运行进程的CPU时间消耗在寄存器,内核占及虚拟内存等数据保存和恢复上.</p>
+</li>
+<li><p>CPU缓存命中率</p>
+<p>  CPU缓存的复用情况,命中率越高性能越好. 其中L1/L2常用在单核,L3则用在多核中.</p>
+</li>
+</ul>
+<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/cache.png" alt>  </p>
+<h3 id="性能工具"><a href="#性能工具" class="headerlink" title="性能工具"></a>性能工具</h3><p>回顾之前的几个CPU性能测试场景:</p>
+<ul>
+<li>平均负载案例<ul>
+<li>先用uptime查看系统平均负载</li>
+<li>判断负载在升高后再用mpstat和pidstat分别查看每个CPU和每个进程CPU使用情况.找出导致平均负载较高的进程. </li>
+</ul>
+</li>
+<li>上下文切换案例<ul>
+<li>先用vmstat查看系统上下文切换和中断次数</li>
+<li>再用pidstat观察进程的自愿和非自愿上下文切换情况</li>
+<li>最后通过pidstat观察线程的上下文切换情况</li>
+</ul>
+</li>
+<li>进程CPU使用率高案例<ul>
+<li>先用top查看系统和进程的CPU使用情况,定位到进程</li>
+<li>再用perf top观察进程调用链,定位到具体函数</li>
+</ul>
+</li>
+<li>系统CPU使用率高案例<ul>
+<li>先用top查看系统和进程的CPU使用情况,top/pidstat都无法找到CPU使用率高的进程</li>
+<li>重新审视top输出</li>
+<li>从CPU使用率不高,但是处于Running状态的进程入手</li>
+<li>perf record/report发现短时进程导致 (execsnoop工具)</li>
+</ul>
+</li>
+<li>不可中断和僵尸进程案例<ul>
+<li>先用top观察iowait升高,发现大量不可中断和僵尸进程</li>
+<li>strace无法跟踪进程系统调用</li>
+<li>perf分析调用链发现根源来自磁盘直接I/O</li>
+</ul>
+</li>
+<li>软中断案例<ul>
+<li>top观察系统软中断CPU使用率高</li>
+<li>查看/proc/softirqs找到变化速率较快的几种软中断</li>
+<li>sar命令发现是网络小包问题</li>
+<li>tcpdump找出网络帧的类型和来源, 确定SYN FLOOD攻击导致</li>
+</ul>
+</li>
+</ul>
+<p>根据不同的性能指标来找合适的工具:<br><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_tool.png" alt> </p>
+<p>在生产环境中往往开发者没有权限安装新的工具包,只能最大化利用好系统中已经安装好的工具. 因此要了解一些主流工具能够提供哪些指标分析.</p>
+<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_tool_1.png" alt> </p>
+<p>作者给了一个直观的套路, 先运行几个支持指标较多的工具, 如top/vmstat/pidstat,根据它们的输出可以得出是哪种类型的性能问题. 定位到进程后再用strace/perf分析调用情况进一步分析. 如果是软中断导致用/proc/softirqs</p>
+<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/normal_tool.png" alt> </p>
+<hr>
+<h2 id="Lesson-12-CPU性能优化的几个思考"><a href="#Lesson-12-CPU性能优化的几个思考" class="headerlink" title="Lesson 12 CPU性能优化的几个思考"></a>Lesson 12 CPU性能优化的几个思考</h2><h3 id="性能优化方法论"><a href="#性能优化方法论" class="headerlink" title="性能优化方法论"></a>性能优化方法论</h3><p>遇到性能问题,优化前首先思考三个问题:</p>
+<ul>
+<li>首先判断优化是否有效,能提升多少性能?</li>
+<li>多种性能问题同时存在情况下,先优化哪一个?</li>
+<li>提升性能的方法往往不唯一,如何选取? 是否总选最大程度提升的那一种?</li>
+</ul>
+<h3 id="怎样评估性能优化效果"><a href="#怎样评估性能优化效果" class="headerlink" title="怎样评估性能优化效果"></a>怎样评估性能优化效果</h3><ul>
+<li>确定性能的量化指标<ul>
+<li>不要局限在单一维度,至少从应用程序和系统资源两个维度,分别选择不同的指标<ul>
+<li>应用程序: 吞吐量和请求延迟</li>
+<li>系统资源: CPU使用率</li>
+</ul>
+</li>
+<li>好的应用程序是性能优化的最终目的和结果,系统资源的使用情况是影响应用程序性能的根源.</li>
+<li>例如, web程序可以用ab等工具测试并发请求数和响应延迟,同时可以用vmstat/pidstat观察系统和进程的CPU使用率 </li>
+</ul>
+</li>
+<li>测试优化前的性能指标</li>
+<li>测试优化后的性能指标<ul>
+<li>要避免性能测试工具的干扰</li>
+<li>避免外部环境的变化</li>
+</ul>
+</li>
+</ul>
+<h3 id="多个性能问题同时存在-如何选择"><a href="#多个性能问题同时存在-如何选择" class="headerlink" title="多个性能问题同时存在,如何选择?"></a>多个性能问题同时存在,如何选择?</h3><p><strong>并不是所有性能问题都值得优化,性能测试也存在二八法则</strong></p>
+<ul>
+<li>如果是系统资源达到的瓶颈,首先优化系统资源的使用问题.</li>
+<li>针对不同类型的指标,首先优化那些由瓶颈导致,性能指标变化幅度较大的问题.</li>
+</ul>
+<h3 id="多个优化方法-如何选择"><a href="#多个优化方法-如何选择" class="headerlink" title="多个优化方法, 如何选择?"></a>多个优化方法, 如何选择?</h3><p>在提升性能的同时也要考虑优化成本.性能优化通常会带来复杂度的提升,降低程序的可维护性. (balance)</p>
+<p>例如DPDK(Data Plane Development Kit)是一种优化网络处理速度的方法,通过绕开内核网络协议栈的方法,提升网络的处理能力. 但是它要求独占一个CPU以及一定数量的内存大页,并且以100%CPU使用率运行. 在CPU核数较少的情况下不适合.</p>
+<h3 id="CPU-优化"><a href="#CPU-优化" class="headerlink" title="CPU 优化"></a>CPU 优化</h3><ul>
+<li>应用程序优化<ul>
+<li>编译器优化: 编译阶段开启优化选项, 如gcc -O2</li>
+<li>算法优化</li>
+<li>异步处理: 避免程序因为等待某个资源而一直阻塞,提升程序的并发处理能力. (将轮询替换为事件通知)</li>
+<li>多线程代替多进程: 减少上下文切换成本</li>
+<li>善用缓存: 加快程序处理速度</li>
+</ul>
+</li>
+<li>系统优化<ul>
+<li>CPU绑定: 将进程绑定要1个/多个CPU上,提高CPU缓存命中率,减少CPU调度带来的上下文切换</li>
+<li>CPU独占: CPU亲和性机制来分配进程</li>
+<li>优先级调整:使用nice适当降低非核心应用的优先级</li>
+<li>为进程设置资源显示: cgroups设置使用上限,防止由某个应用自身问题耗尽系统资源</li>
+<li>NUMA优化: CPU尽可能访问本地内存</li>
+<li>中断负载均衡: irpbalance,将中断处理过程自动负载均衡到各个CPU上</li>
+</ul>
+</li>
+</ul>
+<h3 id="避免过早优化"><a href="#避免过早优化" class="headerlink" title="避免过早优化"></a>避免过早优化</h3><p>优化可能会带来复杂性的提升,降低可维护性.针对当前情况进行的优化可能不适应快递迭代的新需求. </p>
+<p>因此性能优化最好逐步完善,根据性能评估的结果选择最重要的性能问题进行优化.</p>
+<h2 id="Lesson-13-14-答疑-略"><a href="#Lesson-13-14-答疑-略" class="headerlink" title="Lesson 13/14 答疑 (略)"></a>Lesson 13/14 答疑 (略)</h2><h2 id="读书群内分享"><a href="#读书群内分享" class="headerlink" title="读书群内分享"></a>读书群内分享</h2><ul>
+<li><p><a href="https://blog.csdn.net/u010889616/article/details/83245695" target="_blank" rel="external">TPS QPS 系统吞吐量的区别和理解</a></p>
+<ul>
+<li>QPS (Queries Per Second)每秒查询率,一台服务器每秒能够响应的查询次数.</li>
+<li><p>TPS (Transactions Per Second)每秒事务数,软件测试的结果.</p>
+<ul>
+<li>用户请求服务器</li>
+<li>服务器内部处理</li>
+<li><p>服务器返回给客户</p>
+<p>QPS类似TPS,但是对于一个页面的访问形成一个TPS,但是一次页面请求可能包含多次对服务器的请求,可能计入多次QPS</p>
+</li>
+</ul>
+</li>
+<li><p>系统吞吐量, 包括几个重要参数:</p>
+<ul>
+<li>QPS(TPS)</li>
+<li>并发数</li>
+<li><p>响应时间</p>
+<p>QPS(TPS)=并发数/平均相应时间</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/cute/archive/2011/04/20/2022280.html" target="_blank" rel="external">深入理解Linux系统下proc文件系统内容</a></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/" itemprop="url">
                   《Linux 性能优化实战》第一周--CPU性能篇(上)
                 </a>
@@ -248,7 +627,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-05-31T22:57:55+08:00" content="2020-05-31">
               2020-05-31
             </time>
@@ -516,7 +895,7 @@ ps aux | grep &apos;/app&apos;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-06-16T22:57:55+08:00" content="2019-06-16">
               2019-06-16
             </time>
@@ -706,7 +1085,7 @@ ps aux | grep &apos;/app&apos;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-04-18T23:31:19+08:00" content="2019-04-18">
               2019-04-18
             </time>
@@ -846,7 +1225,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-04-17T23:38:48+08:00" content="2019-04-17">
               2019-04-17
             </time>
@@ -942,7 +1321,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-31T15:54:03+08:00" content="2016-12-31">
               2016-12-31
             </time>
@@ -1050,7 +1429,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-23T15:53:56+08:00" content="2016-12-23">
               2016-12-23
             </time>
@@ -1151,7 +1530,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-16T10:56:39+08:00" content="2016-12-16">
               2016-12-16
             </time>
@@ -1308,7 +1687,7 @@ Test:2000 good engines,10 anomalous
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
               2016-12-08
             </time>
@@ -1496,7 +1875,7 @@ xj&apos; = xj - uj
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
               2016-12-04
             </time>
@@ -1592,149 +1971,11 @@ but many slower to train.
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2016-11-27T15:46:44+08:00" content="2016-11-27">
-              2016-11-27
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="6、Advice-for-Applying-Machine-Learning"><a href="#6、Advice-for-Applying-Machine-Learning" class="headerlink" title="6、Advice for Applying Machine Learning"></a>6、Advice for Applying Machine Learning</h2><h3 id="6-1、Evaluating-a-learning-Algorithm"><a href="#6-1、Evaluating-a-learning-Algorithm" class="headerlink" title="6.1、Evaluating a learning Algorithm"></a>6.1、Evaluating a learning Algorithm</h3><h4 id="6-1-1、Deciding-What-to-Try-Next"><a href="#6-1-1、Deciding-What-to-Try-Next" class="headerlink" title="6.1.1、Deciding What to Try Next"></a>6.1.1、Deciding What to Try Next</h4><p>Which of the following statements about diagnostics are true? (BCD)</p>
-<p>A. It’s hard to tell what will work to improve a learning algorithm, so the best approach is to go with gut feeling and just see what works.</p>
-<p>B. Diagnostics can give guidance as to what might be more fruitful things to try to improve a learning algorithm.</p>
-<p>C. Diagnostics can be time-consuming to implement and try, but they can still be a very good use of your time.</p>
-<p>D. A diagnostic can sometimes rule out certain courses of action(changes to your learning algorithm) as being unlikely to improve its performance signigicantly.</p>
-<h4 id="6-1-2、Evaluating-a-Hypothesis"><a href="#6-1-2、Evaluating-a-Hypothesis" class="headerlink" title="6.1.2、Evaluating a Hypothesis"></a>6.1.2、Evaluating a Hypothesis</h4><p>如何评估假设函数，后面可以以此为基础讨论如何避免过拟合和欠拟合的问题。</p>
-<p>Suppose an implementation of linear regression(without reguarization) is badly overfitting the training set. In this case, we would expect:</p>
-<p>The training error to be low, and the test error to be high.</p>
-<p>数据划分为训练集和测试集，一般比例为7:3,random select。如果数据不是随机的，最好自己随机排序或打乱顺序后再选取70%.</p>
-<p>Misclassification error(0/1 misclassification error)</p>
-<h4 id="6-1-3、Model-Selection-and-Training-Validation-Test-Sets"><a href="#6-1-3、Model-Selection-and-Training-Validation-Test-Sets" class="headerlink" title="6.1.3、Model Selection and Training/Validation/Test Sets"></a>6.1.3、Model Selection and Training/Validation/Test Sets</h4><p>如何确定对于某组数据，最合适的多项式次数是几次？如何选择学习算法中的正规化参数lamda？</p>
-<p>模型选择问题。（泛化误差）</p>
-<p>我们将数据集分为三部分，training set(60%), cross validation set(20%), test set(20%).</p>
-<p>Training error</p>
-<p>cross validation error</p>
-<p>test error</p>
-<p>我们使用交叉验证集来选择模型，看这些假设在交叉验证集表现如何。选择最小交叉验证集误差的模型。</p>
-<p>Consider the model selection procedure where we choose the degree of polynomial using a cross validation set. For the final model, we might generally expect Jcv to be lower than Jtest because:</p>
-<p>An extra parameter(d,the degree of the polynomial) has been fit to the cross validation set.</p>
-<h3 id="6-2、Bias-vs-Variance-偏差和方差"><a href="#6-2、Bias-vs-Variance-偏差和方差" class="headerlink" title="6.2、Bias vs. Variance(偏差和方差)"></a>6.2、Bias vs. Variance(偏差和方差)</h3><h4 id="6-2-1、Diagnosing-Bias-vs-Variance"><a href="#6-2-1、Diagnosing-Bias-vs-Variance" class="headerlink" title="6.2.1、Diagnosing Bias vs. Variance"></a>6.2.1、Diagnosing Bias vs. Variance</h4><p>High Bias Overfitting</p>
-<p>High Variance Underfitting</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/6_1.png" alt="6_1"></p>
-<h4 id="6-2-2、Regularization-and-Bias-Variance"><a href="#6-2-2、Regularization-and-Bias-Variance" class="headerlink" title="6.2.2、Regularization and Bias/Variance"></a>6.2.2、Regularization and Bias/Variance</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_2.png" alt="6_2"></p>
-<h4 id="6-2-3、Learning-Curves"><a href="#6-2-3、Learning-Curves" class="headerlink" title="6.2.3、Learning Curves"></a>6.2.3、Learning Curves</h4><p>判断一个假设是否存在偏差方差问题</p>
-<pre><code>High Bias
-If a learning algorithm is suffering from high bias, getting more training data will not help much.
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_3.png" alt="6_3"><br>因此知道自己的假设是否存在高偏差/方差问题，非常有用。</p>
-<pre><code>High variance
-If a learning algorithm is suffering from high variance, getting more training data is likely to help.
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_4.png" alt="6_4"></p>
-<h4 id="6-2-4、Deciding-What-to-Do-Next-Revisited"><a href="#6-2-4、Deciding-What-to-Do-Next-Revisited" class="headerlink" title="6.2.4、Deciding What to Do Next Revisited"></a>6.2.4、Deciding What to Do Next Revisited</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_5.png" alt="6_5"></p>
-<h3 id="6-3、Machine-Learning-system-design"><a href="#6-3、Machine-Learning-system-design" class="headerlink" title="6.3、Machine Learning system design"></a>6.3、Machine Learning system design</h3><h4 id="6-3-1、Priorityzing-what-to-work-on"><a href="#6-3-1、Priorityzing-what-to-work-on" class="headerlink" title="6.3.1、Priorityzing what to work on"></a>6.3.1、Priorityzing what to work on</h4><h4 id="6-3-2、Error-Analysis"><a href="#6-3-2、Error-Analysis" class="headerlink" title="6.3.2、Error Analysis"></a>6.3.2、Error Analysis</h4><p>建议的方法：</p>
-<p>1、尽快的实现一个最基本的算法，然后在交叉验证数据集上进行验证；</p>
-<p>2、画出learning curves，看是否更多的数据、更多的features能提升正确性；</p>
-<p>3、Error Analysis：主要分析那些算法预测出错的例子，看能否发现一些系统趋势。</p>
-<pre><code>Error analysis may not be helpful for deciding is this is likely to improve performance, only solution is to try it and say if it works.
-</code></pre><h4 id="6-3-3-Error-Metrics-for-Skewed-Classes"><a href="#6-3-3-Error-Metrics-for-Skewed-Classes" class="headerlink" title="6.3.3 Error Metrics for Skewed Classes"></a>6.3.3 Error Metrics for Skewed Classes</h4><p>不能仅仅依靠错误率来判断算法的性能，还需要利用Precision 和 Recall<br><img src="http://ofacak8l3.bkt.clouddn.com/6_6.png" alt="6_6"></p>
-<h4 id="6-3-4-Trading-off-precision-and-recall"><a href="#6-3-4-Trading-off-precision-and-recall" class="headerlink" title="6.3.4 Trading off precision and recall"></a>6.3.4 Trading off precision and recall</h4><p>我们可以通过计算F1来自动选择性能较高的算法。</p>
-<pre><code>F1 = 2*(P*R)/(P+R);
-</code></pre><h4 id="6-3-5-Data-for-Machine-Learning"><a href="#6-3-5-Data-for-Machine-Learning" class="headerlink" title="6.3.5 Data for Machine Learning"></a>6.3.5 Data for Machine Learning</h4><p>Banko anf Brill 在2001年提出了一个观点：</p>
-<pre><code>It&apos;s not who has the best algorithm that wins, 
-It&apos;s who has the most data.
-</code></pre><p>这个观点有时候不一定正确：</p>
-<p>当feature很少不足以预测时（例，预测房价时仅知道尺寸），此时再多的数据可能也无法提升算法的性能； </p>
-<p>当算法参数很多时（例，逻辑回归和线性回归有很多的feature，或者神经网络有很多的隐藏单元），更大的测试集可以尽可能的减少过拟合。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1775,8 +2016,8 @@ It&apos;s who has the most data.
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">30</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-count">31</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -1786,7 +2027,7 @@ It&apos;s who has the most data.
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">9</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -1830,7 +2071,7 @@ It&apos;s who has the most data.
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

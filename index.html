@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -235,6 +235,274 @@
             
               
                 
+                <a class="post-title-link" href="/2020/08/15/设计模式之美第二周/" itemprop="url">
+                  设计模式之美第二周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-08-15T23:24:00+08:00" content="2020-08-15">
+              2020-08-15
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？"><a href="#理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？" class="headerlink" title="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？"></a>理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？</h2><p>本文主要针对四大特性，结合实际代码，帮助我们了解每个特性存在的意义和目的，以及它们能解决哪些编程问题。</p>
+<h3 id="封装-Encapsulation"><a href="#封装-Encapsulation" class="headerlink" title="封装 Encapsulation"></a>封装 Encapsulation</h3><p>封装也叫作信息藏匿或者数据访问保护。类通过暴露有限的访问接口，授权外部仅能通过类提供的方式来访问内部信息或数据。</p>
+<p>对于封装这个特性，我们需要编程语言本身提供一定的语法机制来支持。这个语法机制就是访问权限控制。</p>
+<p>如果对类中属性访问不做限制，那任何代码都可以访问、修改类中的属性，虽然这样看起来更灵活，但是从另一方面来说过度灵活意味着不可控。除此之外，类仅仅通过有限的方法暴露必要的操作，也提高类的易用性。调用者不需要了解太多背后的业务细节，用错的概率也会减少。</p>
+<h3 id="抽象-Abstraction"><a href="#抽象-Abstraction" class="headerlink" title="抽象 Abstraction"></a>抽象 Abstraction</h3><p>封装主要讲的是如何隐藏信息、保护数据，而抽象讲的是如何隐藏方法的具体实现，让调用者之需要关心方法提供了哪些功能，并不需要知道这些功能是如何实现的。</p>
+<p>在面向对象编程中，我们常借助编程语言提供的接口类（Interface）或者抽象类（Abstract）这两种语法机制，来实现抽象。</p>
+<p>抽象的意义，首先作为一种只关注功能不关注实现的设计思路，正好帮我们的大脑过滤掉许多非必要的信息。其次，抽象在代码设计中起到非常重要的指导作用。很多设计原则都体现了抽象这种设计思想，比如基于接口而非实现编程、开闭原则、代码解耦等。</p>
+<p>我们在定义类的方法时，也要有抽象思维，不要在方法定义中暴露太多的实现细节，以保证在某个时间点需要修改方法的实现逻辑时不用去修改其定义。</p>
+<h3 id="继承-Inheritance"><a href="#继承-Inheritance" class="headerlink" title="继承 Inheritance"></a>继承 Inheritance</h3><p>为了实现继承特性，编程语言需要提供特殊的语法机制来支持，如Java中使用extends来实现继承，C++使用冒号，Python使用paraentheses（）等。不过有些语言只支持单继承，如Java、PHP、C#、Ruby等，有些支持多重继承，如C++、python、Perl等。</p>
+<p>继承存在的最大好处就是代码复用。不过过度使用继承层次过深过复杂，会导致代码可读性、可维护性变差。所以继承应该尽量少用，甚至不用。（多用组合少用继承）</p>
+<h3 id="多态-Polymorphism"><a href="#多态-Polymorphism" class="headerlink" title="多态 Polymorphism"></a>多态 Polymorphism</h3><p>多态能提高代码的可扩展性和复用性。除此之外多态也是很多设计模式、设计原则、编程技巧的代码实现基础。比如策略模式、基于接口而非实现编程、依赖倒置原则、里氏替换原则、利用多态去掉冗长的if-else语句等。</p>
+<h3 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h3><p>Java不支持继承的原因是多重继承存在副作用：钻石问题（菱形继承）</p>
+<p>假设B和C都继承A，且都重写了A中同一方法，类D继承类B和类C，对于B、C重写的A中的方法，类D会继承哪一个会产生歧义。但是Java支持多接口实现，因为接口中的方法是抽象的，在实现接口时需要实现类自己实现，所以不会出现二义性问题。</p>
+<h2 id="理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？"><a href="#理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？" class="headerlink" title="理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？"></a>理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？</h2><h3 id="什么是面向过程编程与面向过程编程语言？"><a href="#什么是面向过程编程与面向过程编程语言？" class="headerlink" title="什么是面向过程编程与面向过程编程语言？"></a>什么是面向过程编程与面向过程编程语言？</h3><p>面向过程编程也是一种编程范式/风格，它以过程作为组织代码的基本单元。以数据与方法相分离为最主要的特点。面向过程风格是一种流程化的编程风格，通过拼接一组顺序执行的方法来操作数据完成一项功能。<br>面向过程编程语言首先是一种编程语言。它最大的特点是不支持类和对象两个语法概念，不支持丰富的面向对象编程特性。</p>
+<h3 id="面向对象编程相比面向过程编程有哪些优势？"><a href="#面向对象编程相比面向过程编程有哪些优势？" class="headerlink" title="面向对象编程相比面向过程编程有哪些优势？"></a>面向对象编程相比面向过程编程有哪些优势？</h3><h4 id="OOP更加能够应对大规模复杂程序的开发"><a href="#OOP更加能够应对大规模复杂程序的开发" class="headerlink" title="OOP更加能够应对大规模复杂程序的开发"></a>OOP更加能够应对大规模复杂程序的开发</h4><p>对于大规模复杂程序开发来说，整个程序的处理流程错综复杂，并非只有一条主线。如果用面向过程编程这种流程化、线性的思维方式，去翻译这个网状结构，去思考如何把程序拆解为一组顺序执行的方法会比较吃力。</p>
+<p>面向对象编程以类为思考对象。在进行面向对象编程的时候，我们并不是一上来就去思考如何讲复杂的流程拆解为一个一个方法，而是采用曲线救国的策略。先去思考如何给业务建模，如何将需求翻译为类，如何给类之间建立交互关系，完成这些工作完全不需要考虑错综复杂的处理流程。</p>
+<p>除此之外，面向对象编程还提供了一种更加清晰、更加模块化的代码组织方式。</p>
+<p>实际上利用面向过程的编程语言那样，也可以写出面向对象风格的代码。只不过可能会比用面向对象编程语言付出的代价更高一些。两种编程风格并不是完全对立的。</p>
+<h4 id="OOP代码更易复用、易扩展、易维护"><a href="#OOP代码更易复用、易扩展、易维护" class="headerlink" title="OOP代码更易复用、易扩展、易维护"></a>OOP代码更易复用、易扩展、易维护</h4><p>封装特性是两种编程风格最基本的区别，面向对象将数据和方法绑定在一起，通过访问权限控制，只允许外部调用者通过类暴露的有限方法访问数据，而不会像面向过程那样，数据可以被任意方法修改。因此面向对象提供的封装特性更有利于提高代码的易维护性。</p>
+<p>函数本身就是一种抽象，它隐藏了具体实现。我们在使用函数时之需要了解函数具有什么功能，而不需要了解它是怎么实现的。从这一点上两种编程风格都支持抽象特性。只是面向对象还提供了其他抽象特性的实现方式，如基于接口实现的抽象。基于接口的抽象可以让我们在不改变原有实现的情况下，轻松替换新的实现逻辑，提高了代码的可扩展性。</p>
+<p>继承特性是面向对象特有的，能避免代码重复写很多遍，提高了代码的复用性。</p>
+<p>多态特性也是面向对象特有，在需要修改一个功能实现的时候，可以通过实现一个新的子类的方式，在子类重写原来的逻辑功能。用子类替换父类遵从了“对修改关闭，对扩展开放”的原则，提高代码的扩展性。除此之外，多态特性使得不同类对象可以传递相同的方法，执行不同的逻辑，提高代码复用性。</p>
+<h4 id="OOP语言更加人性化、更高级智能"><a href="#OOP语言更加人性化、更高级智能" class="headerlink" title="OOP语言更加人性化、更高级智能"></a>OOP语言更加人性化、更高级智能</h4><p>面向对象时，开发者是在思考如何给业务建模、如何将真实世界映射为类或者对象，能更聚焦到业务本身，而不是思考如何和机器打交道。</p>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><ul>
+<li>Unix/Linux这些复杂系统，也是基于C语言这种面向过程的编程语言开发的，怎么看待这种现象？<ul>
+<li>操作系统是业务无关的，它更接近于底层计算机，因此更适合用面向过程的语言编写。并且和硬件打交道需要考虑到语言本身翻译成机器语言的成本和执行效率。</li>
+<li>不过操作系统虽然是面向过程的C语言实现，但是其设计逻辑是面向对象的。它用结构体同样实现了信息的封装，内核源码中也不乏继承和多态思想的体现。面向对象思想并不局限于具体语言。</li>
+</ul>
+</li>
+</ul>
+<h2 id="理论四：-哪些代码设计看似面向对象，实际是面向过程的？"><a href="#理论四：-哪些代码设计看似面向对象，实际是面向过程的？" class="headerlink" title="理论四： 哪些代码设计看似面向对象，实际是面向过程的？"></a>理论四： 哪些代码设计看似面向对象，实际是面向过程的？</h2><h3 id="滥用getter、setter方法"><a href="#滥用getter、setter方法" class="headerlink" title="滥用getter、setter方法"></a>滥用getter、setter方法</h3><p>在项目开发中，有时定义完类的属性之后，就顺手将属性的getter、setter方法都定义上。IDE或者Lombok插件会自动生成所有属性的getter、setter方法。</p>
+<p>这种方法是不推荐的，因为其违反了面向对象的封装特性，相当于将面向对象编程风格退化成了面向过程编程风格。 例如下面这段代码</p>
+<pre><code>public class ShoppingCart {
+    private int itemsCount;
+    private double totalPrice;
+    private List&lt;ShoppingCartItem&gt; items = new ArrayList&lt;&gt;();
+
+    public int getItemsCount() {
+        return this.itemsCount;
+    }
+
+    public void setItemCount(int itemsCount) {
+        this.itemsCount = itemsCount;
+    }
+
+    public double getTotalPrice() {
+        return this.totalPrice;
+    }
+
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public List&lt;ShoppingCartItem&gt; getItems() {
+        return this.items;
+    }
+
+    public void addItems(ShoppingCartItem item) {
+        items.add(item);
+        itemCount++;
+        totalPrice += item.getPrice();
+    }
+    ...
+}
+</code></pre><p>在这个代码中虽然我们将itemsCount和totalPrice定义为private，但是外部可以通过setter方法随意修改这两个属性的值。可能会导致和items属性的值不一致。暴露不该暴露的setter方法明显违反了面向对象的封装特性。数据没有任何访问权限，任何代码都可以随意修改，代码就退化成了面向过程编程风格了。</p>
+<p>对于items我们没有设置setter方法，这样的设计看起来没有任何问题，而实际上并不是。items属性的getter方法返回的是一个List容器。外部调用者在拿到这个容器后，是可以操作容器内部数据的。比如obj.getItems().clear()会清空购物车，这样也会导致类属性中三个数据不一致。</p>
+<p>正确的方法是应该专门在类中提供clear方法，并且修改getItems返回类型为Collections.undermidifiableList()。此时外部调用要修改就会抛出UnsupportedOperationException异常，避免容器中的数据被修改。（这里还存在一个问题，虽然items容器中数据不会被修改，但是容器中每个对象ShoppingCartItem的数据仍然可以修改）</p>
+<h3 id="滥用全局变量和全局方法"><a href="#滥用全局变量和全局方法" class="headerlink" title="滥用全局变量和全局方法"></a>滥用全局变量和全局方法</h3><p>面向对象编程中，常见的全局变量有单例类对象、静态成员变量、常量等，常见的全局方法有静态方法。</p>
+<ul>
+<li>单例类对象在全局代码中只有一份，相当于全局变量</li>
+<li>静态成员变量归属类上的数据，被所有实例化对象共享，也相当于一定程度上的全局变量</li>
+<li>常量是非常常见的全局变量，放到一个Constant类中</li>
+<li>静态方法一般用来操作静态变量或者外部数据。如各种Utils类，里面的方法一般都会定义成静态方法。静态方法将方法和数据分离，破坏了封装特性，是典型的面向过程风格。</li>
+</ul>
+<p>如：</p>
+<pre><code>public class Constants {
+    public static final String MYSQL_ADDR_KEY = &quot;mysql_addr&quot;;
+    ...
+}
+</code></pre><p>我们会把程序中所有用到的常量都集中放到这个Constants类中，这并不是一个很好的设计思路。</p>
+<ul>
+<li>首先会影响代码的可维护性。开发同一项目的工程师很多，在开发过程中可能都要涉及修改这个类，查找修改可能比较费时，并且会增加提交代码冲突的概率。</li>
+<li>其次，这样的设计会增加代码的编译时间。 依赖这个类的代码很多，每次修改Constants类都会导致依赖它的类重新编译。</li>
+<li>最后，这样设计会影响代码的复用性。 如果我们在另一个项目中复用本项目的一个类，该类又依赖Constants类，即使只依赖其中的一部分我们仍然需要将整个Constants类也一起并入。引入许多无关的常量到新项目中。</li>
+</ul>
+<p>如何改进呢？</p>
+<ul>
+<li>将Constants类拆解为功能更加单一的多个类</li>
+<li>另一种更好的思路是，并不单独地设计Constants常量类，而是哪个类用到了某个常量，就把这个常量定义到这个类中，提高了类设计的内聚性和代码的复用性</li>
+</ul>
+<p>对于Utils类，它的出现主要是解决了多个类需要用到一块相同的功能逻辑，为了避免代码重复。通常为了复用会通过继承特性，将相同的属性和方法提取出来，定义到父类中，子类复用父类中的属性和方法。但是有时候从业务含义上，这些类并不一定具有继承关系，仅仅为了代码复用生硬地抽象一个父类，会影响代码可读性。所以只包含静态方法Utils类就出现了，它实现了公用的方法但是不需要共享任何数据，因此不需要定义任何属性。同时也要注意不要实现大而全的Utils类，最好细化一下。</p>
+<h3 id="定义数据和方法分离的类"><a href="#定义数据和方法分离的类" class="headerlink" title="定义数据和方法分离的类"></a>定义数据和方法分离的类</h3><p>传统的MVC分为Model层、Controller层、View层，在做前后端分离之后，三层结构在后端开发时会稍微有些调整，被分为Controller层、Service层、Repository层。Controller层负责暴露接口给前端调用，Service层负责核心业务逻辑，Repository层负责数据读写。在每一层中我们又会定义相应的VO（ViewObject）、BO（BusinessObject）、Entity。一般情况下VO、BO、Entity只会定义数据，不会定义方法，所有操作这些数据的业务逻辑都定义在对应的Controller类、Service类、Repository类中。这就是典型的面向过程的编程风格。</p>
+<p>实际上这种开发模式叫做基于贫血模型的开发模式，也就是我们现在非常常用的一种Web项目开发模式。</p>
+<h3 id="面向对象编程中，为什么容易写出面向过程风格的代码？"><a href="#面向对象编程中，为什么容易写出面向过程风格的代码？" class="headerlink" title="面向对象编程中，为什么容易写出面向过程风格的代码？"></a>面向对象编程中，为什么容易写出面向过程风格的代码？</h3><p>主要是面向过程符合人的流程化思维方式。面向对象则是一种自底向上的思考方式，不是先去思考执行流程来分解任务，而是将任务翻译成一个一个的小模块，设计类之间的交互，最后按照流程将类组装起来完成整个任务。这种思考路径比较适合复杂程序开发，不是特别符合人类的思考习惯。</p>
+<p>除此之外，面向对象中类的设计挺需要技巧，需要一定设计经验，要去思考如何封装合适的数据和方法到一个类里，如何设计类之间的关系，类之间的交互等诸多问题。</p>
+<p>不管使用面向过程还是面向对象，最终目的都是写出易维护、易读、易复用、易扩展的高质量代码。只要我们能避免面向过程编程风格的一些弊端，控制好它的副作用，在掌控范围内为我们所用，就大可不用避讳在面向对象编程中写面向过程风格的代码。</p>
+<h2 id="理论五：-接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？"><a href="#理论五：-接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？" class="headerlink" title="理论五： 接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？"></a>理论五： 接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？</h2><h3 id="什么是抽象类和接口？区别在哪里？"><a href="#什么是抽象类和接口？区别在哪里？" class="headerlink" title="什么是抽象类和接口？区别在哪里？"></a>什么是抽象类和接口？区别在哪里？</h3><p>抽象类</p>
+<ul>
+<li>不允许被实例化，只能被继承。</li>
+<li>抽象类可以包含属性和方法。方法既可以包含代码实现，也可以不包含代码实现。不包含代码实现的方法叫做抽象方法。</li>
+<li>子类继承抽象类，必须实现抽象类中的所有抽象方法。</li>
+</ul>
+<p>接口</p>
+<ul>
+<li>接口不能包含属性（即成员变量）</li>
+<li>接口只能声明方法，方法不能包含代码实现</li>
+<li>类实现接口的时候，必须实现接口中声明的所有方法</li>
+</ul>
+<p>抽象类实际上就是类，只不过是一种不能被实例化的特殊类，只能被子类继承，is-a的关系。接口表示has-a的关系，表示具有某些功能。对于接口，有一个更加形象的叫法，就是协议。</p>
+<h3 id="抽象类和接口能解决什么编程问题？"><a href="#抽象类和接口能解决什么编程问题？" class="headerlink" title="抽象类和接口能解决什么编程问题？"></a>抽象类和接口能解决什么编程问题？</h3><p>抽象类是为代码复用而生的，多个子类可以继承抽象类中定义的属性和方法，避免在子类中重复编写相同的代码。普通的类继承虽然也可以解决代码复用问题，但是无法使用多态特性，会增加类被无用的风险。虽然也可以通过设置私有的构造函数的方式来解决，不过显然没有抽象类优雅。</p>
+<p>接口更侧重于解耦，是对行为的一种抽象，相当于一组协议或者契约，可以类比API接口。调用者只需要关注抽象的接口，不需要了解具体的实现，具体的实现代码对调用者透明。接口实现了约定和实现相分离，可以降低代码间的耦合性，提高代码的可扩展性。</p>
+<h3 id="如何模拟抽象类和接口两个语法概念？"><a href="#如何模拟抽象类和接口两个语法概念？" class="headerlink" title="如何模拟抽象类和接口两个语法概念？"></a>如何模拟抽象类和接口两个语法概念？</h3><p>我们可以通过抽象类来模拟接口。首先接口的定义：接口中没有成员变量，只有方法声明，没有方法实现，实现接口的类必须实现接口中的所有方法。</p>
+<pre><code>class Strategy {
+    public:
+        ~Strategy();
+        virtual void algorithm() = 0;
+    protected:
+        Strategy();
+}
+</code></pre><p>上述C++代码中用抽象类模拟了一个接口，类中没有定义任何属性，并且所有方法都是virtual类型。</p>
+<p>除了用抽象类来模拟接口，我们还可以用普通类来模拟接口。类中虽然包含方法不符合接口定义，但是我们可以让类中的方法抛出异常来模拟不包含实现的接口，并且能强迫子类在继承这个父类的时候都去主动实现父类的方法，否则就会在运行时抛出异常。为了避免该类被实例化，我们将类的构造函数声明为protected方法就可以了。</p>
+<pre><code>public class MockInterface {
+    protected MockInterface() {}
+    public void funcA() {
+        throw new MethodUnSupportedException();
+    }
+} 
+</code></pre><h3 id="如何决定该用抽象类还是接口？"><a href="#如何决定该用抽象类还是接口？" class="headerlink" title="如何决定该用抽象类还是接口？"></a>如何决定该用抽象类还是接口？</h3><p>要表示一种is-a的关系，并且是为了解决代码复用的问题，就用抽象类。</p>
+<p>要表示一种has-a的关系，并且是为了解决抽象而非代码复用的问题，就可以使用接口。</p>
+<p>抽象类是一种自下而上的设计思路，现有子类的代码重复，然后再抽象成上层的父类。而接口正好相反，它是一种自上而下的设计思路，在编程的时候一般是先设计接口再去考虑具体的实现。</p>
+<h2 id="理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？"><a href="#理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？" class="headerlink" title="理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？"></a>理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？</h2><p>Program to an interface, not an implematation。这句话最早出自1994年GoF的设计模式这本书，是一种比较抽象泛化的思想。此处的interface不要局限于编程语言中的接口。</p>
+<p>如果落实到具体代码，这条原则中的接口可以理解为编程语言中的接口或者抽象类。</p>
+<p>应用这条原则可以有效地提高代码质量，实现接口和实现相分离，封装不稳定的实现，暴露稳定的接口。当实现发生变化的时候，上游系统的代码基本上不需要做改动，以此来降低耦合性，提高扩展性。</p>
+<ul>
+<li>函数的命名不能暴露任何实现细节</li>
+<li>封装具体的实现细节</li>
+<li>为实现类定义抽象的接口，具体的实现类都依赖统一的接口定义，遵从一致的上传功能协议。使用者依赖接口，而不是具体的实现类来编程。</li>
+</ul>
+<p>总之，我们在做软件开发的时候，一定要有抽象意识、封装意识、接口意识。在定义接口的时候，不要暴露任何实现细节，接口的定义只表明做什么，而不是怎么做。而且在设计接口的时候，我们要多思考一下，这样的接口设计是否足够通用，能否做到在替换具体的接口实现的时候，不需要任何接口定义的改动。</p>
+<h3 id="是否要为每个类定义接口？"><a href="#是否要为每个类定义接口？" class="headerlink" title="是否要为每个类定义接口？"></a>是否要为每个类定义接口？</h3><p>如果业务场景中某个功能只有一种实现方式，未来也不可能被其他实现方式替换，那么我们就没有必要为其设计接口，也没有必要基于接口编程，直接使用实现类就可以。</p>
+<h2 id="理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？"><a href="#理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？" class="headerlink" title="理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？"></a>理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？</h2><h3 id="为什么不推荐用继承？"><a href="#为什么不推荐用继承？" class="headerlink" title="为什么不推荐用继承？"></a>为什么不推荐用继承？</h3><p>比如，我们设计一个关于鸟的类AbstractBird，所有细分的鸟都继承这个抽象类。 大部分鸟都可以飞，我们可不可以在抽象类中定义fly()方法呢？答案是不行，因为还有特例，如果我们对所有不会飞的鸟都重写fly方法并且抛出异常也可行，但是不够优雅。一方面增加了代码量另一方面也违背的Least Knowledge Principle（最小知识原则/迪米特法则），暴露了不该暴露的接口给外部，增加了类使用过程中被误用的概率。</p>
+<p>此时再通过抽象类派生出两个细分的类，AbstractFlyableBird/AbstractUnFlyableBird()，这样继承关系就变成3层。如果此时再关注鸟会不会叫等等特点，继承关系就会越来越复杂，导致代码可读性变差。也破坏了类的封装特性，将父类的实现细节暴露给子类，子类的实现依赖父类的实现，两者高度耦合，一旦父类代码修改就会影响所有子类的逻辑。</p>
+<h3 id="组合相比继承有哪些优势？"><a href="#组合相比继承有哪些优势？" class="headerlink" title="组合相比继承有哪些优势？"></a>组合相比继承有哪些优势？</h3><p>我们可以利用组合Composition、接口、委托delegation三个技术手段，一起解决刚刚继承存在的问题。</p>
+<p>接口表示某种行为特性，针对会飞特性我们可以定义Flyable接口，只让会飞的鸟去实现这个接口，对于会叫、会下蛋这些行为特性，类似定义Tweetable接口、EggLayable接口。不过接口只声明方法，不定义实现，也就是所有会下蛋的类都要实现一遍LayEgg()方法，会导致代码重复的问题。</p>
+<p>我们可以针对三个接口再定义三个实现类，通过组合和委托技术来消除代码重复。</p>
+<pre><code>public interface Flyable() {
+    void fly();
+}
+public class FlyAbility implements Flyable {
+    @Override
+    public void fly() {...}
+}
+...
+
+public class Ostrich implements Tweetable, Egglayable {
+    private TweetAbility tweetAbility = new TweetAbility();
+    private EggLayAbility eggLayAbility = new EggLayAbility();
+
+    @Overide 
+    public void tweet() {
+        tweetAbility.tweet();
+    }
+
+    @Overide
+    public void layEgg() {
+        eggLayAbility.layEgg();
+    }
+}
+</code></pre><h3 id="如何判断该用组合还是继承？"><a href="#如何判断该用组合还是继承？" class="headerlink" title="如何判断该用组合还是继承？"></a>如何判断该用组合还是继承？</h3><p>如果类之间的继承结构稳定，继承层次比较浅（最多两层），继承关系不复杂我们就可以大胆使用继承。反之则尽量使用组合。</p>
+<p>有一些设计模式会固定使用继承或组合：</p>
+<ul>
+<li>装饰者模式decorator pattern、策略模式Strategy pattern、组合模式Composite pattern都使用了组合关系</li>
+<li>模版模式template pattern则使用了继承关系</li>
+</ul>
+<p>还有一些特殊场景必须使用继承。如果不能改变函数的入参类型，而入参又非接口，为了支持多态只能采用继承来实现。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/08/10/ES-tech_md/" itemprop="url">
                   ES相关知识
                 </a>
@@ -248,7 +516,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-08-10T21:52:00+08:00" content="2020-08-10">
               2020-08-10
             </time>
@@ -531,7 +799,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-08-02T16:55:00+08:00" content="2020-08-02">
               2020-08-02
             </time>
@@ -705,7 +973,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-07-25T16:55:00+08:00" content="2020-07-25">
               2020-07-25
             </time>
@@ -802,7 +1070,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-07-19T16:55:00+08:00" content="2020-07-19">
               2020-07-19
             </time>
@@ -1053,7 +1321,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-07-10T21:55:00+08:00" content="2020-07-10">
               2020-07-10
             </time>
@@ -1306,7 +1574,7 @@ perf report
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-07-04T17:26:55+08:00" content="2020-07-04">
               2020-07-04
             </time>
@@ -1704,7 +1972,7 @@ net.ipv4.tcp_rmem net.ipv4.tcp_wmem
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-27T15:26:55+08:00" content="2020-06-27">
               2020-06-27
             </time>
@@ -2024,7 +2292,7 @@ webbench
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-21T10:57:55+08:00" content="2020-06-21">
               2020-06-21
             </time>
@@ -2429,7 +2697,7 @@ fio --name=reply --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin #使用fio�
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-14T10:57:55+08:00" content="2020-06-14">
               2020-06-14
             </time>
@@ -2746,390 +3014,11 @@ watch -d grep -A 15 ‘Normal’ /proc/zoneinfo #观察内存指标变化
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" itemprop="url">
-                  《Linux 性能优化实战》第二周--CPU性能篇(下)
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2020-06-03T22:57:55+08:00" content="2020-06-03">
-              2020-06-03
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>这两周主要围绕CPU性能优化相关基础知识进行学习。对于CPU性能问题的处理，首先我们要了解CPU相关性能指标。</p>
-<h3 id="CPU性能指标"><a href="#CPU性能指标" class="headerlink" title="CPU性能指标"></a>CPU性能指标</h3><p><strong>平均负载,上下文切换,CPU使用率,CPU缓存命中率</strong>等.</p>
-<p><strong>平均负载</strong>是指系统处于可运行状态和不可中断状态的平均进程数（一般平均负载高于CPU数量70%的时候需要注意排查）。 平均负载升高可能是<strong>CPU密集进程</strong>导致,也可能是<strong>I/O</strong>或<strong>进程过多超负载</strong>导致. 可以用<strong>mpstat</strong>和<strong>pidstat</strong>辅助分析.</p>
-<pre><code>uptime #查看最近1/5/15分钟平均负载
-watch -d uptime #实时查看变化情况
-mpstat -P ALL 5 #查看CPU使用率,间隔5秒输出
-pidstat -u 5 1  #查看进程CPU使用率/IOwait
-</code></pre><p><strong>上下文切换</strong>,主要分为进程上下文切换,线程上下文切换以及中断上下文切换（可以利用多线程替代多进程来提升性能）。可以通过vmstat查看系统总体上下文切换和中断次数. pidstat -w 查看每个进程上下文切换次数, -wt输出线程指标.</p>
-<pre><code>watch -d cat /proc/interrupts #查看中断变化具体来源
-</code></pre><ul>
-<li>系统调用涉及内核态和用户态的切换因此实际发生两次CPU上下文切换,不过不涉及虚拟内存等资源也不切换进程. </li>
-<li>进程的切换都在内核态,保存内核状态和CPU寄存器之前,先保存进程的虚拟内存,栈等 </li>
-<li>同一进程内的线程切换只需要保存线程的私有数据,寄存器等.</li>
-<li>中断上下文切换并不涉及进程的用户态,比进程优先级高</li>
-</ul>
-<p><strong>CPU使用率</strong>过高时一般都是结合top/pidstat/perf来进行分析定位. 如果定位不到CPU使用率高的进程,可以跟踪top查看是否存在短时进程. 调用pstree分析父进程. </p>
-<pre><code>perf record -g
-perf report #查看性能报告找到瓶颈
-
-execsnoop #监控短时进程
-</code></pre><p><strong>iowait</strong>升高时,可以用dstat观察CPU和I/O的使用情况. </p>
-<pre><code>pidstat -d -p XXX n m  #-d输出I/O情况,指定线程号间隔n秒输出m组数据
-strace -p XXX #跟踪系统调用
-如果定位进程状态为Z,通过perf report查看调用栈
-</code></pre><p><strong>僵尸进程</strong>, 通过pstree查看父进程,在父进程中进行解决(子进程创建和清理的地方)</p>
-<pre><code>pstree -aps XXX
-</code></pre><p><strong>中断处理</strong></p>
-<pre><code>/proc/softirqs #查看软中断
-/proc/interrupts #查看硬中断
-</code></pre><p><strong>网络监测工具</strong></p>
-<pre><code>sar -n DEV 1 #网络收发报告, 间隔1秒输出一组数据
-tcpdump -i eth0 -n tcp port 80 #指定网卡eth0,tcp协议,端口号80
-</code></pre><h3 id="CPU性能分析套路"><a href="#CPU性能分析套路" class="headerlink" title="CPU性能分析套路"></a>CPU性能分析套路</h3><p>通过几组实验分析我们发现对于CPU性能，常用的瓶颈问题有一些套路可以定位问题所在。虽然CPU性能指标很多，但是都不是孤立存在的，很多指标间都存在一定的关联。 再遇到CPU性能问题时我们可以先运行几个支持指标较多的工具(top/vmstat/pidstat)来缩小排查范围，查看是否是因为某个进程导致，找出导致性能问题的进程之后，再用进程分析工具来分析进程的行为。比如strace分析系统调用情况，或者perf分析调用链中各级函数的执行情况。 </p>
-<h3 id="CPU性能优化方案"><a href="#CPU性能优化方案" class="headerlink" title="CPU性能优化方案"></a>CPU性能优化方案</h3><p>定位到问题所在之后并不是要立即着手进行优化。在需要优化之前,要先考虑优化到底能提升多少性能(应用程序和系统资源多维度评估),选取哪些性能问题进行优化以及优化方案的取舍. 优化往往会带来复杂度的提升,所以要做好性能和复杂度的平衡.</p>
-<p><strong>CPU优化的一些常用方法</strong></p>
-<ul>
-<li>应用程序优化<ul>
-<li>编译器优化</li>
-<li>算法优化</li>
-<li>异步处理</li>
-<li>多线程代替多进程</li>
-<li>善用缓存</li>
-</ul>
-</li>
-<li>系统优化<ul>
-<li>CPU绑定</li>
-<li>CPU独占</li>
-<li>优先级调整</li>
-<li>为进程设置资源限制</li>
-<li>NUMA优化</li>
-<li>中断负载均衡</li>
-</ul>
-</li>
-</ul>
-<hr>
-<p>接下来是本周读书笔记</p>
-<hr>
-<h2 id="Lesson-9-怎么理解Linux软中断"><a href="#Lesson-9-怎么理解Linux软中断" class="headerlink" title="Lesson 9 怎么理解Linux软中断"></a>Lesson 9 怎么理解Linux软中断</h2><p>本周继续学习CPU性能相关知识点,<a href="http://xiaozhazi.github.io/2020/05/31/Linux性能优化实战第一周--CPU性能篇%28上%29">Linux 性能优化实战第一周</a>第8课提到不可中断状态一般都是短时进程,主要是系统的一种保护机制,保证硬件的交互过程不被意外打断. 但是如果进程长时间处于不可中断状态就需要注意是否存在磁盘I/O问题.</p>
-<p>除了iowait,软中断softirq导致CPU使用率增加的场景也比较常见.</p>
-<p>为了解决中断处理程序执行时间过长和中断丢失的问题,Linux将中断过程分为两阶段:</p>
-<ul>
-<li><strong>快速处理中断</strong> (硬中断, 会打断CPU正在执行的任务)</li>
-<li><strong>延迟处理上半部未完成的工作, 通常以内核线程的方式运行</strong> (软中断,内核线程执行)</li>
-</ul>
-<p>以网卡接收数据包为例: 网卡接收到数据包之后,先通过硬中断通知内核新数据到达.此时内核调用中断处理程序来响应. 第一步快速处理中断,将网卡数据读到内存中,然后更新硬件寄存器的状态(表示数据已经读完); 第二步发送软中断信号,内核线程从内存中找到网络数据,按照网络协议栈对数据逐层解析和处理,直到将其发送给应用程序.</p>
-<p>软中断不仅包括上述硬件设备中断处理程序的第二阶段,还包含一些内核自定义的事件. 如内核调度,RCU锁等.</p>
-<pre><code>~ cat /proc/softirqs   #查看软中断的运行情况　10种不同软中断类型
-                CPU0       CPU1       CPU2       CPU3       
-      HI:     940848    8695970     929219     958387
-   TIMER:    6032528    8523080    6185804    7882723
-  NET_TX:         13         18         10      21655
-  NET_RX:      81303      81483      74123    5497701
-   BLOCK:        112        109    1961852         73
-IRQ_POLL:          0          0          0          0
- TASKLET:         40        152      69233      41556
-   SCHED:    5262219    6279886    5054733    5849054
- HRTIMER:          0          0          0          0
-     RCU:    4615615    5897520    4693046    5749548
-
-➜  ~ ps -aux | grep softirq #一个CPU对应一个软中断内核线程
-  root         7  0.0  0.0      0     0 ?        S    Jun01   0:00 [ksoftirqd/0]
-  root        16  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/1]
-  root        22  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/2]
-  root        28  0.0  0.0      0     0 ?        S    Jun01   0:02 [ksoftirqd/3]
-</code></pre><hr>
-<h2 id="Lesson-10-系统的软中断CPU使用率高，怎么解决"><a href="#Lesson-10-系统的软中断CPU使用率高，怎么解决" class="headerlink" title="Lesson 10 系统的软中断CPU使用率高，怎么解决"></a>Lesson 10 系统的软中断CPU使用率高，怎么解决</h2><h3 id="所需工具"><a href="#所需工具" class="headerlink" title="所需工具"></a>所需工具</h3><table>
-<thead>
-<tr>
-<th>工具</th>
-<th>用途</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>sar</td>
-<td>系统报告工具,实时查看当前系统活动,配置保存和报告历史统计</td>
-</tr>
-<tr>
-<td>hping3</td>
-<td>构造TCP/IP包, 对系统进行安全审计,防火墙测试等</td>
-</tr>
-<tr>
-<td>tcpdump</td>
-<td>网络抓包工具, 用来分析各种网络问题</td>
-</tr>
-</tbody>
-</table>
-<h3 id="实验与分析"><a href="#实验与分析" class="headerlink" title="实验与分析"></a>实验与分析</h3><pre><code>sudo docker run -itd --name=nginx -p 81:80 nginx  #启动nginx服务
-curl http://localhost:81  #检查nginx服务是否正常运行
-
-hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
-</code></pre><p>本机测试中并没有监测到系统响应变慢,改为1微秒时数据包全丢, 10微秒时丢包率为80%.</p>
-<p>top查看ksoftirqd软中断进程CPU使用率也不高.</p>
-<p>继续执行后续指令</p>
-<pre><code>watch -d cat /proc/softirqs #观察高亮变化
-</code></pre><p>此时发现TIMER/NET_RX/SCHED/RCU都在不停变化,且NET_RX变化速率较快,几K级别的在增加. 其它几种类型的软中断是保证linux调度,时钟,临界区保护等正常工作必须,有变化是正常的. </p>
-<p>因此我们着手分析网络接收的软中断,选取sar工具查看网络收发情况</p>
-<pre><code>sar -n DEV 1  #每隔1秒输出网络收发报告
-
-07:01:11 PM     IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s rxcmp/s   txcmp/s  rxmcst/s   %ifutil
-07:01:12 PM veth3a2b4de      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
-07:01:12 PM        lo  20895.00  20895.00    843.42    843.42      0.00      0.00      0.00      0.00
-07:01:12 PM   docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
-07:01:12 PM enp0s31f6      6.00      0.00      0.85      0.00      0.00      0.00      0.00      0.00
-07:01:12 PM vethedb691a      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
-07:01:12 PM br-1665f3682889      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
-</code></pre><ul>
-<li>rxpck/s txpck/s　表示每秒接收/发送的网络帧数　　PPS</li>
-<li>rxkB/s  txkB/s　　表示每秒接收/发送的千字节数　BPS　</li>
-</ul>
-<p>看到网卡lo每秒接收的数据明显较多，　843*1024/20895 =41　说明每个网络帧只有41字节，小包问题．</p>
-<p>进一步通过tcpdump分析这是什么样的网络帧</p>
-<pre><code>tcpdump -i lo -n tcp port 81
-
-18:20:43.273056 IP 127.0.0.1.12537 &gt; 127.0.0.1.81: Flags [R], seq 393134060, win 0, length 0
-18:20:43.273184 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [S], seq 1240632262, win 512, length 0
-18:20:43.273193 IP 127.0.0.1.81 &gt; 127.0.0.1.12538: Flags [S.], seq 3698133257, ack 1240632263, win 65495, options [mss 65495], length 0
-18:20:43.273198 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [R], seq 1240632263, win 0, length 0
-</code></pre><p>可以看出网络帧是发送到nginx端口，Flags [S]表示这是一个ＳＹＮ包，　可以锁定是SYN FLOOD问题，最简单的解决方法就是防火墙中封锁该来源ＩＰ．</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>如果碰到软中断线程CPU使用率高的情况下, 可以借助sar和tcpdump等工具进一步分析来源.</p>
-<hr>
-<h2 id="Lesson-11-套路-如何迅速分析出系统CPU的瓶颈在哪里"><a href="#Lesson-11-套路-如何迅速分析出系统CPU的瓶颈在哪里" class="headerlink" title="Lesson 11 [套路] 如何迅速分析出系统CPU的瓶颈在哪里?"></a>Lesson 11 [套路] 如何迅速分析出系统CPU的瓶颈在哪里?</h2><p>要想分析处理CPU性能问题, 首先我们需要了解CPU性能指标.</p>
-<h3 id="CPU性能指标-1"><a href="#CPU性能指标-1" class="headerlink" title="CPU性能指标"></a>CPU性能指标</h3><p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_metric.png" alt> </p>
-<ul>
-<li>CPU使用率<ul>
-<li>用户CPU使用率, 包括用户态(user)和低优先级用户态(nice). 该指标过高说明应用程序比较繁忙.</li>
-<li>系统CPU使用率, CPU在内核态运行的时间百分比(不含中断). 该指标高说明内核比较繁忙.</li>
-<li>等待I/O的CPU使用率, iowait, 该指标高说明系统与硬件设备I/O交互时间比较长.</li>
-<li>软/硬中断CPU使用率, 该指标高说明系统中发生大量中断.</li>
-<li>steal CPU / guest CPU, 表示虚拟机占用的CPU百分比.</li>
-</ul>
-</li>
-<li><p>平均负载</p>
-<p>  理想情况下平均负载等于逻辑CPU个数,表示每个CPU都被充分利用. 若大于则说明系统负载较重.</p>
-</li>
-<li><p>进程上下文切换</p>
-<p>  包括无法获取资源的自愿切换和系统强制调度时的非自愿切换. 上下文切换本身是保证Linux正常运行的一项核心功能. 过多的切换则会将原本运行进程的CPU时间消耗在寄存器,内核占及虚拟内存等数据保存和恢复上.</p>
-</li>
-<li><p>CPU缓存命中率</p>
-<p>  CPU缓存的复用情况,命中率越高性能越好. 其中L1/L2常用在单核,L3则用在多核中.</p>
-</li>
-</ul>
-<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/cache.png" alt>  </p>
-<h3 id="性能工具"><a href="#性能工具" class="headerlink" title="性能工具"></a>性能工具</h3><p>回顾之前的几个CPU性能测试场景:</p>
-<ul>
-<li>平均负载案例<ul>
-<li>先用uptime查看系统平均负载</li>
-<li>判断负载在升高后再用mpstat和pidstat分别查看每个CPU和每个进程CPU使用情况.找出导致平均负载较高的进程. </li>
-</ul>
-</li>
-<li>上下文切换案例<ul>
-<li>先用vmstat查看系统上下文切换和中断次数</li>
-<li>再用pidstat观察进程的自愿和非自愿上下文切换情况</li>
-<li>最后通过pidstat观察线程的上下文切换情况</li>
-</ul>
-</li>
-<li>进程CPU使用率高案例<ul>
-<li>先用top查看系统和进程的CPU使用情况,定位到进程</li>
-<li>再用perf top观察进程调用链,定位到具体函数</li>
-</ul>
-</li>
-<li>系统CPU使用率高案例<ul>
-<li>先用top查看系统和进程的CPU使用情况,top/pidstat都无法找到CPU使用率高的进程</li>
-<li>重新审视top输出</li>
-<li>从CPU使用率不高,但是处于Running状态的进程入手</li>
-<li>perf record/report发现短时进程导致 (execsnoop工具)</li>
-</ul>
-</li>
-<li>不可中断和僵尸进程案例<ul>
-<li>先用top观察iowait升高,发现大量不可中断和僵尸进程</li>
-<li>strace无法跟踪进程系统调用</li>
-<li>perf分析调用链发现根源来自磁盘直接I/O</li>
-</ul>
-</li>
-<li>软中断案例<ul>
-<li>top观察系统软中断CPU使用率高</li>
-<li>查看/proc/softirqs找到变化速率较快的几种软中断</li>
-<li>sar命令发现是网络小包问题</li>
-<li>tcpdump找出网络帧的类型和来源, 确定SYN FLOOD攻击导致</li>
-</ul>
-</li>
-</ul>
-<p>根据不同的性能指标来找合适的工具:<br><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_tool.png" alt> </p>
-<p>在生产环境中往往开发者没有权限安装新的工具包,只能最大化利用好系统中已经安装好的工具. 因此要了解一些主流工具能够提供哪些指标分析.</p>
-<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_tool_1.png" alt> </p>
-<p>作者给了一个直观的套路, 先运行几个支持指标较多的工具, 如top/vmstat/pidstat,根据它们的输出可以得出是哪种类型的性能问题. 定位到进程后再用strace/perf分析调用情况进一步分析. 如果是软中断导致用/proc/softirqs</p>
-<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/normal_tool.png" alt> </p>
-<hr>
-<h2 id="Lesson-12-CPU性能优化的几个思考"><a href="#Lesson-12-CPU性能优化的几个思考" class="headerlink" title="Lesson 12 CPU性能优化的几个思考"></a>Lesson 12 CPU性能优化的几个思考</h2><h3 id="性能优化方法论"><a href="#性能优化方法论" class="headerlink" title="性能优化方法论"></a>性能优化方法论</h3><p>遇到性能问题,优化前首先思考三个问题:</p>
-<ul>
-<li>首先判断优化是否有效,能提升多少性能?</li>
-<li>多种性能问题同时存在情况下,先优化哪一个?</li>
-<li>提升性能的方法往往不唯一,如何选取? 是否总选最大程度提升的那一种?</li>
-</ul>
-<h3 id="怎样评估性能优化效果"><a href="#怎样评估性能优化效果" class="headerlink" title="怎样评估性能优化效果"></a>怎样评估性能优化效果</h3><ul>
-<li>确定性能的量化指标<ul>
-<li>不要局限在单一维度,至少从应用程序和系统资源两个维度,分别选择不同的指标<ul>
-<li>应用程序: 吞吐量和请求延迟</li>
-<li>系统资源: CPU使用率</li>
-</ul>
-</li>
-<li>好的应用程序是性能优化的最终目的和结果,系统资源的使用情况是影响应用程序性能的根源.</li>
-<li>例如, web程序可以用ab等工具测试并发请求数和响应延迟,同时可以用vmstat/pidstat观察系统和进程的CPU使用率 </li>
-</ul>
-</li>
-<li>测试优化前的性能指标</li>
-<li>测试优化后的性能指标<ul>
-<li>要避免性能测试工具的干扰</li>
-<li>避免外部环境的变化</li>
-</ul>
-</li>
-</ul>
-<h3 id="多个性能问题同时存在-如何选择"><a href="#多个性能问题同时存在-如何选择" class="headerlink" title="多个性能问题同时存在,如何选择?"></a>多个性能问题同时存在,如何选择?</h3><p><strong>并不是所有性能问题都值得优化,性能测试也存在二八法则</strong></p>
-<ul>
-<li>如果是系统资源达到的瓶颈,首先优化系统资源的使用问题.</li>
-<li>针对不同类型的指标,首先优化那些由瓶颈导致,性能指标变化幅度较大的问题.</li>
-</ul>
-<h3 id="多个优化方法-如何选择"><a href="#多个优化方法-如何选择" class="headerlink" title="多个优化方法, 如何选择?"></a>多个优化方法, 如何选择?</h3><p>在提升性能的同时也要考虑优化成本.性能优化通常会带来复杂度的提升,降低程序的可维护性. (balance)</p>
-<p>例如DPDK(Data Plane Development Kit)是一种优化网络处理速度的方法,通过绕开内核网络协议栈的方法,提升网络的处理能力. 但是它要求独占一个CPU以及一定数量的内存大页,并且以100%CPU使用率运行. 在CPU核数较少的情况下不适合.</p>
-<h3 id="CPU-优化"><a href="#CPU-优化" class="headerlink" title="CPU 优化"></a>CPU 优化</h3><ul>
-<li>应用程序优化<ul>
-<li>编译器优化: 编译阶段开启优化选项, 如gcc -O2</li>
-<li>算法优化</li>
-<li>异步处理: 避免程序因为等待某个资源而一直阻塞,提升程序的并发处理能力. (将轮询替换为事件通知)</li>
-<li>多线程代替多进程: 减少上下文切换成本</li>
-<li>善用缓存: 加快程序处理速度</li>
-</ul>
-</li>
-<li>系统优化<ul>
-<li>CPU绑定: 将进程绑定要1个/多个CPU上,提高CPU缓存命中率,减少CPU调度带来的上下文切换</li>
-<li>CPU独占: CPU亲和性机制来分配进程</li>
-<li>优先级调整:使用nice适当降低非核心应用的优先级</li>
-<li>为进程设置资源显示: cgroups设置使用上限,防止由某个应用自身问题耗尽系统资源</li>
-<li>NUMA优化: CPU尽可能访问本地内存</li>
-<li>中断负载均衡: irpbalance,将中断处理过程自动负载均衡到各个CPU上</li>
-</ul>
-</li>
-</ul>
-<h3 id="避免过早优化"><a href="#避免过早优化" class="headerlink" title="避免过早优化"></a>避免过早优化</h3><p>优化可能会带来复杂性的提升,降低可维护性.针对当前情况进行的优化可能不适应快递迭代的新需求. </p>
-<p>因此性能优化最好逐步完善,根据性能评估的结果选择最重要的性能问题进行优化.</p>
-<h2 id="Lesson-13-14-答疑-略"><a href="#Lesson-13-14-答疑-略" class="headerlink" title="Lesson 13/14 答疑 (略)"></a>Lesson 13/14 答疑 (略)</h2><h2 id="读书群内分享"><a href="#读书群内分享" class="headerlink" title="读书群内分享"></a>读书群内分享</h2><ul>
-<li><p><a href="https://blog.csdn.net/u010889616/article/details/83245695" target="_blank" rel="external">TPS QPS 系统吞吐量的区别和理解</a></p>
-<ul>
-<li>QPS (Queries Per Second)每秒查询率,一台服务器每秒能够响应的查询次数.</li>
-<li><p>TPS (Transactions Per Second)每秒事务数,软件测试的结果.</p>
-<ul>
-<li>用户请求服务器</li>
-<li>服务器内部处理</li>
-<li><p>服务器返回给客户</p>
-<p>QPS类似TPS,但是对于一个页面的访问形成一个TPS,但是一次页面请求可能包含多次对服务器的请求,可能计入多次QPS</p>
-</li>
-</ul>
-</li>
-<li><p>系统吞吐量, 包括几个重要参数:</p>
-<ul>
-<li>QPS(TPS)</li>
-<li>并发数</li>
-<li><p>响应时间</p>
-<p>QPS(TPS)=并发数/平均相应时间</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="https://www.cnblogs.com/cute/archive/2011/04/20/2022280.html" target="_blank" rel="external">深入理解Linux系统下proc文件系统内容</a></li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -3170,8 +3059,8 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">30</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-count">31</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -3181,7 +3070,7 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">9</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -3225,7 +3114,7 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
