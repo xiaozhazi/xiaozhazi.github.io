@@ -1,0 +1,618 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="深入理解计算机系统," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="第三章主要是从汇编代码级来了解程序是如何运行，通过阅读汇编代码一方面可以理解编译器的优化能力帮助分析优化源码，另一方面可以了解程序存储运行控制信息的细节可以用来防御代码漏洞等。
+有一定的汇编基础，所以这章比上章读起来稍微轻松一些，长假期间闲时顺手翻完。
+主要记录了以下几个知识点：
+首先是定义
+
+PC,存储将要执行的下一条指令在内存中的地址
+整数寄存器，存储整数数据和指针，有的jicunq被用来记录">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《深入理解计算机系统》第3周">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/10/11/深入理解计算机系统第3周/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="第三章主要是从汇编代码级来了解程序是如何运行，通过阅读汇编代码一方面可以理解编译器的优化能力帮助分析优化源码，另一方面可以了解程序存储运行控制信息的细节可以用来防御代码漏洞等。
+有一定的汇编基础，所以这章比上章读起来稍微轻松一些，长假期间闲时顺手翻完。
+主要记录了以下几个知识点：
+首先是定义
+
+PC,存储将要执行的下一条指令在内存中的地址
+整数寄存器，存储整数数据和指针，有的jicunq被用来记录">
+<meta property="og:updated_time" content="2020-10-21T14:14:32.300Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《深入理解计算机系统》第3周">
+<meta name="twitter:description" content="第三章主要是从汇编代码级来了解程序是如何运行，通过阅读汇编代码一方面可以理解编译器的优化能力帮助分析优化源码，另一方面可以了解程序存储运行控制信息的细节可以用来防御代码漏洞等。
+有一定的汇编基础，所以这章比上章读起来稍微轻松一些，长假期间闲时顺手翻完。
+主要记录了以下几个知识点：
+首先是定义
+
+PC,存储将要执行的下一条指令在内存中的地址
+整数寄存器，存储整数数据和指针，有的jicunq被用来记录">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2020/10/11/深入理解计算机系统第3周/"/>
+
+  <title> 《深入理解计算机系统》第3周 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                《深入理解计算机系统》第3周
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-10-11T22:00:00+08:00" content="2020-10-11">
+              2020-10-11
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>第三章主要是从汇编代码级来了解程序是如何运行，通过阅读汇编代码一方面可以理解编译器的优化能力帮助分析优化源码，另一方面可以了解程序存储运行控制信息的细节可以用来防御代码漏洞等。</p>
+<p>有一定的汇编基础，所以这章比上章读起来稍微轻松一些，长假期间闲时顺手翻完。</p>
+<p>主要记录了以下几个知识点：</p>
+<p><strong>首先是定义</strong></p>
+<ul>
+<li>PC,存储将要执行的下一条指令在内存中的地址</li>
+<li>整数寄存器，存储整数数据和指针，有的jicunq被用来记录某些重要的程序状态</li>
+<li>条件码，保存最近执行的算术或逻辑指令的状态信息，用来实现控制或数据流中的条件变化</li>
+<li>向量寄存器用来存放一个或多个整数或浮点数值。</li>
+<li>一个X86-64的CPU中包含一组16个64位通用目的寄存器，用来存储整数数据和指针。其中%rsp是栈指针用来指明运行时栈的结束位置。</li>
+</ul>
+<p>数据传输指令、入栈出栈数据指令、算术逻辑操作以及跳转指令之前都有一定的了解，这次补充了下乘法和除法的运算逻辑。</p>
+<p>2个64位有符号/无符号整数相乘需要128位来表示，X86-64对128位数的操作提供有限的支持。</p>
+<p>mulq（无符号数乘法）和imulq（补码乘法）都要求一个参数必须在寄存器%rax中，另一个作为指令的源操作数给出，乘积存放在寄存器%rdx（高64位）和%rax（低64位）中。</p>
+<p>除法或取模运算，由单操作数除法指令来提供，idivl将寄存器%rdx（高64位）和%rax（低64位）中的128位数作为被除数，除数作为指令操作数给出，将商存储在%rax中，余数存储在%rdx中。</p>
+<p>条件码通常不会直接读取，常用的三种方法：</p>
+<ul>
+<li>根据条件码的某种组合将一个字节设置为0/1； </li>
+<li>条件跳转到程序的其他部分；</li>
+<li>有条件地传送数据。 常用的条件码寄存器：<ul>
+<li>CF：进位标志，可用来检查无符号操作的溢出</li>
+<li>ZF：零标志位</li>
+<li>SF：符号标志</li>
+<li>OF：溢出标志，最近的操作导致一个补码溢出</li>
+</ul>
+</li>
+</ul>
+<p><strong>基于条件数据传送的代码会比基于条件控制转移的代码性能要好</strong>是因为：</p>
+<p>首先，现代处理器通过pipelining重叠连续指令的步骤来获取高性能。</p>
+<p>当机器遇到条件跳转指令时只有当分支条件求值完成后才能决定分支往哪走，分支预测逻辑可靠的情况下流水线中依旧会充满指令并行，但是当跳转错误预测时需要丢掉它为跳转指令后续所有指令已做的工作，浪费大约15-30个时钟周期，导致程序性能严重下降。</p>
+<p>同条件跳转不同，处理器不需要预测结果就可以执行条件传送，处理器只是读源值，检查条件码，然后要么更新目的寄存器要么保持不变。</p>
+<p>不过条件传送也不总是会提高代码效率，需要权衡复杂计算开销和分支预测错误开销来判断具体使用哪种。</p>
+<p><strong>过程</strong>是软件中的一种重要抽象，要提供对过程的机器级支持需要处理<strong>传递控制、传递数据、分配和释放内存</strong>等机制。</p>
+<p>C语言过程调用机制的一个关键特性在于使用了栈数据结构的后进先出的内存管理原则，每个过程在栈中都有自己的私有空间，多个未完成调用的局部变量不会相互影响。</p>
+<p>C语言对数据引用不进行任何边界检查，局部变量和状态信息都存放在栈中。这两种情况结合在一起，对越界的数组元素写操作会破坏存储在栈中的状态信息，即常见的<strong>缓冲区溢出问题</strong>。 </p>
+<p>这种问题可以被用来攻击系统安全，将攻击代码包含在输入字符串中或者将一个指向攻击代码地址的指针覆盖返回地址等。</p>
+<p>现代的编译器和操作系统实现了很多机制限制入侵者通过缓冲区溢出攻击获得系统控制。常见的机制：</p>
+<ul>
+<li>栈随机化：为了插入攻击代码，攻击者既要插入代码又要插入指向该代码的指针。这个指针也是攻击字符串的一部分，要产生这个指针需要知道字符串存放的栈地址。栈的位置在程序每次运行时都有变化使得改地址难以预测。在Linux中栈随机化已经成为标准行为，ASLR地址空间布局随机化。</li>
+<li>栈破坏检测：第二道防线是能够检测到何时栈被破坏，栈保护者机制通过canary金丝雀值是否被改变来判断，该值是程序每次运行随机产生的，如果被某个函数或操作改变那么异常中止该程序。</li>
+<li>限制可执行代码区域：消除攻击者向系统中插入可执行代码的能力。</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/深入理解计算机系统/" rel="tag">#深入理解计算机系统</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/09/27/ 深入理解计算机系统第2周/" rel="next" title="《深入理解计算机系统》第2周">
+                <i class="fa fa-chevron-left"></i> 《深入理解计算机系统》第2周
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/10/18/深入理解计算机系统第4周/" rel="prev" title="《深入理解计算机系统》第4周">
+                《深入理解计算机系统》第4周 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">35</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">This post does not have a Table of Contents</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

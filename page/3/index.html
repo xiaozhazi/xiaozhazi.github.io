@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -235,6 +235,582 @@
             
               
                 
+                <a class="post-title-link" href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2016-12-23T15:53:56+08:00" content="2016-12-23">
+              2016-12-23
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="10、Large-Scale-Machine-Learning"><a href="#10、Large-Scale-Machine-Learning" class="headerlink" title="10、Large Scale Machine Learning"></a>10、Large Scale Machine Learning</h1><h2 id="10-1、Gradient-Descent-with-Large-Datasets"><a href="#10-1、Gradient-Descent-with-Large-Datasets" class="headerlink" title="10.1、Gradient Descent with Large Datasets"></a>10.1、Gradient Descent with Large Datasets</h2><h3 id="10-1-1、Learning-with-large-dataset"><a href="#10-1-1、Learning-with-large-dataset" class="headerlink" title="10.1.1、Learning with large dataset"></a>10.1.1、Learning with large dataset</h3><p>It’s not who has the best algorithm that wins.<br>It’s who has the most data.</p>
+<h3 id="10-1-2、Stochastic-gradient-descent"><a href="#10-1-2、Stochastic-gradient-descent" class="headerlink" title="10.1.2、Stochastic gradient descent"></a>10.1.2、Stochastic gradient descent</h3><p>不像Batch gradient descent每次迭代时都需要将数据集代入计算。</p>
+<p>当数据集大的时候我们需要随机shuffle数据集，<br>然后选取第一个数据进行计算，然后进行梯度下降，再接着使用接下来的数据依次进行此过程。</p>
+<h3 id="10-1-3、Mini-batch-gradient-descent"><a href="#10-1-3、Mini-batch-gradient-descent" class="headerlink" title="10.1.3、Mini-batch gradient descent"></a>10.1.3、Mini-batch gradient descent</h3><p>batch 和  stochastic的结合。每次选一组数据进行计算，然后再接着使用下一组重复此过程。</p>
+<h3 id="10-1-4、Stochastic-gradient-descent-convergence"><a href="#10-1-4、Stochastic-gradient-descent-convergence" class="headerlink" title="10.1.4、Stochastic gradient descent convergence"></a>10.1.4、Stochastic gradient descent convergence</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/10_1.png" alt="10_1"></p>
+<p>Learning rate α is tapically held constant. Can slowly descrease α over time if we want θ to converge.</p>
+<h2 id="10-2、Online-Learning"><a href="#10-2、Online-Learning" class="headerlink" title="10.2、Online Learning"></a>10.2、Online Learning</h2><p>上述方法可以应用在实时在线学习上，数据集大小不固定，以数据流的形式出现。</p>
+<h2 id="10-3、Map-reduce-and-data-parallelism"><a href="#10-3、Map-reduce-and-data-parallelism" class="headerlink" title="10.3、Map-reduce and data parallelism"></a>10.3、Map-reduce and data parallelism</h2><p>在进行梯度下降计算时，中间有步骤需要求和，我们可以利用Map-reduce和并行计算来缩短处理时间。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2016-12-16T10:56:39+08:00" content="2016-12-16">
+              2016-12-16
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="9、Anomaly-detection"><a href="#9、Anomaly-detection" class="headerlink" title="9、Anomaly detection"></a>9、Anomaly detection</h1><h2 id="9-1、Density-Estimation"><a href="#9-1、Density-Estimation" class="headerlink" title="9.1、Density Estimation"></a>9.1、Density Estimation</h2><h3 id="9-1-1、Problem-motivation"><a href="#9-1-1、Problem-motivation" class="headerlink" title="9.1.1、Problem motivation"></a>9.1.1、Problem motivation</h3><p>密度估计，判断一个test实例是否为不正常的。</p>
+<p>Anomaly detection example：</p>
+<ol>
+<li><p>Fraud detection</p>
+<pre><code>xi = features of user i&apos;s ativities.
+Model p(x) from data.
+Identify unusual users by checking which have p(x)&lt;ε
+</code></pre></li>
+<li><p>Manufacturing</p>
+</li>
+<li><p>Monitoring computers in a data center.</p>
+<pre><code>xi = features of machine i.
+memory use,number of disk access/sec,cpu load...
+</code></pre></li>
+</ol>
+<h3 id="9-1-2、Gaussian-distribution"><a href="#9-1-2、Gaussian-distribution" class="headerlink" title="9.1.2、Gaussian distribution"></a>9.1.2、Gaussian distribution</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_1.png" alt="9_1"></p>
+<h3 id="9-1-3、Anomaly-detection-algorithm"><a href="#9-1-3、Anomaly-detection-algorithm" class="headerlink" title="9.1.3、Anomaly detection algorithm"></a>9.1.3、Anomaly detection algorithm</h3><ol>
+<li>Choose features xi that might be indicative of anomalous examples.</li>
+<li><p>Fit parameters μ1, … μn,σ12,…σn2</p>
+<pre><code>μj = 1/m ξxji
+σj2 = 1/m ξ(xji-μj)2
+</code></pre></li>
+<li>Given new example x, compute p(x),Anomaly if p(x)&lt;ε.</li>
+</ol>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_2.png" alt="9_2"></p>
+<h3 id="9-1-4、Developing-and-evaluating-an-anomaly-detection-system"><a href="#9-1-4、Developing-and-evaluating-an-anomaly-detection-system" class="headerlink" title="9.1.4、Developing and evaluating an anomaly detection system"></a>9.1.4、Developing and evaluating an anomaly detection system</h3><ol>
+<li>The importance of real-number evaluation</li>
+</ol>
+<p>例如 10000 good engines， 20 flawed engines，我们可以进行如下划分：</p>
+<pre><code>Training set：6000 good engines
+CV:2000 good engines,10 anomalous
+Test:2000 good engines,10 anomalous
+</code></pre><ol>
+<li>Algorithm evaluation  </li>
+</ol>
+<p>可以利用F1-score来评估算法，我们也可以用CV来选择参数ε。</p>
+<h3 id="9-1-5、Anomaly-detection-VS-supervised-learning"><a href="#9-1-5、Anomaly-detection-VS-supervised-learning" class="headerlink" title="9.1.5、Anomaly detection VS supervised learning"></a>9.1.5、Anomaly detection VS supervised learning</h3><p>Anomaly detection:</p>
+<ol>
+<li>Very small number of positive example.</li>
+<li>Large number of negative example.</li>
+<li>Many different types od anomalies. 很难通过positive实例来学习异常的特征</li>
+<li>未来和异常和目前的异常实例不相关</li>
+</ol>
+<p>Supervised Learning：</p>
+<ol>
+<li>Large number of positive and negative examples.</li>
+<li>可以根据大量的positive值推断出其特征值，未来的positive和现在的训练集非常相似</li>
+</ol>
+<h3 id="9-1-6、多元高斯分布"><a href="#9-1-6、多元高斯分布" class="headerlink" title="9.1.6、多元高斯分布"></a>9.1.6、多元高斯分布</h3><p>通过μ矩阵和ξ矩阵来对多远高斯分布进行调整。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_3.png" alt="9_3"></p>
+<h2 id="9-2-推荐系统"><a href="#9-2-推荐系统" class="headerlink" title="9.2 推荐系统"></a>9.2 推荐系统</h2><h3 id="9-3-1-基于内容的推荐"><a href="#9-3-1-基于内容的推荐" class="headerlink" title="9.3.1 基于内容的推荐"></a>9.3.1 基于内容的推荐</h3><p>问题描述：</p>
+<ol>
+<li>r(i,j)=1 if user j has rated movie i</li>
+<li>y(i,j)=rating by user j on movie i</li>
+<li>θ(j)=paramater vector for user j</li>
+<li>x(i)=feature vector for movie i</li>
+<li>For user j,movie i, predicted rating θ(j)T(x(i))</li>
+<li>m(j)=no. of movies rated by user j</li>
+</ol>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_4.png" alt="9_4"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_5.png" alt="9_5"></p>
+<h3 id="9-3-2-正交过滤"><a href="#9-3-2-正交过滤" class="headerlink" title="9.3.2 正交过滤"></a>9.3.2 正交过滤</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_6.png" alt="9_6"></p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/9_7.png" alt="9_7"></p>
+<h3 id="9-3-2-实现技巧"><a href="#9-3-2-实现技巧" class="headerlink" title="9.3.2 实现技巧"></a>9.3.2 实现技巧</h3><p>归一化，计算平均值，然后同时减去该值</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
+              2016-12-08
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="8、Unsupervised-Learning"><a href="#8、Unsupervised-Learning" class="headerlink" title="8、Unsupervised Learning"></a>8、Unsupervised Learning</h1><h2 id="8-1-Clustering"><a href="#8-1-Clustering" class="headerlink" title="8.1 Clustering"></a>8.1 Clustering</h2><h3 id="8-1-1-Unsupervised-Learning-Introduction"><a href="#8-1-1-Unsupervised-Learning-Introduction" class="headerlink" title="8.1.1 Unsupervised Learning: Introduction"></a>8.1.1 Unsupervised Learning: Introduction</h3><p>Applications of clustering:</p>
+<ol>
+<li>Market segementation</li>
+<li>Social network analysis</li>
+<li>Organize computing clusters</li>
+<li>Astronomical data analysis</li>
+</ol>
+<p>无监督学习，数据是没有label的。</p>
+<h3 id="8-1-2-K-Means-Algorithm"><a href="#8-1-2-K-Means-Algorithm" class="headerlink" title="8.1.2 K-Means Algorithm"></a>8.1.2 K-Means Algorithm</h3><p>Input:</p>
+<pre><code>K (number of clusters)
+Training set {x1,x2,...xm}
+</code></pre><p>算法：</p>
+<p>随机初始化K个聚类簇（cluster centroids）u1,u2…uK</p>
+<p>然后repeat操作：</p>
+<ol>
+<li><p>cluster assignment step：</p>
+<pre><code>for     i = 1 to m
+  c(i):=index(from 1 to K) of cluster centroids closest to xi
+</code></pre></li>
+<li><p>Move centroid:</p>
+<pre><code>for k = 1 to K
+  uk := average(mean)of points assigned to cluster k
+</code></pre></li>
+</ol>
+<h3 id="8-1-3-Optimization-objective"><a href="#8-1-3-Optimization-objective" class="headerlink" title="8.1.3 Optimization objective"></a>8.1.3 Optimization objective</h3><p>最小化distortion：<br><img src="http://ofacak8l3.bkt.clouddn.com/8_1.png" alt="8_1"></p>
+<p>因此K-means算法也可以表示为：</p>
+<ol>
+<li>Randomly initialize K cluster centroids u1,u2,…uk</li>
+<li><p>Repeat:</p>
+<pre><code>for i = 1 to m
+    c(i):= index(from 1 to K) of cluster centroid closest to xi
+</code></pre></li>
+</ol>
+<pre><code>for k = 1 to K
+    uk:= average(mean) of points assigned to cluster k [minize J]
+</code></pre><h3 id="8-1-4-Random-initialization"><a href="#8-1-4-Random-initialization" class="headerlink" title="8.1.4 Random initialization"></a>8.1.4 Random initialization</h3><p>Random initialize:</p>
+<p>首先满足 K &lt; m；</p>
+<p>然后随机选择K个训练实例；</p>
+<p>将u1,u2,…uk等于这K个实例；</p>
+<pre><code>for i = 1 to 100{
+    Randomly initialize K-means.
+    Run K-means. Get c1,c2,...cm,u1,...uk.
+    Compute cost function(distortion)
+</code></pre><p>选择最小cost的聚类</p>
+<h3 id="8-1-5-Choosing-the-number-of-clusters"><a href="#8-1-5-Choosing-the-number-of-clusters" class="headerlink" title="8.1.5 Choosing the number of clusters"></a>8.1.5 Choosing the number of clusters</h3><p>目前最好的方法还是手动选择；</p>
+<p>Elbow cost：手肘方法，不是所有情况都能画出这样的图形，有时候会下降趋势较平滑。</p>
+<p>sometimes, you’re running K-means to get clusters to use for some later/downstream purpose.</p>
+<p>Evaluate K-means based on a metric for how well it performs for that later purpose.    </p>
+<h2 id="8-2-Dimensionality-Reduction"><a href="#8-2-Dimensionality-Reduction" class="headerlink" title="8.2 Dimensionality Reduction"></a>8.2 Dimensionality Reduction</h2><p>介绍了第二种无监督学习算法：维数约减。</p>
+<p>主要分为两大类应用：</p>
+<ol>
+<li>Data Compression</li>
+<li>Data Visualization</li>
+</ol>
+<h3 id="8-2-1-Data-Compression"><a href="#8-2-1-Data-Compression" class="headerlink" title="8.2.1 Data Compression"></a>8.2.1 Data Compression</h3><p>将数据从2D 降维到 1D</p>
+<p>将数据从3D 降维到 2D （将三维中的点投影到一个平面上）</p>
+<h3 id="8-2-2-Data-Visualization"><a href="#8-2-2-Data-Visualization" class="headerlink" title="8.2.2 Data Visualization"></a>8.2.2 Data Visualization</h3><p>数据可视化，便于用户更好的观察数据，理解数据之间的含义。</p>
+<p>将数据比较相关的进行降维，原来N维的数据降低到K维</p>
+<p>k &lt;= N； 并且通常K=2或3， 便于进行可视化视图分析 </p>
+<h2 id="8-3-Principal-Component-Analysis"><a href="#8-3-Principal-Component-Analysis" class="headerlink" title="8.3 Principal Component Analysis"></a>8.3 Principal Component Analysis</h2><h3 id="8-3-1-Principal-Component-Analysis-Problem-Formulation"><a href="#8-3-1-Principal-Component-Analysis-Problem-Formulation" class="headerlink" title="8.3.1 Principal Component Analysis Problem Formulation"></a>8.3.1 Principal Component Analysis Problem Formulation</h3><p>Reduce from 2-dimension to 1-dimension:</p>
+<p>Find a direction (a vector v1) onto which to project the data so as to minimize the projection error.</p>
+<p>Reduce from n-dimension to k-dimension:</p>
+<p>Find k vectors v1,v2…vk on to which to project the data, so as to minimize the projection error.</p>
+<p>PCA 不是线性回归：线性回归是竖着映射，PCA是垂直映射。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/8_2.png" alt="8_2"></p>
+<h3 id="8-3-2-Principal-Component-Analysis-algorithm"><a href="#8-3-2-Principal-Component-Analysis-algorithm" class="headerlink" title="8.3.2 Principal Component Analysis algorithm"></a>8.3.2 Principal Component Analysis algorithm</h3><p><strong>Data Preprocessing:</strong></p>
+<p>Training set: x1,x2,…xm</p>
+<p>Preprocessing(feature scaling/mean normalization):</p>
+<pre><code>uj = 1/m(x1+x2+...+xm)
+xj&apos; = xj - uj
+</code></pre><p>If different features on different scales, scale features to have comparable range of values.</p>
+<p><strong>Principal Component Analysis (PCA) algorithm</strong></p>
+<p>Reduce data from n-dimensions to k-dimensions</p>
+<p>compute “covariance matrix”: sigma = 1/m(x1<em>x1T+…+xn</em>xnT)</p>
+<p>compute “eigenvectors” of matrix sigma: [U,S,V] = svd(sigma)</p>
+<p>Ureduce = U(:,1:k)</p>
+<p>z = Ureduce’ * x</p>
+<h3 id="8-4-Applying-PCA"><a href="#8-4-Applying-PCA" class="headerlink" title="8.4 Applying PCA"></a>8.4 Applying PCA</h3><h4 id="8-4-1-Reconstruction-from-Compressed-Representation"><a href="#8-4-1-Reconstruction-from-Compressed-Representation" class="headerlink" title="8.4.1 Reconstruction from Compressed Representation"></a>8.4.1 Reconstruction from Compressed Representation</h4><p>Xapprox = Ureduce*z</p>
+<h4 id="8-4-2-Choosing-the-number-of-principal-components"><a href="#8-4-2-Choosing-the-number-of-principal-components" class="headerlink" title="8.4.2 Choosing the number of principal components"></a>8.4.2 Choosing the number of principal components</h4><p><strong>choosing k    </strong></p>
+<p>(1)Average squared projection error: 1/m(||x1-xapprox1||2 +…)</p>
+<p>(2)Total variation in the data : 1/m(||x1||2 + … +||xm||2)</p>
+<p>Typically, choose k to be smallest value so that (1)/(2)&lt;=0.01</p>
+<p>“99% of variance is retained”    </p>
+<p><strong>Advice for applying PCA</strong></p>
+<p>Supervised learning speedup</p>
+<p>Compression:</p>
+<ol>
+<li>Reduce memory/disk needed to store data</li>
+<li>speed up learning algorithm</li>
+</ol>
+<p>Visualization</p>
+<p><strong>Bad use of PCA: To prevent overfitting</strong></p>
+<p>fewer features, less likely to overfit.</p>
+<p>This might work ok, but isn’t good way to address overfitting. Use regularization instead.</p>
+<p>Before implementing PCA, first try running whatever you want to do with the original/raw data xi. Only if that doesn’t do what you want, then implement PCA and consider using zi.</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" itemprop="url">
+                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
+              2016-12-04
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><h3 id="7-1-Optimization-objective"><a href="#7-1-Optimization-objective" class="headerlink" title="7.1 Optimization objective"></a>7.1 Optimization objective</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
+<h3 id="7-2-Large-Margin-Intuition"><a href="#7-2-Large-Margin-Intuition" class="headerlink" title="7.2 Large Margin Intuition"></a>7.2 Large Margin Intuition</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
+<p>C如果越大，两个分类的间距越小。</p>
+<h3 id="7-3-The-Mathematics-behind-large-margin-classification"><a href="#7-3-The-Mathematics-behind-large-margin-classification" class="headerlink" title="7.3 The Mathematics behind large margin classification"></a>7.3 The Mathematics behind large margin classification</h3><p>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/7_4.png" alt="7_4"><br>SVM Decision Boundary 计算时可以利用这个特性。</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/7_5.png" alt="7_5"></p>
+<h3 id="7-4-Kernels"><a href="#7-4-Kernels" class="headerlink" title="7.4 Kernels"></a>7.4 Kernels</h3><h4 id="7-4-1-Kernels-I"><a href="#7-4-1-Kernels-I" class="headerlink" title="7.4.1 Kernels I"></a>7.4.1 Kernels I</h4><p>Gaussian Kernel.</p>
+<p><img src="http://ofacak8l3.bkt.clouddn.com/7_6.png" alt="7_6"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_7.png" alt="7_7"></p>
+<h4 id="7-5-Kernels-II"><a href="#7-5-Kernels-II" class="headerlink" title="7.5 Kernels II"></a>7.5 Kernels II</h4><p>SVM parameters:<br>Large C: Lower bias, high variance</p>
+<p>Small C: High bias, low variance</p>
+<p>Large segma*segma: more smoothly. High bias, low variance.</p>
+<p>Small segma*segma: less smoothly. Lower bias, higher variance.</p>
+<h3 id="7-6-Using-an-SVM"><a href="#7-6-Using-an-SVM" class="headerlink" title="7.6 Using an SVM"></a>7.6 Using an SVM</h3><p>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
+<p><strong>Need to specify:</strong></p>
+<pre><code>Choice of parameter C.
+Choice of Kernel(similarity function):
+    No Kernel(&apos;Linear Kernel&apos;)
+    Gaussian Kernel.(need to choose segma)
+</code></pre><p><strong>Note:</strong></p>
+<pre><code>Do not perform feature scaling before using the Gaussian kernel.
+</code></pre><p><strong>Other Choice of kernel:</strong></p>
+<pre><code>Not all similarity functions similarity(x,l) make valid kernels. 
+(Need to satisfy &apos;mercer&apos;s Theorem&apos; to make sure SVM package&apos;s optimications run correctly, and do not diverge)    
+</code></pre><p><strong>Multi-class classification:</strong></p>
+<p>Train K SVMs, 需要对K个类进行分类，而非k-1。</p>
+<p><strong>Logistic regression vs SVM:</strong></p>
+<p>n= number of features, m =number of training examples</p>
+<pre><code>if n is large（相对于m）:
+    using Logistic regression, or SVM without kernel.
+if n is small, m is intermediate:
+    use SVM with Gaussian Kernel.
+if n is small, m is large:
+    create/add more features,
+    then use logistic regression or SVM without kernel.
+
+Neural network likely to work well for most od these settings,
+but many slower to train.
+</code></pre>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周
                 </a>
@@ -248,7 +824,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-27T15:46:44+08:00" content="2016-11-27">
               2016-11-27
             </time>
@@ -386,7 +962,7 @@ It&apos;s who has the most data.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-24T15:10:34+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -487,7 +1063,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-24T14:14:40+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -656,7 +1232,7 @@ struct list_head cg_list;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-13T15:48:54+08:00" content="2016-11-13">
               2016-11-13
             </time>
@@ -762,7 +1338,7 @@ output层
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-07T10:31:30+08:00" content="2016-11-07">
               2016-11-07
             </time>
@@ -940,7 +1516,7 @@ end
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-01T15:30:52+08:00" content="2016-11-01">
               2016-11-01
             </time>
@@ -1026,548 +1602,6 @@ but fail to generalize to new examples.
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/10/31/Machine-Learning编程作业1——Linear-Regression/" itemprop="url">
-                  Machine Learning编程作业1——Linear Regression
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-10-31T10:50:02+08:00" content="2016-10-31">
-              2016-10-31
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="作业源码"><a href="#作业源码" class="headerlink" title="作业源码"></a>作业源码</h2><h3 id="warmUpExercise-m-basic-function"><a href="#warmUpExercise-m-basic-function" class="headerlink" title="warmUpExercise.m   ____basic function"></a>warmUpExercise.m   ____basic function</h3><p>fprintf(‘Running warmUpExercise …\n’);</p>
-<p>fprintf(‘5*5 Identity Matrix: \n”);</p>
-<p>warmUpExercise()</p>
-<pre><code>function A = warmUpExercise()
-
-A = [];
-A = eye(5);
-
-end
-</code></pre><h3 id="plotData-m-Plotting"><a href="#plotData-m-Plotting" class="headerlink" title="plotData.m ____Plotting"></a>plotData.m ____Plotting</h3><p>fprintf(‘Plotting Data…\n’)</p>
-<p>data = load(‘ex1data1.txt’);</p>
-<p>X = data(:,1); y = data(;,2);</p>
-<p>m = length(y); %num of training examples</p>
-<p>plotData(X,y)</p>
-<pre><code>function plotData(x,y)
-
-figure;
-plot(x,y,&apos;rx&apos;,&apos;MarkerSize&apos;,10);
-ylabel(&apos;Profit in $10,000s&apos;);
-xlabel(&apos;Poputation of City in 10,000s&apos;);
-
-end
-</code></pre><h3 id="gradientDescent-m-Gradient-Descent"><a href="#gradientDescent-m-Gradient-Descent" class="headerlink" title="gradientDescent.m ____Gradient Descent"></a>gradientDescent.m ____Gradient Descent</h3><p>fprintf(‘Running Gradient Descent …\n’)</p>
-<p>X = [ones[m,1],data(;,1)];</p>
-<p>theta = zeros(2,1);</p>
-<p>iterations = 1500;</p>
-<p>alpha = 0.01;</p>
-<p>computeCost(X,y,theta);</p>
-<h4 id="computeCost-m-compute-initial-cost"><a href="#computeCost-m-compute-initial-cost" class="headerlink" title="computeCost.m ____compute initial cost"></a>computeCost.m ____compute initial cost</h4><pre><code>function J = computeCost(X,y,theta)
-
-m = length(y);
-J = 0;
-cost = 0;
-for i = 1 : m
-    cost += (theta(1,1) * X(i,1) + theta(2,1) * X(i,2)
-            - y(i))^2;
-end
-
-J = 1/(2*m) * cost;
-
-end
-</code></pre><p>theta = gradientDescent(X,y,theta,alpha,iterations);</p>
-<pre><code>function [theta,J_history] = gradientDescent(X,y,theta,
-                alpha,num_iters)
-
-m = length(y);
-J_history = zeros(num_iters,1);
-
-for iter = 1 : num_iters
-    cost_theta1 = 0;
-    cost_theta2 = 0;
-    for i = 1 : m
-        cost_theta1 += (theta(1,1) * X(i,1) + 
-            theta(2,1) * X(i,2) - y(i)) * X(i,1);
-        cost_theta2 += (theta(1,1) * X(i,1) +
-            theta(2,1) * X(i,2) - y(i)) * X(i,2);
-    end
-    new_theta1 = theta(1,1) - alpha*cost_theta1 * 1/m;
-    new_theta2 = theta(2,1) - alpha*cost_theta2 * 1/m;
-    theta(1,1) = new_theta1;
-    theta(2,1) = new_theta2;
-
-    J_history(iter) = computeCost(X,y,theta);
-end
-end
-</code></pre>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/10/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第二周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第二周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-10-24T14:00:42+08:00" content="2016-10-24">
-              2016-10-24
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="课程内容简介"><a href="#课程内容简介" class="headerlink" title="课程内容简介"></a>课程内容简介</h2><p>课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：<br>i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）<br>ii）无监督学习（集群、降维、推荐系统、深度学习）<br>iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）</p>
-<h3 id="课程学习"><a href="#课程学习" class="headerlink" title="课程学习"></a>课程学习</h3><h4 id="第二周"><a href="#第二周" class="headerlink" title="第二周"></a>第二周</h4><p>1、环境搭建</p>
-<p>2、Multivariate Linear Regression，多元线性回归。 </p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9.png" alt="9"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/10.png" alt="10"></p>
-<pre><code>Feature Scaling:
-Make sure features are on a similar scale.
-
-为什么使用feature scaling？
-It speeds up gradient by making it require fewer
-iterations to get to 
-
-
-(Get every feature into approximately a -1&lt;= xi &lt;=1)
-(Mean normalization: replace xi with xi-ui to make
- features have approximately zero mean.)
-</code></pre><p>如何保证梯度下降正确完成？</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/11.png" alt="11"></p>
-<pre><code>Making sure gradient descent is working correctly.
-如果随着迭代次数的增加J(θ)反而越来越大，应该用更小的α。
-If α is too small: slow convergence.
-If α is too large: J(θ) may be not decrease on
-            every interation, may not converge.
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/12.png" alt="12"></p>
-<p>3、Computing Parameters Analytically    </p>
-<p>正态方程<br><img src="http://ofacak8l3.bkt.clouddn.com/13.png" alt="13"></p>
-<p>Octave: pinv(X’ <em> X) </em> X’ * Y   (X’ 即XT)</p>
-<p>什么时候用梯度下降？什么时候用正态方程？</p>
-<pre><code>m training examples, n features.
-
-Gradient Descent
-* Need to choose α.
-* Need many iterations.
-* Work well even when n is large.
-
-Normal Equation
-* No need to choose α.
-* Don&apos;t need to iterate.
-* Need to cumpute (XTX)-1.   O(n3) 
-* Slow if n is very large.
-</code></pre><p>如果XTX是不可逆的怎么办？</p>
-<pre><code>Octave 有两种计算矩阵逆的函数——pinv、inv
-如果使用pinv计算的话都会得到实际的结果，不管矩阵是否可逆。
-
-* Redundant features(linearly dependent).
-* Too many features(eg. m &lt;= n)
-    delete some features,or use regularization.
-</code></pre>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/10/18/AI入门笔记一/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第一周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-10-18T10:44:48+08:00" content="2016-10-18">
-              2016-10-18
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="课程内容简介"><a href="#课程内容简介" class="headerlink" title="课程内容简介"></a>课程内容简介</h2><p>课程主要介绍机器学习、数据挖掘和统计模式识别。相关主题包括：<br>i) 监督式学习（参数和非参数算法、支持向量机、核函数、神经网络）<br>ii）无监督学习（集群、降维、推荐系统、深度学习）<br>iii) 机器学习实例（偏见／方差理论、机器学习和AI领域的创新）</p>
-<h3 id="课程学习"><a href="#课程学习" class="headerlink" title="课程学习"></a>课程学习</h3><h4 id="第一周"><a href="#第一周" class="headerlink" title="第一周"></a>第一周</h4><p>1、10月18日学习Introduction章节。主要介绍了什么是Machine Learning及其意义，后续介绍了监督学习和无监督学习，其中监督学习主要介绍了regression和classification，无监督学习主要是cluster。(review三遍才过，对于有无监督学习理解不深刻)</p>
-<pre><code>Machine Learning is the field of study that gives computers 
-the ability to learn without being explicitly programmed.
-</code></pre><p>2、10月19日学习Model and Cost Function章节。分为四个小节，Model Representation、Cost Function、Cost Function-Intuition I、Cost Function-Intuition II。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/hypothesis_structure.png" alt="hypothsis structure"></p>
-<pre><code>Cost Function —— square error function
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/2.png" alt="2"></p>
-<p>我们的目标就是尽可能的使Cost Function值最小。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/3.png" alt="3"></p>
-<p>3、10月19日学习Parameter Learning章节。分为三个小节Gradient Descent、Gradient Descent Intuition、Gradient Descent For Linear Regression。</p>
-<p>因此采用梯度下降的方法</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/4.png" alt="4"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/5.png" alt="5"></p>
-<p>注意，上述temp0和temp1是同步变化的。</p>
-<p>参数a的选取也至关重要，不仅影响算法的效率，还对是否能寻找到局部最优解起至关重要的作用。<br><img src="http://ofacak8l3.bkt.clouddn.com/6.png" alt="6"></p>
-<pre><code>As we approach a local minimum, gradient descent will sutomatically
-take smaller steps. So, no need to decrease a over time.
-</code></pre><p>最终算法表示如下：<br><img src="http://ofacak8l3.bkt.clouddn.com/7.png" alt="7"><br><img src="http://ofacak8l3.bkt.clouddn.com/8.png" alt="8"></p>
-<p>4、10月20日学习Linear Algebra Review，主要是复习了线性代数的相关知识，矩阵计算、矩阵的逆和转置等。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/09/05/如何在MAC上搭建博客——hexo-github/" itemprop="url">
-                  如何在MAC上搭建博客——hexo+github
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-09-05T16:41:16+08:00" content="2016-09-05">
-              2016-09-05
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h2><h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>1、git——git-scm官网<a href="http://git-scm.com" target="_blank" rel="external">git-scm</a>下载mac版</p>
-<p>2、node.js——直接到<a href="https://nodejs.org" target="_blank" rel="external">node.js官网</a>下载安装 </p>
-<p>3、markdown编辑器——mac下推荐<a href="25.io/mou/">mou</a>或者<a href="http://macdown.uranusjr.com/" target="_blank" rel="external">macDown</a> 本人下载mou时其还未支持macOS sierra</p>
-<p>4、域名——阿里云购买即可</p>
-<h3 id="安装和初始化"><a href="#安装和初始化" class="headerlink" title="安装和初始化"></a>安装和初始化</h3><p>mac下在命令行下安装hexo</p>
-<pre><code>sudo npm install hexo -g
-hexo init blog
-cd blog
-sudo npm install
-hexo server
-</code></pre><h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>配置站点文件_config.yml,主要修改Site部分，URL部分，deploy部分</p>
-<pre><code>#Site
-title: Frances Hu&apos;s Blog
-subtitle: 技术迷，本命李宇春
-author: Frances Hu
-...
-language: zh_CN
-
-#URL
-url: http://xiaozhazi.win
-
-deploy:
-    type: git
-    repository: https://github.com/xiaozhazi/xiaozhazi.github.io.git
-    branch: master
-</code></pre><h3 id="部署网页"><a href="#部署网页" class="headerlink" title="部署网页"></a>部署网页</h3><p>在blog文件夹目录下执行生成静态页面的命令：</p>
-<pre><code>hexo generate
-hexo deploy
-</code></pre><p>如果出错，无法识别git，则执行如下命令来安装hexo-deployer-git</p>
-<pre><code>sudo npm install hexo-deployer-git --save
-</code></pre><h3 id="绑定个人域名"><a href="#绑定个人域名" class="headerlink" title="绑定个人域名"></a>绑定个人域名</h3><p>在/blog/themes/landscape/source目录下新建CNAME文件，将自己的域名 xiaozhazi.win写入即可</p>
-<p>重新部署</p>
-<pre><code>hexo clean
-hexo d -g
-</code></pre><p>###安装主题<br>在blog目录下执行如下命令</p>
-<pre><code>git clone https://github.com/iissnan/hexo-theme-next themes/next
-</code></pre><p>将blog目录下的_config.yml里theme的名称改为next即可</p>
-<p>也可以到<a href="http://hexo.io.themes" target="_blank" rel="external">hexo官网主题页</a>下载自己喜欢的主题</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1613,8 +1647,8 @@ hexo d -g
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">31</span>
-              <span class="site-state-item-name">Artikel</span>
+              <span class="site-state-item-count">35</span>
+              <span class="site-state-item-name">posts</span>
             </a>
           </div>
 
@@ -1623,8 +1657,8 @@ hexo d -g
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">9</span>
-                <span class="site-state-item-name">Tags</span>
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">tags</span>
               </a>
             </div>
           
@@ -1668,7 +1702,7 @@ hexo d -g
 </div>
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

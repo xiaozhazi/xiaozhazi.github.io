@@ -1,0 +1,608 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="深入理解计算机系统," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="上周第三章已经看完，因此这周选择了加看第五章优化程序性能，通常编译器可以代替我们进行程序优化，例如循环展开、代码移动等。但是由于函数存在编译器无法感知的副作用，往往还需要程序员在编写代码时注重效率。
+一些看上去无足轻重的代码段可能隐藏着渐进低效率（asymptotic inefficiency），在数据量小时测试可能无法发现问题，但部署环境后代码会突然成为瓶颈。有经验的程序员工作的一部分就是避免引">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《深入理解计算机系统》第4周">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/10/18/深入理解计算机系统第4周/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="上周第三章已经看完，因此这周选择了加看第五章优化程序性能，通常编译器可以代替我们进行程序优化，例如循环展开、代码移动等。但是由于函数存在编译器无法感知的副作用，往往还需要程序员在编写代码时注重效率。
+一些看上去无足轻重的代码段可能隐藏着渐进低效率（asymptotic inefficiency），在数据量小时测试可能无法发现问题，但部署环境后代码会突然成为瓶颈。有经验的程序员工作的一部分就是避免引">
+<meta property="og:updated_time" content="2020-10-21T14:21:39.454Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《深入理解计算机系统》第4周">
+<meta name="twitter:description" content="上周第三章已经看完，因此这周选择了加看第五章优化程序性能，通常编译器可以代替我们进行程序优化，例如循环展开、代码移动等。但是由于函数存在编译器无法感知的副作用，往往还需要程序员在编写代码时注重效率。
+一些看上去无足轻重的代码段可能隐藏着渐进低效率（asymptotic inefficiency），在数据量小时测试可能无法发现问题，但部署环境后代码会突然成为瓶颈。有经验的程序员工作的一部分就是避免引">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2020/10/18/深入理解计算机系统第4周/"/>
+
+  <title> 《深入理解计算机系统》第4周 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                《深入理解计算机系统》第4周
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-10-18T22:00:00+08:00" content="2020-10-18">
+              2020-10-18
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>上周第三章已经看完，因此这周选择了加看第五章优化程序性能，通常编译器可以代替我们进行程序优化，例如循环展开、代码移动等。但是由于函数存在编译器无法感知的副作用，往往还需要程序员在编写代码时注重效率。</p>
+<p>一些看上去无足轻重的代码段可能隐藏着<strong>渐进低效率</strong>（asymptotic inefficiency），在数据量小时测试可能无法发现问题，但部署环境后代码会突然成为瓶颈。有经验的程序员工作的一部分就是避免引入这样的渐进低效率。</p>
+<p>比如在循环中止条件我们经常会用到 strlen（s）来作为循环中止条件，而strlen所需时间和字符串长度N成正比，如果每次循环迭代前都判断一次，那么循环的整体运行时间会是N<em>N。此时我们如果将字符串长度提前进行计算，再进行循环判断就会显著提升性能。书中实现对1048576字符进行测试，循环运行时间从17分钟降低到2毫秒， <em>*50W倍左右的提升</em></em>。</p>
+<p>当前GCC版本会对整数运算执行重新结合，但不是总有好的效果，通常循环展开和并行地累计在多个值中是提高程序性能的更可靠的方法。</p>
+<p><strong>CPE Cycles Per Element</strong>，作为一种表示程序性能并指导我们改进代码的度量标准。可以帮助我们在更细节的级别上理解迭代程序的循环性能。</p>
+<p>未经优化的代码通常效率比较低，简单地使用命令行选项就能显著地提高程序性能（超过两个数量级）。</p>
+<p><strong>代码移动，</strong>识别要执行多次（如循环内）但是计算结果不会改变的计算，将其移动到代码前不会多次求值的部分来提高性能。优化编译器会尝试进行代码移动，但是不能可靠地发现一个函数是否会有副作用。因此为了改进代码，程序员必须经常帮助编译器显示地完成代码移动。</p>
+<p><strong>过程调用会带来开销，而且妨碍大多数形式的程序优化。</strong></p>
+<p><strong>尽量消除代码中不必要的内存读写，用寄存器来保存中间值来提升性能</strong></p>
+<p>要进一步提高性能，必须<strong>考虑利用处理器微体系结构的优化</strong>，也就是处理器用来执行指令的底层系统设计。要想充分提高性能，需要仔细分析程序，同时代码的生成也要针对目标处理器进行调整。</p>
+<p><strong>延迟界限（latency bound）</strong>，在下一条指令开始之前，这条指令必须结束。当代码中的数据相关限制了处理器利用指令级并行的能力时，延迟界限能够限制程序性能。</p>
+<p><strong>吞吐量界限（throughput bound）</strong>，刻画了处理器功能单元的计算能力，这个界限是程序性能的终极限制。</p>
+<p><strong>整体操作：</strong> </p>
+<ul>
+<li>ICU从高速缓存中读取指令，通常会在当前正在执行的指令很早之前取指，才有足够的时间对指令进行译码并把操作发送给EU。</li>
+<li>当程序遇到分支时，通过分支预测猜测是否会执行分支，并且同时预测分支的目标地址。</li>
+<li>使用投机执行的技术，取出位于它预测的分支会调到的地方的指令，对指令进行译码，甚至在确定分支预测正确之前开始执行。</li>
+<li>如果分支预测错误的话，会将状态重新置于分支点的状态，接着往下执行。</li>
+</ul>
+<p><strong>功能单元的性能：由延迟、时间、容量来刻画。</strong></p>
+<ul>
+<li><strong>延迟</strong>latency，表示完成运算所需要的总时间；</li>
+<li><strong>发射时间</strong>issue time表示两个连续的同类型运算之间需要的最小时钟周期数；</li>
+<li><strong>capacity</strong>表示能够执行该运算功能单元的个数。 其中除法不是完全流水线化的，发射时间=延迟 即在开始一条新运算之前，除法器必须完成整个除法，使得其成为一个相对开销很大的运算。</li>
+</ul>
+<p><strong>循环展开</strong>通过增加每次迭代计算的元素数量，减少循环的迭代次数。编译器可以很容易地执行循环展开，只要优化级别设置得足够高。GCC -O3就会执行。</p>
+<p><strong>提高并行性：</strong></p>
+<p>对于可结合和可交换的合并运算来说，通过将一组合并运算分割成两路或多路，最后再合并来提高性能。</p>
+<p>重新结合变换打破顺序相关从而使性能提高到延迟界限之外的方法，减少计算中关键路径上操作的数量，更好地利用功能单元的流水线能力。 （大多数编译器不会对浮点运算重新结合，因为这些运算是不保证结合的）</p>
+<p><strong>其他一些制约程序在实际机器上性能的因素</strong>：</p>
+<ul>
+<li><strong>寄存器溢出</strong>，并行度p超过了可用的寄存器数量，编译器会溢出，将某些临时值存放在内存中。此时再进行循环展开就没有效果，甚至会导致性能变差。</li>
+<li><strong>分支预测错误处罚</strong>, 大约19个时钟周期，赌注很高。因此注意以下通用原则：<ul>
+<li>不要过分关心可预测的分支；</li>
+<li>书写适合条件传送实现的代码</li>
+</ul>
+</li>
+</ul>
+<p>总结来说，优化程序性能的基本策略如下：</p>
+<ul>
+<li><strong>高级设计：</strong> 选取合适的算法和数据结构，避免使用那些会产生渐进低效率的算法OR编码技术；</li>
+<li><strong>基本编码原则</strong>：避免限制优化的因素，使编译器产生高效地代码。</li>
+<li><strong>消除连续的函数调用</strong>：代码移动；</li>
+<li><strong>消除不必要的内存引用</strong>： 引入临时变量；</li>
+<li><strong>低级优化</strong>： 结构化代码以利用硬件功能；<ul>
+<li>循环展开</li>
+<li>累积变量、重新结合等技术，提高指令级并行</li>
+<li>功能性的风格重写条件操作，使得编译器采用条件数据传送。</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/深入理解计算机系统/" rel="tag">#深入理解计算机系统</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/10/11/深入理解计算机系统第3周/" rel="next" title="《深入理解计算机系统》第3周">
+                <i class="fa fa-chevron-left"></i> 《深入理解计算机系统》第3周
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">35</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">This post does not have a Table of Contents</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

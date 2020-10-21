@@ -1,0 +1,612 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="深入理解计算机系统," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="本周主要学习第二章信息的表示和处理,数值处理部分相对比较枯燥.第一遍看到后面定理晕头转向的,后面看第二遍的时候将所有练习题都跟着动手完成,效果明显好了很多.
+对于整数运算,表示数字的有限字长限制了可能值的取值范围,结果存在溢出可能.C语言中强制类型转换等一些规定可能会产生非直观的结果,需要注意.
+浮点数计算只有有限的范围和精度,并且不遵守普遍的算数属性.
+重新温顾的知识点:
+ 大端/小端法
+最低有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《深入理解计算机系统》第2周">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/09/27/ 深入理解计算机系统第2周/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="本周主要学习第二章信息的表示和处理,数值处理部分相对比较枯燥.第一遍看到后面定理晕头转向的,后面看第二遍的时候将所有练习题都跟着动手完成,效果明显好了很多.
+对于整数运算,表示数字的有限字长限制了可能值的取值范围,结果存在溢出可能.C语言中强制类型转换等一些规定可能会产生非直观的结果,需要注意.
+浮点数计算只有有限的范围和精度,并且不遵守普遍的算数属性.
+重新温顾的知识点:
+ 大端/小端法
+最低有">
+<meta property="og:updated_time" content="2020-10-21T14:09:11.152Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《深入理解计算机系统》第2周">
+<meta name="twitter:description" content="本周主要学习第二章信息的表示和处理,数值处理部分相对比较枯燥.第一遍看到后面定理晕头转向的,后面看第二遍的时候将所有练习题都跟着动手完成,效果明显好了很多.
+对于整数运算,表示数字的有限字长限制了可能值的取值范围,结果存在溢出可能.C语言中强制类型转换等一些规定可能会产生非直观的结果,需要注意.
+浮点数计算只有有限的范围和精度,并且不遵守普遍的算数属性.
+重新温顾的知识点:
+ 大端/小端法
+最低有">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2020/09/27/ 深入理解计算机系统第2周/"/>
+
+  <title> 《深入理解计算机系统》第2周 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                《深入理解计算机系统》第2周
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-09-27T22:00:00+08:00" content="2020-09-27">
+              2020-09-27
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本周主要学习第二章信息的表示和处理,数值处理部分相对比较枯燥.第一遍看到后面定理晕头转向的,后面看第二遍的时候将所有练习题都跟着动手完成,效果明显好了很多.</p>
+<p>对于整数运算,表示数字的有限字长限制了可能值的取值范围,结果存在溢出可能.C语言中强制类型转换等一些规定可能会产生非直观的结果,需要注意.</p>
+<p>浮点数计算只有有限的范围和精度,并且不遵守普遍的算数属性.</p>
+<p>重新温顾的知识点:</p>
+<p> <strong>大端/小端法</strong></p>
+<p>最低有效字节在前面的是小端法,最高有效字节在最前面的是大端法. (大多数Intel兼容机都只用小端法)</p>
+<p>假设变量x=0x01234567在地址0x100处</p>
+<pre><code> |0x100 0x101 0x102 0x103|
+大端 |01 | 23 | 45 | 67 |
+小端 |67 | 45 | 23 | 01 |
+</code></pre><ul>
+<li>网络传输二进制数据时通过网络标准转换来避免不同机器字节顺序的影响.</li>
+<li>反汇编代码阅读时需要考虑字节顺序.</li>
+<li>C语言中强制类型转换/Union允许一种数据类型引用一个对象时需要考虑字节顺序.</li>
+</ul>
+<p><strong>有符号数和无符号数之间的转换</strong></p>
+<p>补码转换为无符号数时</p>
+<pre><code>T2U(x)=x (x&gt;=0); T2U(x)=x+2^w(x&lt;0,w位)
+</code></pre><p>无符号数转换为补码时<br>    U2T(u)=u (u&lt;=TMax); U2T(u)=u-2^w(u&gt;=TMax)</p>
+<p>C语言中对同时包含有符号和无符号数的表达式处理时,会隐式的将有符号数强制转换为无符号数,对于标准运算符并无差异,但是遇到关系运算符时会导致问题.</p>
+<pre><code>如 -1 &lt; 0U, 会先将-1转换为4294967295U 导致非直观结果出现.
+</code></pre><p><strong>扩充整数字长时, 补码数符号扩展,无符号数零位扩展.</strong></p>
+<p><strong>无符号整数加法</strong> </p>
+<pre><code>x+y=x+y(正常) x+y=x+y-2^w (溢出时)
+</code></pre><p><strong>补码加法</strong></p>
+<pre><code>x+y=x+y-2^w(正溢出), x+y=x+y(正常), x+y=x+y+2^w(负溢出)
+</code></pre><p><strong>无符号数乘法</strong> </p>
+<pre><code>xy=(xy) mod 2^w
+</code></pre><p><strong>补码乘法</strong></p>
+<pre><code>xy=U2T((xy) mod 2^w)
+</code></pre><p><strong>浮点数</strong></p>
+<p>通过将数字编码为x*2^y的形式来近似地表示实数,最常见的浮点精度都float和double.</p>
+<p>IEEE浮点通过符号s/尾数M/阶码E来表示,32位1+8+23,64位1+11+52,被编码的值有三种不同的情况:</p>
+<ul>
+<li>规格化的值, 阶码不全为0也不全为1</li>
+<li>非规格化的值,阶码域全为0</li>
+<li>特殊值, 阶码域全为1,小数域全为0时(正无穷,负无穷); 阶码域全为1,小数域非零(NaN)</li>
+</ul>
+<p><strong>四种舍入方式</strong>中默认的是Round-to-even,将数字向上或向下舍入使得结果的最低有效数字是偶数.(可以避免统计偏差)</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/深入理解计算机系统/" rel="tag">#深入理解计算机系统</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/09/20/深入理解计算机系统第一周/" rel="next" title="《深入理解计算机系统》第1周">
+                <i class="fa fa-chevron-left"></i> 《深入理解计算机系统》第1周
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/10/11/深入理解计算机系统第3周/" rel="prev" title="《深入理解计算机系统》第3周">
+                《深入理解计算机系统》第3周 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">35</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">This post does not have a Table of Contents</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
