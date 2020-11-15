@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -235,6 +235,354 @@
             
               
                 
+                <a class="post-title-link" href="/2020/07/25/TalkGo读书会第一期总结/" itemprop="url">
+                  TalkGo读书会第一期总结
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-07-25T16:55:00+08:00" content="2020-07-25">
+              2020-07-25
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人总结"><a href="#个人总结" class="headerlink" title="个人总结"></a>个人总结</h2><p>选择加入读书会首先是本身对性能优化这个Topic比较感兴趣，另外公司底层架构升级维护也需要关注性能问题。课程计划表是两个月，一天一篇的话也不会特别占时间，但是真正执行下来才深刻体会到惰性的强大(如果不是读书会的话应该很容易就弃掉)。平时工作的话回家看书的时间也不会太多，有两三次都是周末抓紧时间搞定，尤其是后面网络那部分平时不太会去关注的指标，可能以前遇到这种章节都会直接略过。</p>
+<p>这个课程主要还是偏向原理，基础的性能指标，主要提供了一些遇到性能问题如何下手分析解决的思路。真正在环境中遇到问题分析出原因定位代码还是需要一些经验。特别是一些开源软件遇到性能问题时定位具体代码还是需要耗费一些精力。我们组这个月正好遇到了ES小版本升级后，xpack monitor导致的内存使用问题，定位代码借助了jstack和阿里的Arthas才最终找到原因。</p>
+<p>总之，这个课程还是需要经常拿来回顾下，遇到性能问题多积攒经验才是王道。</p>
+<p>接下来的看书计划的话，正好前两天收到了一本《架构修炼之道》，准备先翻看下。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2020/07/19/Linux性能优化实战第八周--套路篇/" itemprop="url">
+                  《Linux 性能优化实战》第八周--套路篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-07-19T16:55:00+08:00" content="2020-07-19">
+              2020-07-19
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>在实际的性能分析中，发生性能瓶颈后登陆服务器想要排查的时候发现瓶颈已经消失且很难复现。因此要事先搭建监控系统，把系统和应用程序的运行状况监控下来，并定义一系列的策略，在发生问题第一时间告警处理。</p>
+<p>系统监控通过USE法则利用prometheus+grafana来监控系统资源。应用程序监控分为指标监控和日志监控两大块，在复杂业务场景中通常搭建全链路跟踪系统来定位应用瓶颈。</p>
+<p>性能问题可以从系统资源瓶颈和应用程序瓶颈两个角度来梳理分析。系统时应用的运行环境，系统的瓶颈会导致应用的性能下降，而应用的不合理设计也会引发系统资源的瓶颈。做性能分析要结合应用程序和操作系统的原理，就出引发问题的真凶。</p>
+<p>本周回顾了前几周学习到的常见性能优化方法。值得注意的是一定切记要避免过早优化，性能优化往往会提高复杂度，一方面降低了可维护性，另一方面也为适应复杂多变的新需求带来障碍。所以要逐步完善，首先保证能满足当前的性能要求。发现性能不满足要求或者出现性能瓶颈后，再根据性能分析的结果选择最重要的性能问题进行优化。</p>
+<p>不能把性能工具当成性能分析和优化的全部，一方面性能分析和优化的核心是对系统和应用程序运行原理的掌握，性能工具只是辅助我们更快完成此过程的帮手；另一方面完善监控系统可以提供绝大部分性能分析所需的基准数据，从这些数据中很可能大致定位出性能瓶颈，也就不用再去手动执行各类工具了。</p>
+<h3 id="捞评论"><a href="#捞评论" class="headerlink" title="捞评论"></a>捞评论</h3><ol>
+<li>除了USE原则，还有RED原则。更偏重于应用，在很多微服务中会用到。<ul>
+<li>Rate： 每秒请求数量</li>
+<li>Errors： 失败的请求次数</li>
+<li>Duration： 处理一条请求所需的时间</li>
+</ul>
+</li>
+<li>想要学习eBPF来说，可以从BPF Compiler Collection（BCC）这个项目开始。BCC提供了很多短小的示例，可以快速了解eBPF的工作原理并熟悉eBPF程序的开发思路。了解这些基本的用法后，再去深入了解eBPF。</li>
+</ol>
+<h2 id="Lesson-53-套路篇：系统监控的综合思路"><a href="#Lesson-53-套路篇：系统监控的综合思路" class="headerlink" title="Lesson 53 套路篇：系统监控的综合思路"></a>Lesson 53 套路篇：系统监控的综合思路</h2><p>一个好的监控系统，不仅可以实时暴露系统的各种问题，更可以根据这些监控到的状态，自动分析和定位大致的瓶颈来源，从而更精确地把问题汇报给相关团队。</p>
+<ul>
+<li>从系统来说，监控系统要涵盖系统的整体资源使用情况。如CPU、内存、磁盘、文件系统和网络等</li>
+<li>从应用程序来说，监控系统要涵盖应用程序内部的运行状态。即包括进程的CPU、磁盘I/O等整体运行状况，也包括接口调用耗时、执行中的错误、内部对象的内存使用等程序内部的运行状况</li>
+</ul>
+<h3 id="USE法"><a href="#USE法" class="headerlink" title="USE法"></a>USE法</h3><p>USE， Utilization Saturation and Errors</p>
+<ul>
+<li>使用率，资源用于服务的时间或容量百分比</li>
+<li>饱和度，资源的繁忙程度，通常和队列长度相关</li>
+<li>错误数，表示发生错误的事件个数</li>
+</ul>
+<p>常见指标分类如下图所示：</p>
+<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/use.png" alt></p>
+<h3 id="监控系统"><a href="#监控系统" class="headerlink" title="监控系统"></a>监控系统</h3><p>一个完整的监控系统通常由数据采集、数据存储、数据查询和处理、告警以及可视化展示等多个模块组成。</p>
+<p>常见的开源监控工具有Zabbix、Nagios、Prometheus等，下面介绍Prometheus的基本架构：</p>
+<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/prometheus.png" alt></p>
+<h4 id="数据采集"><a href="#数据采集" class="headerlink" title="数据采集"></a>数据采集</h4><p>Prometheus targets就是数据采集的对象，Retrieval负责采集这些数据。Prometheus支持两种采集模式：</p>
+<ul>
+<li>Pull模式，服务端的采集模块触发采集。只要采集目标提供HTTP接口即可（常用的采集模式）</li>
+<li>Push模式，各个采集目标主动向Push Gateway推送目标，再由服务器端从Gateway中拉取（移动应用中常用）</li>
+</ul>
+<p>Prometheus提供服务发现机制，自动根据配置的规则动态发现需要监控的对象。在K8S容器平台中非常有效。</p>
+<h4 id="数据存储"><a href="#数据存储" class="headerlink" title="数据存储"></a>数据存储</h4><p>TSDB（Time Series Database），负责将采集到的数据持久化到SSD等磁盘设备中。 TSDB是专门为时序数据设计的数据库，以时间为索引、数据量大且以追加的方式写入。</p>
+<h4 id="数据查询和处理"><a href="#数据查询和处理" class="headerlink" title="数据查询和处理"></a>数据查询和处理</h4><p>TSDB在存储数据的同时，还提供了数据查询和基本的数据处理功能。即PromQL语言，提供了简介的查询、过滤功能。</p>
+<h4 id="告警模块"><a href="#告警模块" class="headerlink" title="告警模块"></a>告警模块</h4><p>AlertManager提供了告警功能，基于PromQL语言的触发条件、告警规则的配置管理以及告警的发送。还支持通过分组、抑制或者静默等多种方式来聚合同类告警。</p>
+<h4 id="可视化"><a href="#可视化" class="headerlink" title="可视化"></a>可视化</h4><p>Prometheus WebUI提供了简单的可视化界面。通常配合Grafana来构建强大的图形界面。</p>
+<h2 id="Lesson-54-套路篇：应用监控的一般思路"><a href="#Lesson-54-套路篇：应用监控的一般思路" class="headerlink" title="Lesson 54 套路篇：应用监控的一般思路"></a>Lesson 54 套路篇：应用监控的一般思路</h2><h3 id="指标监控"><a href="#指标监控" class="headerlink" title="指标监控"></a>指标监控</h3><p><strong>应用程序的核心指标，不再是资源的使用情况，而是请求数、错误率和响应时间。</strong><br>除了上述三个指标外，下面几种指标也是应用程序监控必不可少的，可以帮助我们快速定位性能瓶颈。</p>
+<ul>
+<li><strong>应用进程的资源使用情况</strong>，比如进程占用的CPU、内存、磁盘I/O、网络等。</li>
+<li><strong>应用程序之间的调用情况</strong>，如调用频率、错误数、延时等<ul>
+<li>可以迅速分析出一个请求处理的调用链中哪个组件导致性能问题</li>
+</ul>
+</li>
+<li><strong>应用程序内部核心逻辑的运行情况</strong>，比如关键环节的耗时以及执行过程中的错误等<ul>
+<li>直接进入应用程序内部，定位到底是哪个处理环节的函数导致性能问题</li>
+</ul>
+</li>
+</ul>
+<p>由于业务系统通常会涉及到一连串的多个服务，形成一个复杂的分布式调用链。为了迅速定位这类跨应用的性能瓶颈，可以使用Zipkin、Jaeger、Pinpoint等各类开源工具来构建全链路跟踪系统。</p>
+<h3 id="日志监控"><a href="#日志监控" class="headerlink" title="日志监控"></a>日志监控</h3><ul>
+<li>指标是特定时间段的数值型测量数据，通常以时间序列的方式处理，适合于实时监控</li>
+<li>日志都是某个时间点的字符串消息，通常需要对搜索引擎进行索引后，才能进行查询和汇总分析</li>
+</ul>
+<p>日志监控经典的方法是ELK技术栈，Elasticsearch、Logstash、Kibana三个组件的组合。</p>
+<ul>
+<li>Logstash负责从各个日志源采集日志，进行预处理，最后再把初步处理过的日志发送给Elasticsearch进行索引</li>
+<li>Elasticsearch负责对日志进行检索，并提供一个完整的全文搜索引擎</li>
+<li>Kibana负责对日志进行可视化分析，包括日志搜索、处理以及绚丽的仪表板展示</li>
+</ul>
+<p>ELK中logstash资源消耗较大，在资源紧张时往往使用Fluentd来替代，即EFK技术栈。采集端还可以使用filebeat，架构拓展为filebeat-kafka（zookeeper）-logstash或sparkstreaming-es，除了日志查询外可以做业务关联等。</p>
+<h2 id="Lesson-55-套路篇：分析性能问题的一般步骤"><a href="#Lesson-55-套路篇：分析性能问题的一般步骤" class="headerlink" title="Lesson 55 套路篇：分析性能问题的一般步骤"></a>Lesson 55 套路篇：分析性能问题的一般步骤</h2><p>在收到监控系统的告警，发现系统戏院或者应用程序出现性能瓶颈，如何进一步分析根源？</p>
+<h3 id="系统资源瓶颈"><a href="#系统资源瓶颈" class="headerlink" title="系统资源瓶颈"></a>系统资源瓶颈</h3><p>系统资源的瓶颈通过USE法，即使用率、饱和度和错误数三类指标来衡量。系统的资源可以分为硬件资源和软件资源两大类：</p>
+<ul>
+<li>CPU、内存、磁盘和文件系统以及网络等，都是常见的硬件资源</li>
+<li>文件描述符、连接跟踪数、套接字缓冲区大小等都是典型的软件资源。</li>
+</ul>
+<p>在收到监控系统告警后就可以对照这些资源列表，再根据指标的不同来定位。</p>
+<h4 id="CPU性能分析"><a href="#CPU性能分析" class="headerlink" title="CPU性能分析"></a>CPU性能分析</h4><p>利用top、vmstat、pidstat、strace以及perf等几个常见的工具，获得CPU性能指标后，再结合进程与CPU的工作原理，就可以迅速定位CPU性能瓶颈的来源。</p>
+<p>top、vmstat、pidstat等工具所汇报的CPU性能指标都来源于/proc文件系统，这些指标都应该通过监控系统监控起来。 </p>
+<p>比如当收到CPU使用率告警时，从监控系统中直接查询导致CPU使用率过高的进程，然后登陆到服务器分析该进程行为。可以使用strace查看进程的系统调用汇总，也可以使用perf找出热点函数，甚至可以使用动态追踪的方法来观察进程的当前执行过程，直到确定瓶颈个根源。</p>
+<h4 id="内存性能分析"><a href="#内存性能分析" class="headerlink" title="内存性能分析"></a>内存性能分析</h4><p>通过free和vmstat输出的性能指标确认内存瓶颈，然后根据内存问题的类型，进一步分析内存的使用、分配、泄漏以及缓存等，最后找出问题的根源。</p>
+<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/mem_analysis.png" alt></p>
+<p>内存的性能指标也来源于/proc文件系统，它们也都应该通过监控系统监控起来。如当收到内存不足的告警时，可以从监控系统中找出占用内存最多的几个进程。然后根据这些进程的内存占用历史，观察是否存在内存泄漏问题。确定可疑进程后，再登陆服务器分析该进程的内存空间或内存分配，查明原因。</p>
+<h4 id="磁盘和文件系统I-O性能分析"><a href="#磁盘和文件系统I-O性能分析" class="headerlink" title="磁盘和文件系统I/O性能分析"></a>磁盘和文件系统I/O性能分析</h4><p>当使用iostat发现磁盘I/O存在性能瓶颈后，可以再通过pidstat、vmstat等确认I/O的来源。再根据来源的不同进一步分析文件系统和磁盘的使用率、缓存以及进程的I/O等，从而找出I/O问题所在。</p>
+<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/io.png" alt></p>
+<p>磁盘和文件系统的性能指标也来源于/proc和/sys文件系统，也应该通过监控系统监控起来。</p>
+<p>如果发现某块磁盘的I/O使用率为100%时，首先可以从监控系统中，找出I/O最多的进程。然后登陆服务器借助strace、lsof、perf等工具，分析该进程的I/O行为。最后再结合应用程序的原理找出大量I/O的原因。</p>
+<h4 id="网络性能分析"><a href="#网络性能分析" class="headerlink" title="网络性能分析"></a>网络性能分析</h4><p>网络性能其实包含两类资源，网络接口和内核资源。网络分析要从Linux网络协议栈的原理来切入。</p>
+<ul>
+<li>链路层，从网络接口的吞吐量、丢包、错误以及软中断和网络功能卸载等角度分析；</li>
+<li>网络层，从路由、分片、叠加网络等角度分析</li>
+<li>传输层，从TCP、UDP的协议原理出发，从连接数、吞吐量、延迟重传等角度分析</li>
+<li>应用层，从应用层协议、请求数、套接字缓存等角度进行分析</li>
+</ul>
+<p>网络的性能指标也都来源于内核，包括/proc文件系统、网络接口以及conntrack等内核模块，这些指标同样需要被监控系统监控。</p>
+<p>例如，当收到网络不同的告警时，就可以从监控系统中查找各个协议层的丢包指标，确认丢包所在的协议层。然后从监控系统的数据中，确认网络带宽、缓冲区、连接跟踪数等软硬件，是否存在性能瓶颈。最后再登录到服务器中，借助netstat、tcpdump、bcc等工具分析网络的收发数据，并且结合内核中的网络选项以及TCP等网络协议的原理找出问题所在。</p>
+<h3 id="应用程序瓶颈"><a href="#应用程序瓶颈" class="headerlink" title="应用程序瓶颈"></a>应用程序瓶颈</h3><p>应用程序瓶颈本质来源有三种：<strong>资源瓶颈、依赖服务瓶颈、应用自身瓶颈</strong>。</p>
+<p>资源瓶颈可以用前面的方法来分析。</p>
+<p>依赖服务的瓶颈，也就是诸如数据库、分布式缓存、中间件等应用程序，直接或间接调用的服务出现了性能问题从而导致应用程序的响应变慢或者错误率升高。使用全链路跟踪系统可以帮助快速定位这类问题的根源。</p>
+<p>应用程序自身的性能问题，包括了多线程处理不当、死锁、业务的复杂度过高等，这类问题可以通过应用程序指标监控以及日志监控中，观察关键环节的耗时和内部执行过程中的错误，帮助缩小问题范围。</p>
+<p>不过应用程序内部的状态，外部通常不能直接获取详细的性能数据，需要应用程序在设计和开发时提供这些指标。</p>
+<p>如果上述手段还是无法找出瓶颈，可以通过系统资源模块提供的各类进程分析工具来定位分析。 比如：</p>
+<ul>
+<li>strace观察系统调用</li>
+<li>perf和火焰图分析热点函数</li>
+<li>动态追踪技术分析进程的执行状态</li>
+</ul>
+<h2 id="Lesson-56-套路篇：优化性能问题的一般方法"><a href="#Lesson-56-套路篇：优化性能问题的一般方法" class="headerlink" title="Lesson 56 套路篇：优化性能问题的一般方法"></a>Lesson 56 套路篇：优化性能问题的一般方法</h2><h3 id="系统优化"><a href="#系统优化" class="headerlink" title="系统优化"></a>系统优化</h3><h4 id="CPU优化"><a href="#CPU优化" class="headerlink" title="CPU优化"></a>CPU优化</h4><p><strong>CPU性能优化的核心，在于排除所有不必要的工作、充分利用CPU缓存并减少进程程度对性能的影响。</strong></p>
+<ul>
+<li>把进程绑定到一个或者多个CPU上，充分利用CPU缓存的本地性，并减少进程间的相互影响。</li>
+<li>为中断处理程序开启多CPU负载均衡，以便在发生大量中断时可以充分利用多CPU的优势分摊负载</li>
+<li>使用cgroups等方法为进程设置资源限制，避免个别进程消耗过多的CPU。同时为核心应用程序设置更高的优先级，减少低优先级任务的影响</li>
+</ul>
+<h4 id="内存优化"><a href="#内存优化" class="headerlink" title="内存优化"></a>内存优化</h4><ul>
+<li>除非有必要，Swap应该禁止掉。避免Swap的额外I/O，带来内存访问变慢的问题</li>
+<li>使用Cgroups方法为进程设置内存限制。对于核心应用还应该降低oom_score，避免被OOM杀死</li>
+<li>使用大页、内存池等方法，减少内存的动态分配，从而减少缺页异常</li>
+</ul>
+<h4 id="磁盘和文件系统I-O优化"><a href="#磁盘和文件系统I-O优化" class="headerlink" title="磁盘和文件系统I/O优化"></a>磁盘和文件系统I/O优化</h4><ul>
+<li>通过SSD替代HDD、或者用RAID方法来提升I/O性能。</li>
+<li>针对磁盘和应用程序I/O模式的特征，选择最合适的I/O调度算法。比如，SSD和虚拟机中的磁盘，通常用的是noop调度算法；数据库应用更推荐使用deadline算法</li>
+<li>优化文件系统和磁盘的缓存、缓冲区，比如优化藏也的刷新频率、脏页限额，以及内核回收目录项缓存和索引节点缓存的倾向等</li>
+</ul>
+<h4 id="网络优化"><a href="#网络优化" class="headerlink" title="网络优化"></a>网络优化</h4><p>从内核资源和网络协议的角度：</p>
+<ul>
+<li>增大套接字缓冲区、连接跟踪表、最大半连接数、最大文件描述符数、本地端口范围等内核资源配额</li>
+<li>减少TIMEOUT超时时间、SYN+ACK重传数、Keepalive探测时间等异常参数处理</li>
+<li>还可以开启端口复用、反向地址校验，并调整MTU大小等降低内核的负担</li>
+</ul>
+<p>从网络接口的角度：</p>
+<ul>
+<li>将原来CPU上执行的工作，卸载到网卡中执行，即开启网卡的GRO、GSO、RSS、VXLAN等卸载功能；</li>
+<li>也可以开启网络接口的多队列功能，这样每个队列就可以用不用的中断号，调度到不同CPU上执行</li>
+<li>增大网络接口的缓冲区大小以及队列长度等，提升网络传输的吞吐量</li>
+</ul>
+<p>在极限性能情况下，内核的网络协议栈可能是最主要的性能瓶颈，所以一般考虑绕过内核协议栈。</p>
+<ul>
+<li>DPDK技术跳过内核协议栈，直接由用户态进程用轮询的方式，来处理网络请求。同时再结合大页、CPU绑定、内存对齐、流水线并发等多种机制，优化网络包的处理效率</li>
+<li>内核自带的XDP技术，在网络包进入内核协议栈前，就对其进行处理。</li>
+</ul>
+<h4 id="应用程序优化"><a href="#应用程序优化" class="headerlink" title="应用程序优化"></a>应用程序优化</h4><p><strong>性能优化的最佳位置，还是应用程序内部</strong></p>
+<ul>
+<li>从CPU的角度来说，简化代码、优化算法、异步处理以及编译器优化等</li>
+<li>从数据访问的角度，使用缓存、写时复制、增加I/O尺寸等都是常用的减少磁盘I/O的方法</li>
+<li>从内存管理的角度，使用大页、内存池等方法，可以预先分配内存，减少内存的动态分配，从而更好地内存访问性能</li>
+<li>从网络的角度，使用I/O多路复用，长连接代替短连接、DNS缓存等，可以优化网络I/O并减少网络请求数，从而减少网络延时带来的性能问题</li>
+<li>从进程的工作模型来说，异步处理、多线程或多进程可以充分利用每一个CPU的处理能力，从而提高应用程序的吞吐能力</li>
+</ul>
+<p>还可以使用消息队列，CDN、负载均衡等各种方法来优化应用程序的架构，将原来单机要承担的任务调度到多台服务器中并行处理。</p>
+<h2 id="Lesson-57-套路篇：Linux性能工具速查"><a href="#Lesson-57-套路篇：Linux性能工具速查" class="headerlink" title="Lesson 57 套路篇：Linux性能工具速查"></a>Lesson 57 套路篇：Linux性能工具速查</h2><h3 id="CPU性能工具"><a href="#CPU性能工具" class="headerlink" title="CPU性能工具"></a>CPU性能工具</h3><p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/cpu_metric.png" alt></p>
+<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/cpu_tools.png" alt></p>
+<h3 id="内存性能工具"><a href="#内存性能工具" class="headerlink" title="内存性能工具"></a>内存性能工具</h3><p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/mem_metric.png" alt></p>
+<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/mem_tools.png" alt></p>
+<h3 id="磁盘I-O性能工具"><a href="#磁盘I-O性能工具" class="headerlink" title="磁盘I/O性能工具"></a>磁盘I/O性能工具</h3><p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/io_metric.png" alt></p>
+<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/io_tools.png" alt></p>
+<h3 id="网络性能工具"><a href="#网络性能工具" class="headerlink" title="网络性能工具"></a>网络性能工具</h3><p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/net_metric.png" alt></p>
+<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/net_tools.png" alt></p>
+<h3 id="基准测试工具"><a href="#基准测试工具" class="headerlink" title="基准测试工具"></a>基准测试工具</h3><ul>
+<li>在文件系统和磁盘I/O模块中，使用fio工具</li>
+<li>在网络模块，使用iperf、pktgen等</li>
+<li>在基于Nginx的案例中，使用ab、wrk等</li>
+</ul>
+<p>现在重新回看Brendan Gregg的这张Linux基准测试工具图谱，收获良多。</p>
+<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/performance_tool.png" alt></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/07/10/Linux性能优化实战第七周--综合实战篇/" itemprop="url">
                   《Linux 性能优化实战》第七周--综合实战篇
                 </a>
@@ -248,7 +596,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-07-10T21:55:00+08:00" content="2020-07-10">
               2020-07-10
             </time>
@@ -501,7 +849,7 @@ perf report
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-07-04T17:26:55+08:00" content="2020-07-04">
               2020-07-04
             </time>
@@ -899,7 +1247,7 @@ net.ipv4.tcp_rmem net.ipv4.tcp_wmem
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-27T15:26:55+08:00" content="2020-06-27">
               2020-06-27
             </time>
@@ -1219,7 +1567,7 @@ webbench
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-21T10:57:55+08:00" content="2020-06-21">
               2020-06-21
             </time>
@@ -1624,7 +1972,7 @@ fio --name=reply --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin #使用fio�
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-14T10:57:55+08:00" content="2020-06-14">
               2020-06-14
             </time>
@@ -1975,7 +2323,7 @@ watch -d grep -A 15 ‘Normal’ /proc/zoneinfo #观察内存指标变化
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-06-03T22:57:55+08:00" content="2020-06-03">
               2020-06-03
             </time>
@@ -2354,7 +2702,7 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-05-31T22:57:55+08:00" content="2020-05-31">
               2020-05-31
             </time>
@@ -2622,7 +2970,7 @@ ps aux | grep &apos;/app&apos;
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2019-06-16T22:57:55+08:00" content="2019-06-16">
               2019-06-16
             </time>
@@ -2778,242 +3126,6 @@ ps aux | grep &apos;/app&apos;
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2019/04/18/Dynamic-Programming/" itemprop="url">
-                  Dynamic Programming
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2019-04-18T23:31:19+08:00" content="2019-04-18">
-              2019-04-18
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>职业规划原因今年计划自学Go语言，前两个月也断断续续用Golang刷了100道左右的算法题。然而:(最近一个月工作比较忙就搁置了一段，今天看了下<a href="https://github.com/xiaozhazi/leetcode_go" target="_blank" rel="external">https://github.com/xiaozhazi/leetcode_go</a> 距上次commit已经有近一个月的时间了 - _ -#。</p>
-<p>所以今天开始强制自己记录下个人解题过程以及go语言踩雷， 也便于随时复盘【其实是为了自我监督防止懒癌：）</p>
-<h1 id="LeetCode真题系列"><a href="#LeetCode真题系列" class="headerlink" title="LeetCode真题系列"></a>LeetCode真题系列</h1><h2 id="Minimum-Path-Sum-64"><a href="#Minimum-Path-Sum-64" class="headerlink" title="Minimum Path Sum(64)"></a>Minimum Path Sum(64)</h2><p><a href="https://leetcode.com/problems/minimum-path-sum/" target="_blank" rel="external">64 Minumum Path Sum</a></p>
-<h3 id="Question"><a href="#Question" class="headerlink" title="Question"></a>Question</h3><p>Given a m x n grid filled with non-negative numbers, find a path from top left to bottom right which minimizes the sum of all numbers along its path.</p>
-<pre><code>Note: You can only move either down or right at any point in time.
-</code></pre><h3 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h3><pre><code>Input:
-[
-  [1,3,1],
-  [1,5,1],
-  [4,2,1]
-]
-Output: 7
-Explanation: Because the path 1→3→1→1→1 minimizes the sum. 
-</code></pre><h3 id="Analysis"><a href="#Analysis" class="headerlink" title="Analysis"></a>Analysis</h3><p>从（0，0）走到（m-1，n-1）每个阶段只能选择向右或向下两种决策，且每个阶段都会对应一个状态集合。我们把状态定义为dp[i][j]表示从起点走到（i，j）位置时的最短路径长度。 因此它是一个多阶段最优解问题符合动态规划模型。</p>
-<p><code>dp[i][j] = min(dp[i-1][j],dp[i][j-1]) + grid[i][j]</code><br>直接动手上代码</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">func minPathSum(grid [][]int) int &#123;</div><div class="line">  if grid == nil || len(grid) == 0 &#123;</div><div class="line">	return 0</div><div class="line">  &#125;</div><div class="line">  m, n := len(grid), len(grid[0])</div><div class="line">  dp := make([][]int, m)</div><div class="line">	</div><div class="line">  for i := 0; i &lt; m; i++ &#123;</div><div class="line">	dp[i] = make([]int, n)</div><div class="line">  &#125;</div><div class="line">	</div><div class="line">  dp[0][0] = grid[0][0]</div><div class="line">  for i := 1; i &lt; m; i++ &#123;</div><div class="line">	dp[i][0] = dp[i-1][0] + grid[i][0]</div><div class="line">  &#125;</div><div class="line">  for i := 1; i &lt; n; i++ &#123;</div><div class="line">	dp[0][i] = dp[0][i-1] + grid[0][i]</div><div class="line">  &#125;</div><div class="line">  for i := 1; i &lt; m; i++ &#123;</div><div class="line">	for j := 1; j &lt; n; j++ &#123;</div><div class="line">	  dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + grid[i][j]</div><div class="line">	&#125;</div><div class="line">  &#125;</div><div class="line">  return dp[m-1][n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>提交后发现 <em>Runtime: 12 ms, faster than 28.57% of Go online submissions.<br>Memory Usage: 4.4 MB, less than 13.64% of Go online submissions for Minimum Path Sum</em>. 效率太低了，想办法来优化下。</p>
-<p>实际上我们只需要一个长度为n-1的一维数组来存储状态集合，状态转移的过程都可以基于这个一维数组来操作。继续上代码</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">func minPathSum(grid [][]int) int &#123;</div><div class="line">  if grid == nil || len(grid) == 0 &#123;</div><div class="line">    return 0</div><div class="line">  &#125;</div><div class="line">  m, n := len(grid), len(grid[0])</div><div class="line">  dp := make([]int, n)</div><div class="line">   </div><div class="line">  for j, _ := range dp &#123;</div><div class="line">    dp[j] = math.MaxInt32</div><div class="line">  &#125;</div><div class="line">  dp[0] = 0</div><div class="line">  for i := 0; i &lt; m; i++ &#123;</div><div class="line">    for j := 0; j &lt; n; j++ &#123;</div><div class="line">      if j == 0 &#123;</div><div class="line">        dp[j] += grid[i][j]</div><div class="line">      &#125; else &#123;</div><div class="line">        dp[j] = min(dp[j], dp[j-1]) + grid[i][j]</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  return dp[n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>再次提交后 <em>Runtime: 8 ms, faster than 100.00% of Go online submissions for Minimum Path Sum.<br>Memory Usage: 3.9 MB, less than 59.09% of Go online submissions for Minimum Path Sum.</em>  : )</p>
-<h2 id="Unique-Paths-II-63"><a href="#Unique-Paths-II-63" class="headerlink" title="Unique Paths II(63)"></a>Unique Paths II(63)</h2><p><a href="https://leetcode.com/problems/unique-paths-ii/" target="_blank" rel="external">63 Unique Paths II</a></p>
-<h3 id="Question-1"><a href="#Question-1" class="headerlink" title="Question"></a>Question</h3><p>A robot is located at the top-left corner of a m x n grid (marked ‘Start’ in the diagram below).</p>
-<p>The robot can only move either down or right at any point in time. The robot is trying to reach the bottom-right corner of the grid (marked ‘Finish’ in the diagram below).</p>
-<p>Now consider if some obstacles are added to the grids. How many unique paths would there be?</p>
-<h3 id="Example-1"><a href="#Example-1" class="headerlink" title="Example"></a>Example</h3><pre><code>Input:
-[
-  [0,0,0],
-  [0,1,0],
-  [0,0,0]
-]
-Output: 2
-Explanation:
-There is one obstacle in the middle of the 3x3 grid above.
-There are two ways to reach the bottom-right corner:
-1. Right -&gt; Right -&gt; Down -&gt; Down
-2. Down -&gt; Down -&gt; Right -&gt; Right
-</code></pre><h3 id="Analysis-1"><a href="#Analysis-1" class="headerlink" title="Analysis"></a>Analysis</h3><p>第一感觉是可以用回溯来解决此问题。对每一个点先选择向右走，如果遇到障碍物或者右边无路说明此路径不通，回退到该点选择向下走，如果遇到障碍物或下边无路可走说明不存在任何一条路径可以经过该点走到终点。依次类推，每次递归向后走到终点时count加一。</p>
-<p><strong>需要特别注意的是要开始OR结束点值为1的情况</strong></p>
-<p>核心代码如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">func DFS(obstacleGrid [][]int, i, j int) &#123;</div><div class="line">    m, n := len(obstacleGrid), len(obstacleGrid[0])</div><div class="line">    if i == m - 1 &amp;&amp; j == n - 1  &amp;&amp; obstacleGrid[i][j] != 1&#123;</div><div class="line">        count++</div><div class="line">        return </div><div class="line">    &#125;</div><div class="line">    if i &lt; m - 1 &amp;&amp; obstacleGrid[i+1][j] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i + 1, j)</div><div class="line">    &#125;</div><div class="line">    if j &lt; n - 1 &amp;&amp; obstacleGrid[i][j+1] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i, j + 1)</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>递推算法基本类似于暴力求解，无重复又没有遗漏的穷举出所有走法。果不其然代码提交后TLE : (</p>
-<p>继续分析这道题，对于图中任一个非障碍点(i,j)，从起始位置走到该点的路径个数可以通过走到该点的左边位置（i-1,j)和上方位置(i,j-1)的路径个数之和计算， 即</p>
-<p><code>dp[i][j] = dp[i-1][j] + dp[i][j-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
-<p>因此可以改用DP算法来解决，同样为了优化算法效率我们通过一个一维数组在存储状态集合，此时状态方程为<br><code>dp[i] += dp[i-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
-<p>具体代码如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">func uniquePathsWithObstacles(obstacleGrid [][]int) int &#123;</div><div class="line">    if obstacleGrid == nil || len(obstacleGrid) == 0 &#123;</div><div class="line">        return 0</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    m, n, count := len(obstacleGrid), len(obstacleGrid[0]), 0</div><div class="line">    if (obstacleGrid[0][0] == 1 || obstacleGrid[m-1][n-1] == 1) &#123;</div><div class="line">        return count</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    dp := make([]int, n)</div><div class="line">    dp[0] = 1</div><div class="line">    for i := 0; i &lt; m; i++ &#123;</div><div class="line">        for j := 0; j &lt; n; j++ &#123;</div><div class="line">            if obstacleGrid[i][j] == 1 &#123;</div><div class="line">                dp[j] = 0 </div><div class="line">            &#125; else &#123;</div><div class="line">                if j != 0 &#123;</div><div class="line">                    dp[j] += dp[j-1]</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">            </div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    return dp[n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p><em>Runtime: 0 ms, faster than 100.00% of Go online submissions for Unique Paths II.<br>Memory Usage: 2.6 MB, less than 66.67% of Go online submissions for Unique Paths II.</em></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2019/04/17/重归博客/" itemprop="url">
-                  重归博客
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2019-04-17T23:38:48+08:00" content="2019-04-17">
-              2019-04-17
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Hello-My-Personal-Blog"><a href="#Hello-My-Personal-Blog" class="headerlink" title="Hello, My Personal Blog"></a>Hello, My Personal Blog</h2><p>After nearly two years of work, i want to share what i have learned in my work and life.</p>
-<p>Blogs can also help me to improve my ability to make things clearer and record my growth.</p>
-<p>Let’s start!!!</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3059,8 +3171,8 @@ There are two ways to reach the bottom-right corner:
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">36</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-count">38</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -3070,7 +3182,7 @@ There are two ways to reach the bottom-right corner:
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">10</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -3114,7 +3226,7 @@ There are two ways to reach the bottom-right corner:
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -235,6 +235,242 @@
             
               
                 
+                <a class="post-title-link" href="/2019/04/18/Dynamic-Programming/" itemprop="url">
+                  Dynamic Programming
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2019-04-18T23:31:19+08:00" content="2019-04-18">
+              2019-04-18
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>职业规划原因今年计划自学Go语言，前两个月也断断续续用Golang刷了100道左右的算法题。然而:(最近一个月工作比较忙就搁置了一段，今天看了下<a href="https://github.com/xiaozhazi/leetcode_go" target="_blank" rel="external">https://github.com/xiaozhazi/leetcode_go</a> 距上次commit已经有近一个月的时间了 - _ -#。</p>
+<p>所以今天开始强制自己记录下个人解题过程以及go语言踩雷， 也便于随时复盘【其实是为了自我监督防止懒癌：）</p>
+<h1 id="LeetCode真题系列"><a href="#LeetCode真题系列" class="headerlink" title="LeetCode真题系列"></a>LeetCode真题系列</h1><h2 id="Minimum-Path-Sum-64"><a href="#Minimum-Path-Sum-64" class="headerlink" title="Minimum Path Sum(64)"></a>Minimum Path Sum(64)</h2><p><a href="https://leetcode.com/problems/minimum-path-sum/" target="_blank" rel="external">64 Minumum Path Sum</a></p>
+<h3 id="Question"><a href="#Question" class="headerlink" title="Question"></a>Question</h3><p>Given a m x n grid filled with non-negative numbers, find a path from top left to bottom right which minimizes the sum of all numbers along its path.</p>
+<pre><code>Note: You can only move either down or right at any point in time.
+</code></pre><h3 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h3><pre><code>Input:
+[
+  [1,3,1],
+  [1,5,1],
+  [4,2,1]
+]
+Output: 7
+Explanation: Because the path 1→3→1→1→1 minimizes the sum. 
+</code></pre><h3 id="Analysis"><a href="#Analysis" class="headerlink" title="Analysis"></a>Analysis</h3><p>从（0，0）走到（m-1，n-1）每个阶段只能选择向右或向下两种决策，且每个阶段都会对应一个状态集合。我们把状态定义为dp[i][j]表示从起点走到（i，j）位置时的最短路径长度。 因此它是一个多阶段最优解问题符合动态规划模型。</p>
+<p><code>dp[i][j] = min(dp[i-1][j],dp[i][j-1]) + grid[i][j]</code><br>直接动手上代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">func minPathSum(grid [][]int) int &#123;</div><div class="line">  if grid == nil || len(grid) == 0 &#123;</div><div class="line">	return 0</div><div class="line">  &#125;</div><div class="line">  m, n := len(grid), len(grid[0])</div><div class="line">  dp := make([][]int, m)</div><div class="line">	</div><div class="line">  for i := 0; i &lt; m; i++ &#123;</div><div class="line">	dp[i] = make([]int, n)</div><div class="line">  &#125;</div><div class="line">	</div><div class="line">  dp[0][0] = grid[0][0]</div><div class="line">  for i := 1; i &lt; m; i++ &#123;</div><div class="line">	dp[i][0] = dp[i-1][0] + grid[i][0]</div><div class="line">  &#125;</div><div class="line">  for i := 1; i &lt; n; i++ &#123;</div><div class="line">	dp[0][i] = dp[0][i-1] + grid[0][i]</div><div class="line">  &#125;</div><div class="line">  for i := 1; i &lt; m; i++ &#123;</div><div class="line">	for j := 1; j &lt; n; j++ &#123;</div><div class="line">	  dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + grid[i][j]</div><div class="line">	&#125;</div><div class="line">  &#125;</div><div class="line">  return dp[m-1][n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>提交后发现 <em>Runtime: 12 ms, faster than 28.57% of Go online submissions.<br>Memory Usage: 4.4 MB, less than 13.64% of Go online submissions for Minimum Path Sum</em>. 效率太低了，想办法来优化下。</p>
+<p>实际上我们只需要一个长度为n-1的一维数组来存储状态集合，状态转移的过程都可以基于这个一维数组来操作。继续上代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">func minPathSum(grid [][]int) int &#123;</div><div class="line">  if grid == nil || len(grid) == 0 &#123;</div><div class="line">    return 0</div><div class="line">  &#125;</div><div class="line">  m, n := len(grid), len(grid[0])</div><div class="line">  dp := make([]int, n)</div><div class="line">   </div><div class="line">  for j, _ := range dp &#123;</div><div class="line">    dp[j] = math.MaxInt32</div><div class="line">  &#125;</div><div class="line">  dp[0] = 0</div><div class="line">  for i := 0; i &lt; m; i++ &#123;</div><div class="line">    for j := 0; j &lt; n; j++ &#123;</div><div class="line">      if j == 0 &#123;</div><div class="line">        dp[j] += grid[i][j]</div><div class="line">      &#125; else &#123;</div><div class="line">        dp[j] = min(dp[j], dp[j-1]) + grid[i][j]</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">  return dp[n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>再次提交后 <em>Runtime: 8 ms, faster than 100.00% of Go online submissions for Minimum Path Sum.<br>Memory Usage: 3.9 MB, less than 59.09% of Go online submissions for Minimum Path Sum.</em>  : )</p>
+<h2 id="Unique-Paths-II-63"><a href="#Unique-Paths-II-63" class="headerlink" title="Unique Paths II(63)"></a>Unique Paths II(63)</h2><p><a href="https://leetcode.com/problems/unique-paths-ii/" target="_blank" rel="external">63 Unique Paths II</a></p>
+<h3 id="Question-1"><a href="#Question-1" class="headerlink" title="Question"></a>Question</h3><p>A robot is located at the top-left corner of a m x n grid (marked ‘Start’ in the diagram below).</p>
+<p>The robot can only move either down or right at any point in time. The robot is trying to reach the bottom-right corner of the grid (marked ‘Finish’ in the diagram below).</p>
+<p>Now consider if some obstacles are added to the grids. How many unique paths would there be?</p>
+<h3 id="Example-1"><a href="#Example-1" class="headerlink" title="Example"></a>Example</h3><pre><code>Input:
+[
+  [0,0,0],
+  [0,1,0],
+  [0,0,0]
+]
+Output: 2
+Explanation:
+There is one obstacle in the middle of the 3x3 grid above.
+There are two ways to reach the bottom-right corner:
+1. Right -&gt; Right -&gt; Down -&gt; Down
+2. Down -&gt; Down -&gt; Right -&gt; Right
+</code></pre><h3 id="Analysis-1"><a href="#Analysis-1" class="headerlink" title="Analysis"></a>Analysis</h3><p>第一感觉是可以用回溯来解决此问题。对每一个点先选择向右走，如果遇到障碍物或者右边无路说明此路径不通，回退到该点选择向下走，如果遇到障碍物或下边无路可走说明不存在任何一条路径可以经过该点走到终点。依次类推，每次递归向后走到终点时count加一。</p>
+<p><strong>需要特别注意的是要开始OR结束点值为1的情况</strong></p>
+<p>核心代码如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">func DFS(obstacleGrid [][]int, i, j int) &#123;</div><div class="line">    m, n := len(obstacleGrid), len(obstacleGrid[0])</div><div class="line">    if i == m - 1 &amp;&amp; j == n - 1  &amp;&amp; obstacleGrid[i][j] != 1&#123;</div><div class="line">        count++</div><div class="line">        return </div><div class="line">    &#125;</div><div class="line">    if i &lt; m - 1 &amp;&amp; obstacleGrid[i+1][j] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i + 1, j)</div><div class="line">    &#125;</div><div class="line">    if j &lt; n - 1 &amp;&amp; obstacleGrid[i][j+1] == 0 &#123;</div><div class="line">        DFS(obstacleGrid, i, j + 1)</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>递推算法基本类似于暴力求解，无重复又没有遗漏的穷举出所有走法。果不其然代码提交后TLE : (</p>
+<p>继续分析这道题，对于图中任一个非障碍点(i,j)，从起始位置走到该点的路径个数可以通过走到该点的左边位置（i-1,j)和上方位置(i,j-1)的路径个数之和计算， 即</p>
+<p><code>dp[i][j] = dp[i-1][j] + dp[i][j-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
+<p>因此可以改用DP算法来解决，同样为了优化算法效率我们通过一个一维数组在存储状态集合，此时状态方程为<br><code>dp[i] += dp[i-1]</code> <em>if obstacleGrid[i][j] == 0</em></p>
+<p>具体代码如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">func uniquePathsWithObstacles(obstacleGrid [][]int) int &#123;</div><div class="line">    if obstacleGrid == nil || len(obstacleGrid) == 0 &#123;</div><div class="line">        return 0</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    m, n, count := len(obstacleGrid), len(obstacleGrid[0]), 0</div><div class="line">    if (obstacleGrid[0][0] == 1 || obstacleGrid[m-1][n-1] == 1) &#123;</div><div class="line">        return count</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    dp := make([]int, n)</div><div class="line">    dp[0] = 1</div><div class="line">    for i := 0; i &lt; m; i++ &#123;</div><div class="line">        for j := 0; j &lt; n; j++ &#123;</div><div class="line">            if obstacleGrid[i][j] == 1 &#123;</div><div class="line">                dp[j] = 0 </div><div class="line">            &#125; else &#123;</div><div class="line">                if j != 0 &#123;</div><div class="line">                    dp[j] += dp[j-1]</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">            </div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    return dp[n-1]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><em>Runtime: 0 ms, faster than 100.00% of Go online submissions for Unique Paths II.<br>Memory Usage: 2.6 MB, less than 66.67% of Go online submissions for Unique Paths II.</em></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2019/04/17/重归博客/" itemprop="url">
+                  重归博客
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2019-04-17T23:38:48+08:00" content="2019-04-17">
+              2019-04-17
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Hello-My-Personal-Blog"><a href="#Hello-My-Personal-Blog" class="headerlink" title="Hello, My Personal Blog"></a>Hello, My Personal Blog</h2><p>After nearly two years of work, i want to share what i have learned in my work and life.</p>
+<p>Blogs can also help me to improve my ability to make things clearer and record my growth.</p>
+<p>Let’s start!!!</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/12/31/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十一周/" itemprop="url">
                   AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十一周
                 </a>
@@ -248,7 +484,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-31T15:54:03+08:00" content="2016-12-31">
               2016-12-31
             </time>
@@ -356,7 +592,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-23T15:53:56+08:00" content="2016-12-23">
               2016-12-23
             </time>
@@ -457,7 +693,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-16T10:56:39+08:00" content="2016-12-16">
               2016-12-16
             </time>
@@ -614,7 +850,7 @@ Test:2000 good engines,10 anomalous
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
               2016-12-08
             </time>
@@ -802,7 +1038,7 @@ xj&apos; = xj - uj
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
               2016-12-04
             </time>
@@ -932,7 +1168,7 @@ but many slower to train.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-27T15:46:44+08:00" content="2016-11-27">
               2016-11-27
             </time>
@@ -1070,7 +1306,7 @@ It&apos;s who has the most data.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-24T15:10:34+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -1171,7 +1407,7 @@ Be sure to disable your gradient checking code before training your claaifier. o
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2016-11-24T14:14:40+08:00" content="2016-11-24">
               2016-11-24
             </time>
@@ -1306,290 +1542,6 @@ struct list_head cg_list;
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/11/13/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第四周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第四周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2016-11-13T15:48:54+08:00" content="2016-11-13">
-              2016-11-13
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="4、Neural-Networks"><a href="#4、Neural-Networks" class="headerlink" title="4、Neural Networks"></a>4、Neural Networks</h2><h3 id="4-1-Motivations"><a href="#4-1-Motivations" class="headerlink" title="4.1 Motivations"></a>4.1 Motivations</h3><pre><code>Neural Networks
-Origins: Algorithms that try to mimic the brain.
-Was very widely used in 80s and early 90s;
-popularity diminished in late 90s.
-Recent resurgence: 
-    state-of-the-art technique for many applications. 
-</code></pre><h3 id="4-2-Neural-Networks"><a href="#4-2-Neural-Networks" class="headerlink" title="4.2 Neural Networks"></a>4.2 Neural Networks</h3><h4 id="4-2-1-Model-Representation-I"><a href="#4-2-1-Model-Representation-I" class="headerlink" title="4.2.1 Model Representation I"></a>4.2.1 Model Representation I</h4><p>Sigmoid(logistic) activation function.<br><img src="http://ofacak8l3.bkt.clouddn.com/4_1.png" alt="4_1"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/4_2.png" alt="4_2"></p>
-<h4 id="4-2-2-Model-Representation-II"><a href="#4-2-2-Model-Representation-II" class="headerlink" title="4.2.2 Model Representation II"></a>4.2.2 Model Representation II</h4><pre><code>input层
-hidden层
-output层
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/4_3.png" alt="4_3"></p>
-<h3 id="4-3-Multiple-output-units-One-vs-all"><a href="#4-3-Multiple-output-units-One-vs-all" class="headerlink" title="4.3 Multiple output units:One-vs-all."></a>4.3 Multiple output units:One-vs-all.</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/4_4.png" alt="4_4"></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/11/07/Machine-Learning编程作业2——Logistic-Regression/" itemprop="url">
-                  Machine Learning编程作业2——Logistic Regression
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2016-11-07T10:31:30+08:00" content="2016-11-07">
-              2016-11-07
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>##ex2.m<br>=============plotting================</p>
-<p>data = load(‘ex2data1.txt’);</p>
-<p>X = data(:,[1,2]);</p>
-<p>y = data(:,3);</p>
-<p>plotData(X,y);</p>
-<pre><code>plotData.m
-
-function plotData(X,y)
-figure;hold on;
-
-pos = find(y==1);
-neg = find(y==0);
-plot(X(pos,1),X(pos,2),&apos;k+&apos;,&apos;LineWidth&apos;,2,...
-    &apos;MarkerSize&apos;,7);
-plot(X(neg,1),X(neg,2),&apos;ko&apos;,&apos;MarkerFaceColor&apos;,&apos;y&apos;,...
-    &apos;MarkerSize&apos;,7);
-
-hold off;
-end
-</code></pre><p>=============compute cost and gradient===========</p>
-<p>[m,n] = size(X);</p>
-<p>X = [ones(m,1) X];</p>
-<p>initial_theta = zeros(n+1,1);</p>
-<p>[cost,grad] = costFunction(initial_theta,X,y);</p>
-<pre><code>costFunction.m
-
-function [J,grad] = costFunction(theta,X,y)
-m = length(y);
-J = 0;
-grad = zeros(size(theta));
-
-J = (-1)/m *(log(sigmoid(X*theta))&apos;*y +
-            log(1-sigmoid(X*theta))&apos;*(1-y));
-for i = 1: size(X,2)
-  grad(i) = 1/m * sum((sigmoid(X*theta)-y) .* X(:,i));
-end
-end
-</code></pre><p>plotDecisionBoundary(theta,X,y);</p>
-<p>=============predict and accuracies===============</p>
-<p>prob = sigmoid([1 45 85] * theta);</p>
-<p>p = predict(theta,X);</p>
-<pre><code>predict.m
-
-function p = predict(theta,X)
-
-m = size(X,1);
-p = zeros(m,1);
-
-for i = 1:m
-    if(sigmoid(X(i,:) * theta)) &gt;= 0.5
-        p(i) = 1;
-    else
-        p(i) = 0;
-    end
-end
-end
-</code></pre><h2 id="ex2-reg-m"><a href="#ex2-reg-m" class="headerlink" title="ex2_reg.m"></a>ex2_reg.m</h2><p>clear;</p>
-<p>data = load(‘ex2data2.txt’);</p>
-<p>X = data(:,[1,2]);</p>
-<p>y = data(:,3);</p>
-<p>plotData(X,y);</p>
-<p>=====================regularized Logistic Regression======</p>
-<p>X = mapFeature(X(:,1),X(:,2));</p>
-<p>initial_theta = zeros(size(X,2),1);</p>
-<p>lambda = 1;</p>
-<p>[cost,grad] = costFunctionReg(initial_theta,X,y,lambda);</p>
-<pre><code>costFunctionReg.m
-
-function [J,grad] = costFunctionReg(theta,X,y,lambda)
-m = length(y);
-J = 0;
-grad = zeros(size(theta));
-
-temp = theta(2:size(theta,1),:) .^2;
-value = sum(temp);
-J = (-1)/m * (log(sigmoid(X*theta))&apos;*y +
-            log(1-sigmoid(X*theta))&apos;*(1-y))
-        +lambda/(2*m) * value;
-grad(1) = 1/m*sum((sigmoid(X*theta) - y) .* X(:,1));
-
-for i = 2: size(X,2)
-    grad(i) = 1 / m *sum((sigmoid(X*theta) -y).*X(:,i))
-     +lambda/m * theta(i);
-end
-end
-</code></pre>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1635,8 +1587,8 @@ end
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">36</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-count">38</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -1646,7 +1598,7 @@ end
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">10</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -1690,7 +1642,7 @@ end
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

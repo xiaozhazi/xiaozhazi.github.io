@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -235,6 +235,256 @@
             
               
                 
+                <a class="post-title-link" href="/2020/11/14/深入理解计算机系统第8周/" itemprop="url">
+                  《深入理解计算机系统》第8周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-11-14T22:00:00+08:00" content="2020-11-14">
+              2020-11-14
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>虚拟内存是现代系统提供的一种对主存的抽象概念，它将主存看成是一个存储在磁盘上的地址空间的高速缓存，在主存中只保存活动区域按需在磁盘和主存之间来回传送数据；为每个进程提供了一致的地址空间，简化了内存管理；并且保护每个进程的地址空间不被其他进程破坏。通过本章学习可以了解虚拟内存是如何工作的，以及如何在程序中使用和管理虚拟内存，避免一些和内存有关的错误出现。<br>现代系统通过内存映射将虚拟内存和磁盘文件关联，为共享数据、创建新进程以及加载程序提供了一种高效的机制。应用可以使用mmap函数来手工地创建和删除虚拟地址空间的区域。对于运行时才知道大小的数据结构，大多数程序通过动态内存分配器管理虚拟地址空间中的堆区域，并且显式或自动地释放内存。</p>
+<ul>
+<li>早期的PC通过物理寻址，现代处理器多采用虚拟寻址来访问主存，虚拟地址在被送到内存之前通过MMU地址翻译转换为物理地址。</li>
+<li>虚拟页，VM将虚拟内存分割为大小固定的块，虚拟页有以下三种：<ul>
+<li>未分配的，没有任何数据与之关联，不占用任何磁盘空间；</li>
+<li>缓存的，当前已缓存在物理内存中的已分配页；</li>
+<li>未缓存的，未缓存在物理内存中的已分配页</li>
+</ul>
+</li>
+<li>DRAM缓存表示虚拟内存系统的缓存，是全相联的，因为虚拟页通常为4K-2M，不命中时替换开销较大，因此替换策略非常重要。因为对磁盘访问时间长，DRAM缓存总是使用写回而非直写。</li>
+<li>局部性原则保证了任意时刻，程序将趋向于在一个较小的active page集合上工作，即常驻集合/工作集。如果工作集的大小超出了物理内存大小，程序将产生一种不幸的状态，即抖动。页面将不断地换进换出。</li>
+<li>将一组连续的虚拟页映射到任意一个文件中的任意位置的表示法称为内存映射，Linux系统提供一个成为mmap的系统调用，允许应用程序自己做内存映射。     </li>
+<li>正常命中时CPU硬件执行步骤：<ul>
+<li>处理器生成一个虚拟地址并传送给MMU；</li>
+<li>MMU生成PTE地址，从高速缓存/主存请求得到它；</li>
+<li>高速缓存/主存向MMU返回PTE；</li>
+<li>MMU构造物理地址，并把它传送给高速缓存/主存；</li>
+<li>高速缓存/主存返回所请求的数据字给处理器</li>
+</ul>
+</li>
+<li>当缺页时，需要硬件和操作系统内核写作完成：<ul>
+<li>前三步相同</li>
+<li>PTE有效位为0，MMU触发异常，传递CPU中的控制到操作系统内核中的缺页异常处理程序；</li>
+<li>缺页处理程序确定出物理内存中的牺牲页，如果该页已经被修改，则把它换出到磁盘；</li>
+<li>缺页处理程序页面调入新的页面，并更新内存中的PTE</li>
+<li>缺页处理程序返回到原来的进程，再次执行导致缺页的指令。主存将请求字返回给CPU。</li>
+</ul>
+</li>
+<li>频繁读取PTE会使得内存多取一次数据，为了消除开销，现代系统利用TLB（MMU中一个PTE的小缓存）</li>
+<li>如果每个进程都在物理内存中保存常用代码的副本会比较浪费，内存映射提供了一种机制控制多个进程共享对象。一个对象可以被映射到虚拟内存的一个区域，作为共享对象或者私有对象。对于共享对象，进程对该区域的任何写操作，其他把该对象映射到虚拟内存的进程也可见。私有对象使用写时复制的技术被映射到虚拟内存中，延迟私有对象中的副本到最后可能的时刻来充分利用物理内存。</li>
+<li>Fork调用时，内核为新进程创建虚拟内存，创建了当前进程的mm_struct、区域结构和页表的原样副本，将两个进程的每个页面都标记为只读，并将两个进程中的每个区域结构都标记为私有的写时复制。当fork在新进程中返回后，新进程现在的虚拟内存刚好和调用fork时存在的虚拟内存相同。当两个进程中的任何一个后来进行写操作时，写时复制都会创建新页面，即为每个进程保持了私有地址空间的抽象概念。</li>
+<li>程序使用动态内存分配的最重要原因是直到程序实际运行时才知道某些数据结构的大小，数据大小的最大值可以由可用的虚拟内存数量来限制。</li>
+<li>管理和使用虚拟内存中常见的错误类型：间接引用坏指针，读取未初始化的内存、允许栈缓冲区溢出、假设指针和它们指向的对象大小相同，引用指针而不是它指向的对象、误解指针运算、引用不存在的变量、以及引起内存泄漏等。</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2020/11/06/深入理解计算机系统第7周/" itemprop="url">
+                  《深入理解计算机系统》第7周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-11-06T22:00:00+08:00" content="2020-11-06">
+              2020-11-06
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>本周主要学习了异常控制流ECF（Exception Control Flow）相关知识，它可以发生在计算机系统的各个层次，是操作系统用来实现I/O、进程和虚拟内存的基本机制。应用程序通过ECF和操作系统进行交互，如磁盘写数据、网络读取数据、创建新进程、终止当前进程等。理解ECF可以帮助我们编写有趣的应用程序并且更好得理解并发。C++/Java语言提供的异常处理机制，允许程序运行非本地跳转来相应错误，这些都是ECF的一种应用层形式。</p>
+<ul>
+<li><p>异常是控制流中的突变，用来响应处理器状态中的某些变化。在任何情况下，处理器检测到有事件发生时，它会通过异常表来进行间接过程调用，到异常处理程序来处理。完成处理后根据异常类型有以下3种情况：</p>
+<ul>
+<li>处理程序将控制返回给当前指令；</li>
+<li>处理程序将控制返回给下一条指令并执行；</li>
+<li>处理程序终止被中断的程序</li>
+</ul>
+</li>
+<li><p>异常和过程调用的区别：</p>
+<ul>
+<li>过程调用时，在跳转前处理器将返回地址压栈。异常处理时根据异常的类型返回地址要么是当前指令要么是下一条指令；</li>
+<li>处理器也把一些额外的处理器状态压到栈里，在处理程序返回时，重新开始执行被中断的程序会需要这些状态。如X86-64会压入包含当前条件码的EFLAGS寄存器</li>
+<li>如果控制从用户程序转移到内核，则压入内核栈中</li>
+<li>异常处理程序运行在内核模式下</li>
+</ul>
+</li>
+<li><p>异常类型： <strong>中断interrupt、陷阱trap、故障fault、终止abort</strong></p>
+<ul>
+<li>中断： 来自I/O设备的信号/异步/总是返回到下一条指令</li>
+<li>陷阱：有意的异常/同步/总是返回到下一条指令 （用途： 在用户程序和内核之间提供一个像过程一样的接口，叫做系统调用）</li>
+<li>故障：潜在的可恢复的错误/同步/可能返回当前指令 （如缺页异常）</li>
+<li>终止：不可恢复的错误/同步/不会返回</li>
+</ul>
+</li>
+<li><p><strong>上下文切换</strong>是内核使用的一种较高层形式的异常控制流，用来实现多任务。</p>
+</li>
+<li>父进程通过<strong>fork函数</strong>创建子进程，子进程得到与父进程用户级虚拟地址空间相同的一份副本，包括代码和数据段、堆、共享库以及用户栈。子进程还获得与父进程打开文件描述符相同的副本，可以读写父进程中打开的任何文件。两者最大的区别在于不同的PID。 fork函数被父进程调用一次，返回两次—- 一次是返回到父进程，一次返回到新创建的子进程。在父进程中fork返回子进程的PID；在子进程中fork返回0.</li>
+<li>Linux信号是一种更高层的软件形式的异常，允许进程和内核中断其他进程。一个发出来没有被接收的信号叫做待处理信号，在任何时刻一种类型至多只会有一个待处理信号。（后续发送的不会排队等待，被简单丢弃）</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/10/25/深入理解计算机系统第5周/" itemprop="url">
                   《深入理解计算机系统》第5周
                 </a>
@@ -248,7 +498,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-10-25T22:00:00+08:00" content="2020-10-25">
               2020-10-25
             </time>
@@ -389,7 +639,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-10-18T22:00:00+08:00" content="2020-10-18">
               2020-10-18
             </time>
@@ -533,7 +783,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-10-11T22:00:00+08:00" content="2020-10-11">
               2020-10-11
             </time>
@@ -668,7 +918,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-09-27T22:00:00+08:00" content="2020-09-27">
               2020-09-27
             </time>
@@ -800,7 +1050,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-09-20T22:00:00+08:00" content="2020-09-20">
               2020-09-20
             </time>
@@ -904,7 +1154,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-08-15T23:24:00+08:00" content="2020-08-15">
               2020-08-15
             </time>
@@ -1172,7 +1422,7 @@ public class Ostrich implements Tweetable, Egglayable {
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-08-10T21:52:00+08:00" content="2020-08-10">
               2020-08-10
             </time>
@@ -1455,7 +1705,7 @@ public class Ostrich implements Tweetable, Egglayable {
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-08-02T16:55:00+08:00" content="2020-08-02">
               2020-08-02
             </time>
@@ -1595,354 +1845,6 @@ public class Ostrich implements Tweetable, Egglayable {
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/07/25/TalkGo读书会第一期总结/" itemprop="url">
-                  TalkGo读书会第一期总结
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2020-07-25T16:55:00+08:00" content="2020-07-25">
-              2020-07-25
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="个人总结"><a href="#个人总结" class="headerlink" title="个人总结"></a>个人总结</h2><p>选择加入读书会首先是本身对性能优化这个Topic比较感兴趣，另外公司底层架构升级维护也需要关注性能问题。课程计划表是两个月，一天一篇的话也不会特别占时间，但是真正执行下来才深刻体会到惰性的强大(如果不是读书会的话应该很容易就弃掉)。平时工作的话回家看书的时间也不会太多，有两三次都是周末抓紧时间搞定，尤其是后面网络那部分平时不太会去关注的指标，可能以前遇到这种章节都会直接略过。</p>
-<p>这个课程主要还是偏向原理，基础的性能指标，主要提供了一些遇到性能问题如何下手分析解决的思路。真正在环境中遇到问题分析出原因定位代码还是需要一些经验。特别是一些开源软件遇到性能问题时定位具体代码还是需要耗费一些精力。我们组这个月正好遇到了ES小版本升级后，xpack monitor导致的内存使用问题，定位代码借助了jstack和阿里的Arthas才最终找到原因。</p>
-<p>总之，这个课程还是需要经常拿来回顾下，遇到性能问题多积攒经验才是王道。</p>
-<p>接下来的看书计划的话，正好前两天收到了一本《架构修炼之道》，准备先翻看下。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/07/19/Linux性能优化实战第八周--套路篇/" itemprop="url">
-                  《Linux 性能优化实战》第八周--套路篇
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2020-07-19T16:55:00+08:00" content="2020-07-19">
-              2020-07-19
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>在实际的性能分析中，发生性能瓶颈后登陆服务器想要排查的时候发现瓶颈已经消失且很难复现。因此要事先搭建监控系统，把系统和应用程序的运行状况监控下来，并定义一系列的策略，在发生问题第一时间告警处理。</p>
-<p>系统监控通过USE法则利用prometheus+grafana来监控系统资源。应用程序监控分为指标监控和日志监控两大块，在复杂业务场景中通常搭建全链路跟踪系统来定位应用瓶颈。</p>
-<p>性能问题可以从系统资源瓶颈和应用程序瓶颈两个角度来梳理分析。系统时应用的运行环境，系统的瓶颈会导致应用的性能下降，而应用的不合理设计也会引发系统资源的瓶颈。做性能分析要结合应用程序和操作系统的原理，就出引发问题的真凶。</p>
-<p>本周回顾了前几周学习到的常见性能优化方法。值得注意的是一定切记要避免过早优化，性能优化往往会提高复杂度，一方面降低了可维护性，另一方面也为适应复杂多变的新需求带来障碍。所以要逐步完善，首先保证能满足当前的性能要求。发现性能不满足要求或者出现性能瓶颈后，再根据性能分析的结果选择最重要的性能问题进行优化。</p>
-<p>不能把性能工具当成性能分析和优化的全部，一方面性能分析和优化的核心是对系统和应用程序运行原理的掌握，性能工具只是辅助我们更快完成此过程的帮手；另一方面完善监控系统可以提供绝大部分性能分析所需的基准数据，从这些数据中很可能大致定位出性能瓶颈，也就不用再去手动执行各类工具了。</p>
-<h3 id="捞评论"><a href="#捞评论" class="headerlink" title="捞评论"></a>捞评论</h3><ol>
-<li>除了USE原则，还有RED原则。更偏重于应用，在很多微服务中会用到。<ul>
-<li>Rate： 每秒请求数量</li>
-<li>Errors： 失败的请求次数</li>
-<li>Duration： 处理一条请求所需的时间</li>
-</ul>
-</li>
-<li>想要学习eBPF来说，可以从BPF Compiler Collection（BCC）这个项目开始。BCC提供了很多短小的示例，可以快速了解eBPF的工作原理并熟悉eBPF程序的开发思路。了解这些基本的用法后，再去深入了解eBPF。</li>
-</ol>
-<h2 id="Lesson-53-套路篇：系统监控的综合思路"><a href="#Lesson-53-套路篇：系统监控的综合思路" class="headerlink" title="Lesson 53 套路篇：系统监控的综合思路"></a>Lesson 53 套路篇：系统监控的综合思路</h2><p>一个好的监控系统，不仅可以实时暴露系统的各种问题，更可以根据这些监控到的状态，自动分析和定位大致的瓶颈来源，从而更精确地把问题汇报给相关团队。</p>
-<ul>
-<li>从系统来说，监控系统要涵盖系统的整体资源使用情况。如CPU、内存、磁盘、文件系统和网络等</li>
-<li>从应用程序来说，监控系统要涵盖应用程序内部的运行状态。即包括进程的CPU、磁盘I/O等整体运行状况，也包括接口调用耗时、执行中的错误、内部对象的内存使用等程序内部的运行状况</li>
-</ul>
-<h3 id="USE法"><a href="#USE法" class="headerlink" title="USE法"></a>USE法</h3><p>USE， Utilization Saturation and Errors</p>
-<ul>
-<li>使用率，资源用于服务的时间或容量百分比</li>
-<li>饱和度，资源的繁忙程度，通常和队列长度相关</li>
-<li>错误数，表示发生错误的事件个数</li>
-</ul>
-<p>常见指标分类如下图所示：</p>
-<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/use.png" alt></p>
-<h3 id="监控系统"><a href="#监控系统" class="headerlink" title="监控系统"></a>监控系统</h3><p>一个完整的监控系统通常由数据采集、数据存储、数据查询和处理、告警以及可视化展示等多个模块组成。</p>
-<p>常见的开源监控工具有Zabbix、Nagios、Prometheus等，下面介绍Prometheus的基本架构：</p>
-<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/prometheus.png" alt></p>
-<h4 id="数据采集"><a href="#数据采集" class="headerlink" title="数据采集"></a>数据采集</h4><p>Prometheus targets就是数据采集的对象，Retrieval负责采集这些数据。Prometheus支持两种采集模式：</p>
-<ul>
-<li>Pull模式，服务端的采集模块触发采集。只要采集目标提供HTTP接口即可（常用的采集模式）</li>
-<li>Push模式，各个采集目标主动向Push Gateway推送目标，再由服务器端从Gateway中拉取（移动应用中常用）</li>
-</ul>
-<p>Prometheus提供服务发现机制，自动根据配置的规则动态发现需要监控的对象。在K8S容器平台中非常有效。</p>
-<h4 id="数据存储"><a href="#数据存储" class="headerlink" title="数据存储"></a>数据存储</h4><p>TSDB（Time Series Database），负责将采集到的数据持久化到SSD等磁盘设备中。 TSDB是专门为时序数据设计的数据库，以时间为索引、数据量大且以追加的方式写入。</p>
-<h4 id="数据查询和处理"><a href="#数据查询和处理" class="headerlink" title="数据查询和处理"></a>数据查询和处理</h4><p>TSDB在存储数据的同时，还提供了数据查询和基本的数据处理功能。即PromQL语言，提供了简介的查询、过滤功能。</p>
-<h4 id="告警模块"><a href="#告警模块" class="headerlink" title="告警模块"></a>告警模块</h4><p>AlertManager提供了告警功能，基于PromQL语言的触发条件、告警规则的配置管理以及告警的发送。还支持通过分组、抑制或者静默等多种方式来聚合同类告警。</p>
-<h4 id="可视化"><a href="#可视化" class="headerlink" title="可视化"></a>可视化</h4><p>Prometheus WebUI提供了简单的可视化界面。通常配合Grafana来构建强大的图形界面。</p>
-<h2 id="Lesson-54-套路篇：应用监控的一般思路"><a href="#Lesson-54-套路篇：应用监控的一般思路" class="headerlink" title="Lesson 54 套路篇：应用监控的一般思路"></a>Lesson 54 套路篇：应用监控的一般思路</h2><h3 id="指标监控"><a href="#指标监控" class="headerlink" title="指标监控"></a>指标监控</h3><p><strong>应用程序的核心指标，不再是资源的使用情况，而是请求数、错误率和响应时间。</strong><br>除了上述三个指标外，下面几种指标也是应用程序监控必不可少的，可以帮助我们快速定位性能瓶颈。</p>
-<ul>
-<li><strong>应用进程的资源使用情况</strong>，比如进程占用的CPU、内存、磁盘I/O、网络等。</li>
-<li><strong>应用程序之间的调用情况</strong>，如调用频率、错误数、延时等<ul>
-<li>可以迅速分析出一个请求处理的调用链中哪个组件导致性能问题</li>
-</ul>
-</li>
-<li><strong>应用程序内部核心逻辑的运行情况</strong>，比如关键环节的耗时以及执行过程中的错误等<ul>
-<li>直接进入应用程序内部，定位到底是哪个处理环节的函数导致性能问题</li>
-</ul>
-</li>
-</ul>
-<p>由于业务系统通常会涉及到一连串的多个服务，形成一个复杂的分布式调用链。为了迅速定位这类跨应用的性能瓶颈，可以使用Zipkin、Jaeger、Pinpoint等各类开源工具来构建全链路跟踪系统。</p>
-<h3 id="日志监控"><a href="#日志监控" class="headerlink" title="日志监控"></a>日志监控</h3><ul>
-<li>指标是特定时间段的数值型测量数据，通常以时间序列的方式处理，适合于实时监控</li>
-<li>日志都是某个时间点的字符串消息，通常需要对搜索引擎进行索引后，才能进行查询和汇总分析</li>
-</ul>
-<p>日志监控经典的方法是ELK技术栈，Elasticsearch、Logstash、Kibana三个组件的组合。</p>
-<ul>
-<li>Logstash负责从各个日志源采集日志，进行预处理，最后再把初步处理过的日志发送给Elasticsearch进行索引</li>
-<li>Elasticsearch负责对日志进行检索，并提供一个完整的全文搜索引擎</li>
-<li>Kibana负责对日志进行可视化分析，包括日志搜索、处理以及绚丽的仪表板展示</li>
-</ul>
-<p>ELK中logstash资源消耗较大，在资源紧张时往往使用Fluentd来替代，即EFK技术栈。采集端还可以使用filebeat，架构拓展为filebeat-kafka（zookeeper）-logstash或sparkstreaming-es，除了日志查询外可以做业务关联等。</p>
-<h2 id="Lesson-55-套路篇：分析性能问题的一般步骤"><a href="#Lesson-55-套路篇：分析性能问题的一般步骤" class="headerlink" title="Lesson 55 套路篇：分析性能问题的一般步骤"></a>Lesson 55 套路篇：分析性能问题的一般步骤</h2><p>在收到监控系统的告警，发现系统戏院或者应用程序出现性能瓶颈，如何进一步分析根源？</p>
-<h3 id="系统资源瓶颈"><a href="#系统资源瓶颈" class="headerlink" title="系统资源瓶颈"></a>系统资源瓶颈</h3><p>系统资源的瓶颈通过USE法，即使用率、饱和度和错误数三类指标来衡量。系统的资源可以分为硬件资源和软件资源两大类：</p>
-<ul>
-<li>CPU、内存、磁盘和文件系统以及网络等，都是常见的硬件资源</li>
-<li>文件描述符、连接跟踪数、套接字缓冲区大小等都是典型的软件资源。</li>
-</ul>
-<p>在收到监控系统告警后就可以对照这些资源列表，再根据指标的不同来定位。</p>
-<h4 id="CPU性能分析"><a href="#CPU性能分析" class="headerlink" title="CPU性能分析"></a>CPU性能分析</h4><p>利用top、vmstat、pidstat、strace以及perf等几个常见的工具，获得CPU性能指标后，再结合进程与CPU的工作原理，就可以迅速定位CPU性能瓶颈的来源。</p>
-<p>top、vmstat、pidstat等工具所汇报的CPU性能指标都来源于/proc文件系统，这些指标都应该通过监控系统监控起来。 </p>
-<p>比如当收到CPU使用率告警时，从监控系统中直接查询导致CPU使用率过高的进程，然后登陆到服务器分析该进程行为。可以使用strace查看进程的系统调用汇总，也可以使用perf找出热点函数，甚至可以使用动态追踪的方法来观察进程的当前执行过程，直到确定瓶颈个根源。</p>
-<h4 id="内存性能分析"><a href="#内存性能分析" class="headerlink" title="内存性能分析"></a>内存性能分析</h4><p>通过free和vmstat输出的性能指标确认内存瓶颈，然后根据内存问题的类型，进一步分析内存的使用、分配、泄漏以及缓存等，最后找出问题的根源。</p>
-<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/mem_analysis.png" alt></p>
-<p>内存的性能指标也来源于/proc文件系统，它们也都应该通过监控系统监控起来。如当收到内存不足的告警时，可以从监控系统中找出占用内存最多的几个进程。然后根据这些进程的内存占用历史，观察是否存在内存泄漏问题。确定可疑进程后，再登陆服务器分析该进程的内存空间或内存分配，查明原因。</p>
-<h4 id="磁盘和文件系统I-O性能分析"><a href="#磁盘和文件系统I-O性能分析" class="headerlink" title="磁盘和文件系统I/O性能分析"></a>磁盘和文件系统I/O性能分析</h4><p>当使用iostat发现磁盘I/O存在性能瓶颈后，可以再通过pidstat、vmstat等确认I/O的来源。再根据来源的不同进一步分析文件系统和磁盘的使用率、缓存以及进程的I/O等，从而找出I/O问题所在。</p>
-<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/io.png" alt></p>
-<p>磁盘和文件系统的性能指标也来源于/proc和/sys文件系统，也应该通过监控系统监控起来。</p>
-<p>如果发现某块磁盘的I/O使用率为100%时，首先可以从监控系统中，找出I/O最多的进程。然后登陆服务器借助strace、lsof、perf等工具，分析该进程的I/O行为。最后再结合应用程序的原理找出大量I/O的原因。</p>
-<h4 id="网络性能分析"><a href="#网络性能分析" class="headerlink" title="网络性能分析"></a>网络性能分析</h4><p>网络性能其实包含两类资源，网络接口和内核资源。网络分析要从Linux网络协议栈的原理来切入。</p>
-<ul>
-<li>链路层，从网络接口的吞吐量、丢包、错误以及软中断和网络功能卸载等角度分析；</li>
-<li>网络层，从路由、分片、叠加网络等角度分析</li>
-<li>传输层，从TCP、UDP的协议原理出发，从连接数、吞吐量、延迟重传等角度分析</li>
-<li>应用层，从应用层协议、请求数、套接字缓存等角度进行分析</li>
-</ul>
-<p>网络的性能指标也都来源于内核，包括/proc文件系统、网络接口以及conntrack等内核模块，这些指标同样需要被监控系统监控。</p>
-<p>例如，当收到网络不同的告警时，就可以从监控系统中查找各个协议层的丢包指标，确认丢包所在的协议层。然后从监控系统的数据中，确认网络带宽、缓冲区、连接跟踪数等软硬件，是否存在性能瓶颈。最后再登录到服务器中，借助netstat、tcpdump、bcc等工具分析网络的收发数据，并且结合内核中的网络选项以及TCP等网络协议的原理找出问题所在。</p>
-<h3 id="应用程序瓶颈"><a href="#应用程序瓶颈" class="headerlink" title="应用程序瓶颈"></a>应用程序瓶颈</h3><p>应用程序瓶颈本质来源有三种：<strong>资源瓶颈、依赖服务瓶颈、应用自身瓶颈</strong>。</p>
-<p>资源瓶颈可以用前面的方法来分析。</p>
-<p>依赖服务的瓶颈，也就是诸如数据库、分布式缓存、中间件等应用程序，直接或间接调用的服务出现了性能问题从而导致应用程序的响应变慢或者错误率升高。使用全链路跟踪系统可以帮助快速定位这类问题的根源。</p>
-<p>应用程序自身的性能问题，包括了多线程处理不当、死锁、业务的复杂度过高等，这类问题可以通过应用程序指标监控以及日志监控中，观察关键环节的耗时和内部执行过程中的错误，帮助缩小问题范围。</p>
-<p>不过应用程序内部的状态，外部通常不能直接获取详细的性能数据，需要应用程序在设计和开发时提供这些指标。</p>
-<p>如果上述手段还是无法找出瓶颈，可以通过系统资源模块提供的各类进程分析工具来定位分析。 比如：</p>
-<ul>
-<li>strace观察系统调用</li>
-<li>perf和火焰图分析热点函数</li>
-<li>动态追踪技术分析进程的执行状态</li>
-</ul>
-<h2 id="Lesson-56-套路篇：优化性能问题的一般方法"><a href="#Lesson-56-套路篇：优化性能问题的一般方法" class="headerlink" title="Lesson 56 套路篇：优化性能问题的一般方法"></a>Lesson 56 套路篇：优化性能问题的一般方法</h2><h3 id="系统优化"><a href="#系统优化" class="headerlink" title="系统优化"></a>系统优化</h3><h4 id="CPU优化"><a href="#CPU优化" class="headerlink" title="CPU优化"></a>CPU优化</h4><p><strong>CPU性能优化的核心，在于排除所有不必要的工作、充分利用CPU缓存并减少进程程度对性能的影响。</strong></p>
-<ul>
-<li>把进程绑定到一个或者多个CPU上，充分利用CPU缓存的本地性，并减少进程间的相互影响。</li>
-<li>为中断处理程序开启多CPU负载均衡，以便在发生大量中断时可以充分利用多CPU的优势分摊负载</li>
-<li>使用cgroups等方法为进程设置资源限制，避免个别进程消耗过多的CPU。同时为核心应用程序设置更高的优先级，减少低优先级任务的影响</li>
-</ul>
-<h4 id="内存优化"><a href="#内存优化" class="headerlink" title="内存优化"></a>内存优化</h4><ul>
-<li>除非有必要，Swap应该禁止掉。避免Swap的额外I/O，带来内存访问变慢的问题</li>
-<li>使用Cgroups方法为进程设置内存限制。对于核心应用还应该降低oom_score，避免被OOM杀死</li>
-<li>使用大页、内存池等方法，减少内存的动态分配，从而减少缺页异常</li>
-</ul>
-<h4 id="磁盘和文件系统I-O优化"><a href="#磁盘和文件系统I-O优化" class="headerlink" title="磁盘和文件系统I/O优化"></a>磁盘和文件系统I/O优化</h4><ul>
-<li>通过SSD替代HDD、或者用RAID方法来提升I/O性能。</li>
-<li>针对磁盘和应用程序I/O模式的特征，选择最合适的I/O调度算法。比如，SSD和虚拟机中的磁盘，通常用的是noop调度算法；数据库应用更推荐使用deadline算法</li>
-<li>优化文件系统和磁盘的缓存、缓冲区，比如优化藏也的刷新频率、脏页限额，以及内核回收目录项缓存和索引节点缓存的倾向等</li>
-</ul>
-<h4 id="网络优化"><a href="#网络优化" class="headerlink" title="网络优化"></a>网络优化</h4><p>从内核资源和网络协议的角度：</p>
-<ul>
-<li>增大套接字缓冲区、连接跟踪表、最大半连接数、最大文件描述符数、本地端口范围等内核资源配额</li>
-<li>减少TIMEOUT超时时间、SYN+ACK重传数、Keepalive探测时间等异常参数处理</li>
-<li>还可以开启端口复用、反向地址校验，并调整MTU大小等降低内核的负担</li>
-</ul>
-<p>从网络接口的角度：</p>
-<ul>
-<li>将原来CPU上执行的工作，卸载到网卡中执行，即开启网卡的GRO、GSO、RSS、VXLAN等卸载功能；</li>
-<li>也可以开启网络接口的多队列功能，这样每个队列就可以用不用的中断号，调度到不同CPU上执行</li>
-<li>增大网络接口的缓冲区大小以及队列长度等，提升网络传输的吞吐量</li>
-</ul>
-<p>在极限性能情况下，内核的网络协议栈可能是最主要的性能瓶颈，所以一般考虑绕过内核协议栈。</p>
-<ul>
-<li>DPDK技术跳过内核协议栈，直接由用户态进程用轮询的方式，来处理网络请求。同时再结合大页、CPU绑定、内存对齐、流水线并发等多种机制，优化网络包的处理效率</li>
-<li>内核自带的XDP技术，在网络包进入内核协议栈前，就对其进行处理。</li>
-</ul>
-<h4 id="应用程序优化"><a href="#应用程序优化" class="headerlink" title="应用程序优化"></a>应用程序优化</h4><p><strong>性能优化的最佳位置，还是应用程序内部</strong></p>
-<ul>
-<li>从CPU的角度来说，简化代码、优化算法、异步处理以及编译器优化等</li>
-<li>从数据访问的角度，使用缓存、写时复制、增加I/O尺寸等都是常用的减少磁盘I/O的方法</li>
-<li>从内存管理的角度，使用大页、内存池等方法，可以预先分配内存，减少内存的动态分配，从而更好地内存访问性能</li>
-<li>从网络的角度，使用I/O多路复用，长连接代替短连接、DNS缓存等，可以优化网络I/O并减少网络请求数，从而减少网络延时带来的性能问题</li>
-<li>从进程的工作模型来说，异步处理、多线程或多进程可以充分利用每一个CPU的处理能力，从而提高应用程序的吞吐能力</li>
-</ul>
-<p>还可以使用消息队列，CDN、负载均衡等各种方法来优化应用程序的架构，将原来单机要承担的任务调度到多台服务器中并行处理。</p>
-<h2 id="Lesson-57-套路篇：Linux性能工具速查"><a href="#Lesson-57-套路篇：Linux性能工具速查" class="headerlink" title="Lesson 57 套路篇：Linux性能工具速查"></a>Lesson 57 套路篇：Linux性能工具速查</h2><h3 id="CPU性能工具"><a href="#CPU性能工具" class="headerlink" title="CPU性能工具"></a>CPU性能工具</h3><p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/cpu_metric.png" alt></p>
-<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/cpu_tools.png" alt></p>
-<h3 id="内存性能工具"><a href="#内存性能工具" class="headerlink" title="内存性能工具"></a>内存性能工具</h3><p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/mem_metric.png" alt></p>
-<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/mem_tools.png" alt></p>
-<h3 id="磁盘I-O性能工具"><a href="#磁盘I-O性能工具" class="headerlink" title="磁盘I/O性能工具"></a>磁盘I/O性能工具</h3><p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/io_metric.png" alt></p>
-<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/io_tools.png" alt></p>
-<h3 id="网络性能工具"><a href="#网络性能工具" class="headerlink" title="网络性能工具"></a>网络性能工具</h3><p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/net_metric.png" alt></p>
-<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/net_tools.png" alt></p>
-<h3 id="基准测试工具"><a href="#基准测试工具" class="headerlink" title="基准测试工具"></a>基准测试工具</h3><ul>
-<li>在文件系统和磁盘I/O模块中，使用fio工具</li>
-<li>在网络模块，使用iperf、pktgen等</li>
-<li>在基于Nginx的案例中，使用ab、wrk等</li>
-</ul>
-<p>现在重新回看Brendan Gregg的这张Linux基准测试工具图谱，收获良多。</p>
-<p><img src="/2020/07/19/Linux性能优化实战第八周--套路篇/performance_tool.png" alt></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1988,8 +1890,8 @@ public class Ostrich implements Tweetable, Egglayable {
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">36</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-count">38</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -1999,7 +1901,7 @@ public class Ostrich implements Tweetable, Egglayable {
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">10</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -2043,7 +1945,7 @@ public class Ostrich implements Tweetable, Egglayable {
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
