@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -235,6 +235,398 @@
             
               
                 
+                <a class="post-title-link" href="/2020/12/25/学习笔记W2/" itemprop="url">
+                  学习笔记W2
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-12-25T22:00:00+08:00" content="2020-12-25">
+              2020-12-25
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="笔记汇总"><a href="#笔记汇总" class="headerlink" title="笔记汇总"></a>笔记汇总</h2><h3 id="1-K8S垃圾收集器"><a href="#1-K8S垃圾收集器" class="headerlink" title="1. K8S垃圾收集器"></a>1. K8S垃圾收集器</h3><p><a href="https://draveness.me/kubernetes-garbage-collector/" target="_blank" rel="external">详解Kubernetes垃圾收集器的实现原理</a></p>
+<p>垃圾收集器在K8S中以控制器的形式设计实现，删除以前有所有者但是现在所有者不存在的对象。引入垃圾收集器之前，所有的级联删除逻辑都由客户端完成，垃圾收集器的引入使得级联删除实现移动到了服务端。</p>
+<p>级联删除： 对象的API中加入了metadata.ownerReferences字段，包含当前对象的所有依赖者。当所有依赖者都被删除，默认情况下该对象也会被删除。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">type ObjectMeta struct &#123;</div><div class="line">	...</div><div class="line">	OwnerReferences []OwnerReference</div><div class="line">&#125;</div><div class="line">type OwnerReference struct &#123;</div><div class="line">	APIVersion string</div><div class="line">	Kind string</div><div class="line">	Name string</div><div class="line">	UID types.UID</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h4 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h4><p>GarbageCollector负责处理对象之间的联系并在所有依赖者不存在时将对象删除。其中包含了一个GraphBuilder结构体，该结构体会以Goroutine的形式运行使用Informer监听集群中几乎全部资源变动，一但发生变更事件，就将该事件交给主循环体处理。主循环体根据事件的不同选择将处理对象加入不同的队列，GarbageCollector持有的另外两组队列会负责删除或孤立目标对象。</p>
+<ul>
+<li><p>attemptToDeleteItem ： 首先获取待处理对象及其ownerReferences列表，使用classifyReferences将所有者进行分类处理：</p>
+<ul>
+<li>所有者还有存在于集群中的，当前对象不会被删除。将已经被删除、等待删除的所有者从对象ownerReferences删除；</li>
+<li>当正在被删除的所有者不存在任何依赖且ownerReference.blockOwnerDeletion=true时会阻止依赖方的删除，当前对象会等待ownerReference.blockOwnerDeletion=true的所有对象删除后才会被删除；</li>
+<li><p>当前对象不包含任何依赖，会选择三种不同的策略处理依赖：</p>
+<ul>
+<li>当前对象有FinalizerOrphanDependents终结器，DeletePropagationOrphan将对象的所有依赖者变成孤立的；</li>
+<li>当前对象有FinalizerDeleteDependents终接器，deletePropagationBackground策略在前台等待所有依赖被删除后才会删除，整个过程是同步的；</li>
+<li>默认情况下使用DeletePropagationDefault策略在后台删除当前对象的所有依赖；</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>attemptToOrphanItem</li>
+</ul>
+<h3 id="2-Go-Select实现原理"><a href="#2-Go-Select实现原理" class="headerlink" title="2. Go Select实现原理"></a>2. Go Select实现原理</h3><p><a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-select/" target="_blank" rel="external">Go 语言select实现原理</a></p>
+<p>Go语言中select能够让Goroutine同时等待多个Channel的可读/可写，在Channel发生状态改变之前会一直阻塞当前Goroutine。其与switch不同的是，case中的表达式必须是Channel的收发操作。</p>
+<ul>
+<li><strong>select 能在 Channel 上进行非阻塞的收发操作</strong>；</li>
+<li><strong>select 在遇到多个 Channel 同时响应时会随机挑选 case 执行</strong>；(随机的引入是为了避免饥饿问题)</li>
+</ul>
+<p>通常情况下select语句会阻塞当前Goroutine并等待多个Channel中一个达到可以收发的状态，但是如果存在default：</p>
+<ul>
+<li>当存在可以收发的Channel时，直接处理该Channel对应的case； </li>
+<li>当不存在可以收发的Channel时，执行default中语句；<br>非阻塞的Channel发送和接收操作还是很有必要的，在很多场景下我们不希望向Channel发送消息或者从Channel中接收消息会阻塞当前Goroutine，只是想看看 Channel的可读或者可写状态。</li>
+</ul>
+<p>编译器在中间代码生成期间会根据select中case的不同对控制语句进行优化，这一过程都发生在 cmd/compile/internal/gc.walkselectcases 函数中：</p>
+<ul>
+<li>select 不存在任何的 case； 将select{}转换为调用runtime.block，通过gopark让出当前Goroutine对处理器的使用权，导致当前G进入无法被唤醒的永久休眠状态</li>
+<li>select 只存在一个 case； 将select改写成if条件预计，当case中Channel是空指针时，挂起当前G并永久休眠</li>
+<li><p>select 存在两个 case，其中一个 case 是 default； </p>
+<ul>
+<li>非阻塞发送：编译器使用if else改写代码，selectnbsend向Channel非阻塞发送数据，即向chansend函数传入false，哪怕不存在接收方或者缓冲区空间不足都不会阻塞当前G，直接返回。</li>
+<li>非阻塞接收：根据接收数据返回值数量的不同使用selectnbrecv或者selectnbrecv2对返回值进行处理</li>
+</ul>
+</li>
+<li><p>select 存在多个 case； </p>
+<p>  将所有case转换成包含Channel以及类型信息的runtime.scase结构体，调用runtime.selectgo选择一个可执行的scase。runtime.selectgo 函数首先会进行执行必要的初始化操作并决定处理 case 的两个顺序 — <strong>轮询顺序 pollOrder 和加锁顺序 lockOrder：</strong></p>
+<ul>
+<li>轮询顺序：通过 runtime.fastrandn 函数引入随机性； (避免Channel饥饿问题保证公平)</li>
+<li>加锁顺序：按照 Channel 的地址排序后确定加锁顺序；(避免死锁)</li>
+</ul>
+</li>
+</ul>
+<p>selectgo 处理流程    </p>
+<ul>
+<li>随机生成一个遍历的轮询顺序pollOrder 并根据Channel地址生成锁定顺序lockOrder；</li>
+<li>根据pollOrder遍历所有的 case 查看是否有可以立刻处理的 Channel；</li>
+<li>如果存在就直接获取 case 对应的索引并返回；</li>
+<li>如果不存在就会创建 runtime.sudog 结构体，将当前 Goroutine 加入到所有相关 Channel 的收发队列，并调用 runtime.gopark 挂起当前 Goroutine 等待调度器的唤醒；</li>
+<li>当调度器唤醒当前 Goroutine 时就会再次按照 lockOrder 遍历所有的 case，从中查找需要被处理的 runtime.sudog 结构对应的索引；</li>
+</ul>
+<p>###　３.　ETCD九连问<br><a href="https://mp.weixin.qq.com/s/Ht4fsgig0DtKwjPYaLZ8zw" target="_blank" rel="external">ETCD九连问</a></p>
+<p>ETCD是一个可信的分布式键值对存储服务，为分布式集群存储一些关键数据，协助分布式集群的正常运转。</p>
+<ul>
+<li>什么是键值数据库？ 答：一种非关系型数据库，它使用简单的键值方法来存储数据，键作为唯一标识符。</li>
+<li>KV存储服务能干啥？ 答： 用存储服务为服务中介提供服务。</li>
+<li>什么是服务中介？ 答：包含k-v键值对的字典，key是服务名称，value是服务提供者的地址列表。为服务提供者和服务消费者之间建立联系。</li>
+<li>服务发现是什么？ 答：服务提供者、消费者和服务中介三者，实现了服务发现机制，同时etcd还提供服务注册中心的功能。通过服务发现让消费者找到服务提供者。</li>
+<li>服务注册和服务发现的目的是？答：在微服务和容器化环境中，应用的增加和弹性伸缩发生频率很高，服务地址可能经常发生变化，因此需要服务注册和发现机制。<ul>
+<li>服务注册：服务提供者的实例（如pod）在启动时或者位置信息发生变化时，向etcd注册自身，在停止时注销自身。如果该实例发生故障，一段时间没有发送心跳之后会被服务注册表注销；</li>
+<li>服务发现：服务消费者请求服务，首先被发往一个中央路由器或负载均衡器（Service、Router等），查询服务注册表获取服务者的位置信息将请求转发给提供者。</li>
+</ul>
+</li>
+<li>etcd作为分布式键值存储服务，必须要保证分布式系统数据的可用性和一致性。一致性算法有Paxos、Raft，其中Paxos比较复杂很多KV数据库都采用后者。ETCD也不例外。<ul>
+<li>HTTP Server：用于处理用户发送的API请求以及其他ETCD节点的同步与心跳信息请求</li>
+<li>Store: 用于处理ETCD支持的各类功能的事务，包括数据索引、节点状态变更、监控与反馈、时间处理与执行等</li>
+<li>Raft：Raft强一致行算法的具体实现</li>
+<li>WAL：Write Ahead Log，预写式日志，除了内存中存有所有数据状态以及节点索引之外，ETCD通过WAL进行持久化存储，所有数据提交前都会时间记录日志。Snapshot是为了防止数据过多而进行的状态快照，Entry表示存储的具体日志内容。</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-GO-STRUCT对齐"><a href="#4-GO-STRUCT对齐" class="headerlink" title="4. GO STRUCT对齐"></a>4. GO STRUCT对齐</h3><p>合理重排字段可以减少填充，使STRUCT字段排列紧密减少空间浪费。零大小字段指struct{}通常不需要对齐，但是当作为结构体最后一个字段时需要对齐。因为如果有指针指向该字段，返回的地址将在结构体之外。如果此指针一直存活不释放对应的内存会出现内存泄露。（该内存不因结构体释放而释放）因此零大小字段要避免作为 struct 最后一个字段，防止内存浪费。</p>
+<p>32 位系统上对 64 位字的原子访问要保证其是 8bytes 对齐的；当然如果不必要的话，还是用加锁（mutex）的方式更清晰简单</p>
+<h2 id="一周算法汇总"><a href="#一周算法汇总" class="headerlink" title="一周算法汇总"></a>一周算法汇总</h2><h2 id="面试问题汇总"><a href="#面试问题汇总" class="headerlink" title="面试问题汇总:"></a>面试问题汇总:</h2><ol>
+<li>为什么redis选择单线程模型 </li>
+</ol>
+<p>答： Redis从一开始选择使用单线程模型处理客户端的绝大多数网络请求，原因是：</p>
+<ul>
+<li>使用单线程模型可维护性高，方便开发和调试；</li>
+<li>单线程模型也能并发处理客户端请求； （IO多路复用，通过select函数）</li>
+<li>Redis服务中运行的绝大多数操作的性能瓶颈都不是CPU；</li>
+</ul>
+<p>多线程技术能够帮助我们重复利用CPU的计算资源来并发执行不同的任务，但是CPU资源往往不是Redis服务器的瓶颈。Redis如果不开启AOF备份，所有的Redis操作都会在内存中完成不涉及IO，处理非常快。</p>
+<p>普通的Linux服务器上启动Redis也能处理1s 1，000,000个请求。如果这种吞吐量不满足需求，应考虑使用分片的方式将请求发送给不同的Redis来处理。</p>
+<p>Redis 4.0之后的版本加入了多线程的支持，是因为新版本中加入了一些可以被其他线程异步处理的删除操作。UNLINK，FLUSHALL ASYNC，FLUSHDB ASYNC。 删除超大键值对时，几十M，几百M的数据不能在几ms时间内处理完，Redis可能会需要在释放内存空间上消耗过多时间，这些操作会阻塞待处理任务，影响Redis的PCT99和可用性。释放内存的工作由后台线程异步进行处理来提升性能。</p>
+<ol>
+<li>Kafka如何保证数据不丢？</li>
+</ol>
+<p>答： 需要分别从生产者、服务端、消费者三方面处理来保证数据不丢失。</p>
+<ul>
+<li><p>生产者：可以通过配置ACK策略或者retries策略保证数据不丢失：</p>
+<ul>
+<li>ACK=all或-1，生产者发送消息后，需要等待ISR中所有的副本都成功写入消息之后才能接收来自服务端的成功响应。即发送消息时需要leader向follow同步完数据，ISR队列中所有broker全部保存这条消息后，才向ACK发送消息。</li>
+<li>对于可恢复错误（leader选举、网络抖动），配置retries&gt;0进行重试并设置重试时间间隔确保重试时可恢复错误都已恢复；对于不可恢复错误，发生异常时把消息写入DB或者本地缓存文件中，等错误修复后再把数据发送给broker端</li>
+</ul>
+</li>
+<li>broker端：设置unclean.leader.election.enable=false，默认值为true，表示当存有最新一条记录的replication宕机时，kafka自己选举一个主节点，true表示允许未同步最新数据的replication所在节点作为主节点，数据会丢失。</li>
+<li>消费端：处理好offset保证exactly-once &amp; at-least-once数据。设置enable.auto.commit=false手动提交offset，并保证offset的正确性。</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2020/12/13/学习笔记W1/" itemprop="url">
+                  学习笔记W1
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-12-13T22:00:00+08:00" content="2020-12-13">
+              2020-12-13
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="1207-1213"><a href="#1207-1213" class="headerlink" title="1207-1213"></a>1207-1213</h2><h3 id="Go知识图谱"><a href="#Go知识图谱" class="headerlink" title="Go知识图谱"></a>Go知识图谱</h3><p> <a href="https://www.processon.com/view/link/5a9ba4c8e4b0a9d22eb3bdf0#map" target="_blank" rel="external">图片链接</a></p>
+<h3 id="代码规范"><a href="#代码规范" class="headerlink" title="代码规范"></a>代码规范</h3><p>[曹大博客] (<a href="https://mp.weixin.qq.com/s/MRZZOX7cZPIJPelcuihXUw" target="_blank" rel="external">https://mp.weixin.qq.com/s/MRZZOX7cZPIJPelcuihXUw</a>)<br>主要总结了初级程序员容易犯的代码不规范问题: </p>
+<ul>
+<li>命名规范: 业务内部逻辑变量命名讲究单词打全,函数名尽量能让人清晰明了其功能.</li>
+<li>魔法数字: 在配置文件中集中维护特殊变量,可以引入各种方便的配置系统.可以即时修改和配置下发无需系统上下线. 如java中常用的disconf,或借助现在流行的etcd/zookeeper自己开发</li>
+<li>配置文件长度: 对配置文件进行业务逻辑分类(掌握好粒度,配置文件最好有对应的comment进行检索,将系统模块拆分不同模块管理自己的配置文件)</li>
+<li>函数内容长度: 根据功能进行简单的小函数划分</li>
+<li>滥用回调:使用消息队列来解耦.如果系统里发生一个事件,其他模块对事件的数据有依赖,那么就让其订阅系统里产生的消息即可.(Kafka)不过可能会由于引入基于消息队列的分布式系统产生可靠性问题,saga pattern可以解决部分问题.</li>
+<li>分层结果返回没有明确界限和定义: 设计模式修炼,但是要避免滥用设计模式</li>
+<li>公共接口不可重入</li>
+<li>访问数据库不做批量: 即使存在数据库连接池,也要尽可能批量操作提升性能</li>
+<li>尽量少用if else多层嵌套</li>
+<li>数据库查询使用开源builder来减少函数</li>
+<li>工作流系统update前判断修改前的状态</li>
+<li>考虑线程安全问题:有全局map之类的变量访问时考虑加锁</li>
+<li>open资源用后关闭<h3 id="栈内存管理原理分析"><a href="#栈内存管理原理分析" class="headerlink" title="栈内存管理原理分析"></a>栈内存管理原理分析</h3><a href="https://mp.weixin.qq.com/s/1laT9M9WlLldFMYhkKxzsg" target="_blank" rel="external">链接</a><br>介绍了源码runtime/stack.go中是如何管理栈内存的</li>
+</ul>
+<h4 id="堆内存管理"><a href="#堆内存管理" class="headerlink" title="堆内存管理"></a>堆内存管理</h4><p>C语言申请内存通过调用malloc函数指定分配大小向操作系统直接申请,会涉及用户态和内核态的切换,导致性能下降.<br>Golang的内存管理基于tmalloc模型设计,但是局部缓存并不分配给进程/线程,而是分配给P;GC是STW,并不是每个进程单独GC.</p>
+<ul>
+<li>span: golang内存管理的基本单位,管理指定规格(page为单位,67种)的内存块. 最大32KB,超过32KB大小的由特殊的class表示,该classID=0.每个class只包含一个对象.</li>
+<li>内存管理单元: 内存分配器器由mcache,mcentral,mheap组成<ul>
+<li>mcache绑定在P上,用来给协程分配对象存储空间,不需要锁.初始化时没有任何mspan资源,使用过程中动态申请,通过双向链表连接;</li>
+<li>mcentral是公共资源,会有多个mcache向它申请mspan,需要加锁.</li>
+<li>mheap,当mcentral空间不足会向mheap申请新的页,也需要加锁.</li>
+</ul>
+</li>
+<li>分配原则:<ul>
+<li>tiny对象,直接向mcache的tiny对象分配器申请,空间不足时向mcache的tinySpanClass规格的span链表申请,没有继续向mcentral申请对应规格mspan,依旧没有则向mheap申请,最后都不存在向操作系统申请;</li>
+<li>小对象内存分配,先向本线程mcache申请,mspan没有空闲空间-&gt;mcentral-&gt;mheap-&gt;OS page</li>
+<li>大对象内存分配,直接向mheap申请spanclass=0,没有向操作系统申请</li>
+</ul>
+</li>
+<li>GC改进: <ul>
+<li>1.12版本对mheap结构添加了reclaimCredit成员变量,每次mcentral向mheap申请新的page创建span时,先扫描arenas里面的heapArena,清理GC需回收的page数量空间,由于扫描不可能刚好相等,多清理的page大小存到reclaimCredit里.下次再次扫描时先抵消这部分不够再扫描.防止mheap使用率过快增长.</li>
+<li>1.12版本mheap引入scavengeCredit成员变量，当向操作系统申请内存空间的时候，会先去扫描free这个二叉树堆,span从大到小的扫描，释放所需大小的空间给os，多余释放的存储scavengeCredit中，下次再次扫描的时候会先扣除这个值。<h4 id="全局栈内存初始化"><a href="#全局栈内存初始化" class="headerlink" title="全局栈内存初始化"></a>全局栈内存初始化</h4>go程序启动时调用stackinit()初始化,涉及两个重要全局变量stackpool/stackLarge, mspanList初始化头尾为nil. <h4 id="申请内存"><a href="#申请内存" class="headerlink" title="申请内存"></a>申请内存</h4></li>
+</ul>
+</li>
+<li>_StackMin：值为2048,表示go 代码使用最小的栈空间大小</li>
+<li>stackalloc()的stacksize 是一个根据当前系统计算出来的值，win64=8kb、win32=4kb、plan9=4kb、其他系统如linux/bsd/drawin=2kb</li>
+<li>从空闲池中分配栈空间，如果池为空，则向mheap申请内存，并把多余的空间缓存到池中<h4 id="栈扩容"><a href="#栈扩容" class="headerlink" title="栈扩容"></a>栈扩容</h4>linux系统下协程初始栈空间大小为仅仅只有2KB很小，仅分配了保障协程运行的最小空间。go的策略是按需申请，动态扩容，尽量减少内存浪费，每次扩容时会调用运行时方法runtime.morestack(SB) -&gt;runtime.newstack(SB) 。<h4 id="栈收缩"><a href="#栈收缩" class="headerlink" title="栈收缩"></a>栈收缩</h4>栈收缩是由gc触发执行的源码位置runtime/mgcmark.go，收缩时调用方法shrinkstack</li>
+</ul>
+<h3 id="深入理解StatefulSet"><a href="#深入理解StatefulSet" class="headerlink" title="深入理解StatefulSet"></a>深入理解StatefulSet</h3><p><a href="https://mp.weixin.qq.com/s/y60q0-RMh8isd4u4PuLfUg" target="_blank" rel="external">深入理解StatefulSet</a></p>
+<p>StatefulSet是一种特殊的Deployment，它使用K8S里的两个标准功能Headless Service和PVC实现对拓扑状态和存储状态的维护。通过Headless Service管控每个Pod创建一个固定不变的DNS域名作为Pod在集群的网络标识。加上为Pod编号并严格按照编号顺序进行Pod调度，保证了StatefulSet对维护应用拓扑状态的支持。StatefulSet定义文件中的volumeClainTemplates声明Pod使用的PVC，它创建出来的PVC会以名称编号与Pod进行绑定，借助PVC独立于Pod的生命周期完成对应用存储状态的维护。</p>
+<h3 id="分布式事务的实现原理"><a href="#分布式事务的实现原理" class="headerlink" title="分布式事务的实现原理"></a>分布式事务的实现原理</h3><p><a href="https://draveness.me/distributed-transaction-principle/" target="_blank" rel="external">分布式事务的实现原理</a></p>
+<p>数据库事务拥有ACID四大特性：</p>
+<ul>
+<li>Atomicity  原子性</li>
+<li>Consistency 一致性</li>
+<li>Isolation 隔离性</li>
+<li>Durability 持久性</li>
+</ul>
+<p>为了保证事务能在执行任意过程中回滚(原子性)并且提交的事务会永久保存在数据库中，使用事务日志来存储事务执行过程中数据库的变动，每个事务日志包含事务ID、当前被修改的元素、变动前后的值。当事务尝试对数据库进行修改时，先生成一条日志并刷新到磁盘中（append追加速度比较快），然后才会向数据库写入或更新相应的记录。</p>
+<p>MYSQL中常用的存储引擎InnoDB中，事务日志有undo log、redo log两种。</p>
+<p>并发执行SQL过程中可能无法保证数据库对隔离性的要求，为了避免并发带来的一致性问题、满足数据库对隔离性的要求，数据库系统往往都会使用并发控制机制来充分利用效率。常用的有：锁、时间戳、MVCC</p>
+<h4 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h4><p>单机中相对可靠的方法调用以及进程间通信方式没办法使用，由于网络不稳定服务之间的传递会出现障碍。分布式事务就是在不可靠的通信下实现事务的特性，分布式事务也会依赖数据库、Zookeeper、ETCD等服务追踪事务的执行过程，保证事务特性。</p>
+<ul>
+<li>2PC： 两阶段提交分为投票阶段和提交阶段，在投票阶段协调者向事务的参与者询问是否可以执行操作的请求，等待参与者相应。参与者执行相应的事务操作并记录重做和回滚日志，所有执行成功的参与者向协调者发送AGGREMENT/ABORT表示执行操作结果。协调者根据投票结果向参与者发送提交或回滚指令。两阶段提交是一种阻塞协议，如果事务执行过程中协调者宕机，事务的一部分参与者将永远无法完成事务，可能出现参与者状态不一致的问题。</li>
+<li>3PC：为了解决上述问题，引入超时机制和准备阶段。如果协调者或者参与者在规定时间内没有接收到来自其他节点的响应根据当前的状态选择提交或终止整个事务。当参与者向协调者发送 ACK 后，如果长时间没有得到协调者的响应，在默认情况下，参与者会自动将超时的事务进行提交，不会像两阶段提交中被阻塞住；</li>
+</ul>
+<p>MySQL 的 InnoDB 引擎其实能够支持分布式事务，即 XA 事务；XA 事务就是用了2PC实现分布式事务，其中事务管理器为协调者，而资源管理器就是分布式事务的参与者。XA 确实能够保证较强的一致性，但是在 MySQL XA 的执行过程中会对相应的资源加锁，阻塞其他事务对该资源的访问，如果事务长时间没有 COMMIT 或者 ROLLBACK，其实会对数据库造成比较严重的影响。</p>
+<h4 id="Saga"><a href="#Saga" class="headerlink" title="Saga"></a>Saga</h4><p>两阶段提交其实可以保证事务的强一致性，但是在很多业务场景下，我们其实只需要保证业务的最终一致性，在一定的时间窗口内，多个系统中的数据不一致是可以接受的，在过了时间窗口之后，所有系统都会返回一致的结果。放弃满足ACID，选择实现 BASE(Basic Availability, Soft, Eventual consistency) 事务。</p>
+<p>Saga 其实就一种简化的分布式事务解决方案，它将一系列的分布式操作转化成了一系列的本地事务，在每一个本地事务中我们都会更新数据库并且向集群中的其他服务发送一条的新的消息来触发下一个本地的事务；一旦本地的事务因为违反了业务逻辑而失败，那么就会立刻触发一系列的回滚操作来撤回之前本地事务造成的副作用。</p>
+<p>Sagas解决长事务问题。</p>
+<h3 id="一周算法汇总"><a href="#一周算法汇总" class="headerlink" title="一周算法汇总"></a>一周算法汇总</h3><p><a href="https://leetcode.com/problems/jump-game/" target="_blank" rel="external">lc55_jump-game_Medium</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc55_jumpgame.go" target="_blank" rel="external">实现</a></p>
+<p><a href>lc51_nqueen_Hard</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc51_nqueen.go" target="_blank" rel="external">实现</a></p>
+<p><a href="https://leetcode-cn.com/problems/coin-change/" target="_blank" rel="external">lc322_coin-change_Medium</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc322_coinchange.go" target="_blank" rel="external">实现</a><br><a href="https://leetcode.com/problems/shortest-subarray-with-sum-at-least-k/" target="_blank" rel="external">lc862_shortest-subarray-with-sum-at-least-k_Hard</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc862_subarraywithsumatleastk.go" target="_blank" rel="external">实现</a></p>
+<p><a href="https://leetcode-cn.com/problems/house-robber/" target="_blank" rel="external">lc198_house-robber_Easy</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc198_houserobber.go" target="_blank" rel="external">实现</a><br><a href="https://leetcode-cn.com/problems/fancy-sequence" target="_blank" rel="external">lc1622_fancy-sequence_Hard</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc1622_fancysequence.go" target="_blank" rel="external">实现</a></p>
+<h3 id="面试问题汇总"><a href="#面试问题汇总" class="headerlink" title="面试问题汇总:"></a>面试问题汇总:</h3><ol>
+<li><p>new 和 make的区别<br>答:<br>参考这篇文章<a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-make-and-new/" target="_blank" rel="external">Go语言中的make和new</a><br>make是初始化内置的数据结构,如切片,哈希表,channel;<br>在编译期间的类型检查阶段,GO语言将代表make关键字的OMAKE节点根据参数类型不同转换为OMAKESLICE,OMAKEMAP,OMAKECHAN三种节点,这些节点调用不同的运行时函数来初始化相应数据结构.</p>
+<ul>
+<li>slice := make([]int, 0, 100)</li>
+<li>hash := make(map[int]bool, 10)</li>
+<li>channel := make(chan int, 5)<br>new的作用是根据传入的类型分配一片内存空间,并返回这片内存空间的指针.<br>对于new关键字编译器会在中间代码生成阶段先转换为ONEWOBJ类型的阶段,然后根据申请内存空间大小:0返回表示空指针的zerobase变量,反之转换成runtime.newobject函数在堆上申请内存.<br>其中runtime.newobject函数会是获取传入类型占用空间的大小,调用runtime.malloc并返回指向这片内存的指针</li>
+<li>i := new(int) </li>
+<li>var v int | i := &amp;v</li>
+</ul>
+</li>
+<li><p>go 引用类型有哪些<br>答：<br>值类型有int，float， bool， string， 数组， struct<br>引用类型有 指针，slice切片，map，channel，函数等<br>两者的区别是，值类型变量直接存储值，内存通常在栈中分配；引用类型变量通常存储的是一个地址，这个地址对应的内存空间存储真正的数值，内存通常在堆中分配。</p>
+</li>
+<li><p>go的内存模型中，为什么小对象多了会造成gc压力<br>答： 小对象过多会导致GC三色法消耗过多的GPU</p>
+</li>
+<li><p>将10阶对称矩阵压缩存储到一维数组A中，则数组A的长度最少为 10*10/2</p>
+</li>
+<li><p>golang中selct的多个case同时成立时，选择的是哪一个？<br>答： select在遇到多个Channel同时响应时会随机挑选case执行， 这个设计是十多年前select提交引入并一直保留到现在的。如果多个条件满足时我们按顺序执行，那么后面的条件将会得不到执行，随机的引入是为了避免饥饿问题的发生。</p>
+</li>
+<li><p>golang 中除了使用 sync 锁，还可以如何保证并发安全? atomic 是什么？<br>答： golang的auomic院子操作是所有锁机制中效率最高的，能够使用原子操作的地方尽量使用。</p>
+</li>
+<li><p>sync.Map 对键的类型有什么要求么？<br>答： go语言规定键类型的值之间必须支持==和！=操作符判断，而函数类型，字典类型，切片类型不支持判等操作，因此键类型不能是上述几种类型。</p>
+</li>
+<li><p>如何避免死锁? golang 中如何检测死锁?<br>答： </p>
+</li>
+<li><p>不使用 goroutine 怎么实现监听三个 channel，合并三个 channel，变成一个新的 channel，这三个任意有消息的时候都要给 新 channel 传递，都没消息的时候要关闭那个新的 channel？</p>
+<p> func merge(ins …&lt;-chan string) &lt;- chan string {<br>   var wg sync.WaitGroup<br>   out := make(chan string)</p>
+<p>   p := func (in &lt;-chan string) {</p>
+<pre><code>defer wg.Done()
+for c := range in {
+  out &lt;-c
+}
+</code></pre><p>   }<br> }</p>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/11/14/深入理解计算机系统第8周/" itemprop="url">
                   《深入理解计算机系统》第8周
                 </a>
@@ -248,7 +640,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-11-14T22:00:00+08:00" content="2020-11-14">
               2020-11-14
             </time>
@@ -375,7 +767,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-11-06T22:00:00+08:00" content="2020-11-06">
               2020-11-06
             </time>
@@ -498,7 +890,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-10-25T22:00:00+08:00" content="2020-10-25">
               2020-10-25
             </time>
@@ -639,7 +1031,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-10-18T22:00:00+08:00" content="2020-10-18">
               2020-10-18
             </time>
@@ -783,7 +1175,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-10-11T22:00:00+08:00" content="2020-10-11">
               2020-10-11
             </time>
@@ -905,7 +1297,7 @@
             
               
                 
-                <a class="post-title-link" href="/2020/09/27/ 深入理解计算机系统第2周/" itemprop="url">
+                <a class="post-title-link" href="/2020/09/27/深入理解计算机系统第2周/" itemprop="url">
                   《深入理解计算机系统》第2周
                 </a>
               
@@ -918,7 +1310,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-09-27T22:00:00+08:00" content="2020-09-27">
               2020-09-27
             </time>
@@ -1037,7 +1429,7 @@
             
               
                 
-                <a class="post-title-link" href="/2020/09/20/深入理解计算机系统第一周/" itemprop="url">
+                <a class="post-title-link" href="/2020/09/20/深入理解计算机系统第1周/" itemprop="url">
                   《深入理解计算机系统》第1周
                 </a>
               
@@ -1050,7 +1442,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-09-20T22:00:00+08:00" content="2020-09-20">
               2020-09-20
             </time>
@@ -1154,7 +1546,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2020-08-15T23:24:00+08:00" content="2020-08-15">
               2020-08-15
             </time>
@@ -1388,463 +1780,6 @@ public class Ostrich implements Tweetable, Egglayable {
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/08/10/ES-tech_md/" itemprop="url">
-                  ES相关知识
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-08-10T21:52:00+08:00" content="2020-08-10">
-              2020-08-10
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="ES常见知识点"><a href="#ES常见知识点" class="headerlink" title="ES常见知识点"></a>ES常见知识点</h2><h3 id="ES集群-一个node一般会分配几个分片"><a href="#ES集群-一个node一般会分配几个分片" class="headerlink" title="ES集群,一个node一般会分配几个分片?"></a>ES集群,一个node一般会分配几个分片?</h3><ul>
-<li>ES中的数据组织成索引,每一个索引由一个或多个分片组成.每个分片是Luncene索引中的一个实例,可以把实例理解成自管理的搜索引擎,用于在ES集群中对一部分数据进行索引和处理查询. 分片是ES在集群周围分发数据的单位,ES在重新平衡数据时移动分片的速度取决于分片的大小,数量以及网络和磁盘性能.</li>
-<li>避免非常大的分片,因为大的分片可能会对集群从故障中恢复的能力产生负面影响.分片大小为50GB通常被界定为适用于各种用例的限制.</li>
-<li>在集群节点上保存的分片数量与可用的堆内存大小成正比,经验来说,每个节点的分片数量保持在低于每1GB堆内存对应集群的分片在20-25之间. 如30GB内存的堆内存节点最多可以有600-750个分片.</li>
-<li>参考文章: <ul>
-<li><a href="https://mp.weixin.qq.com/s/mKL2PJuNUJTl71Axv4-Rcw" target="_blank" rel="external">Elasticsearch究竟要设置多少分片数</a></li>
-<li><a href="https://www.elastic.co/blog/how-many-shards-should-i-have-in-my-elasticsearch-cluster" target="_blank" rel="external">How many shard should I have in my Elasticsearch cluster</a></li>
-</ul>
-</li>
-</ul>
-<h3 id="Elasticsearch如何实现master选举"><a href="#Elasticsearch如何实现master选举" class="headerlink" title="Elasticsearch如何实现master选举"></a>Elasticsearch如何实现master选举</h3><ul>
-<li>Elasticsearch的任意一个节点都可以设置node.master和node.data属性<ul>
-<li>master=true,data=true:  即是Master Eligible又是data节点</li>
-<li>master=true,data=false: 单纯的Master Eligible节点</li>
-<li>master=false,data=true: 单纯的data节点</li>
-<li>master=false,data=false: 纯粹的Coordinating Node, 协调节点负责查询时的数据收集,合并,以及聚合操作. ES中所有节点都是协调节点</li>
-</ul>
-</li>
-<li>ES针对当前集群的所有Master Eligible节点进行选举,为了避免split-brain现象,ES选取QUORUM思想,只有超过半数选票的节点才能成为master.(eligibleNodesNum/2 + 1)</li>
-<li>当满足下列条件时就会触发一次master选举<ul>
-<li>当前master eligible节点不是master</li>
-<li>当前master eligible节点与其他节点通信无法发现master</li>
-<li>集群中无法连接到master的master eligible节点达到minimum_master_nodes的值</li>
-</ul>
-</li>
-<li>某个节点决定要选举时,会实现如下操作:<ul>
-<li>寻找ClusterStateVersion比自己高的master eligible节点,向其发送选举投票</li>
-<li>如果CLusterStateVersion相同,则计算自己能找到的master eligible节点(包含自己)中节点id最小的节点,向其发送选举投票</li>
-<li>如果一个节点收到足够多的选票,并且向自己也投票了,则该节点成为master开始发布集群信息</li>
-</ul>
-</li>
-<li>与其他选举方法对比<ul>
-<li>Zookeeper: ES可以使用Zookeeper来进行选举,方法如下:<ul>
-<li>所有master eligible尝试在ZK上创建指定路径</li>
-<li>只有第一个节点创建成功,该节点成为master,其余节点watch此路径</li>
-<li>一旦ZK失去master链接,该路径被删除,其他master eligible继续尝试创建路径, 重复上述操作</li>
-</ul>
-</li>
-<li>Raft: 相比ES自身的选举算法,Raft是经过严格论证的一致性算法,ES早期版本时Raft还未提出,可能后续会参考改进.</li>
-</ul>
-</li>
-</ul>
-<h3 id="如何做到ES写入调优"><a href="#如何做到ES写入调优" class="headerlink" title="如何做到ES写入调优?"></a>如何做到ES写入调优?</h3><ul>
-<li>客户端：　多线程批量写<ul>
-<li>通过性能测试,确定最佳文档数量</li>
-<li>多线程,观察HTTP429返回,实现retry以及线程数量的自动调节</li>
-</ul>
-</li>
-<li>服务器端: <ul>
-<li>降低IO操作<ul>
-<li>使用ES自动生成的文档ID(避免Get操作)</li>
-<li>调整Refresh interval等配置(降低搜索实时性)</li>
-<li>调整translog选项,降低写磁盘频率(牺牲容灾能力)</li>
-</ul>
-</li>
-<li>降低CPU和存储开销<ul>
-<li>减少不必要的分词</li>
-<li>避免不需要的doc_values</li>
-<li>文档字段尽量保持相同顺序,提高文档的压缩率</li>
-</ul>
-</li>
-<li>尽量做到写入和分片的负载均衡,实现水平扩展<ul>
-<li>Shard Filtering</li>
-<li>Write load balance</li>
-</ul>
-</li>
-<li>调整Bulk线程池和队列<ul>
-<li>客户端:<ul>
-<li>单个bulk请求体的数据量不要太大,官方建议5-15mb</li>
-<li>写入bulk请求超时时间需要足够长,建议60s以上</li>
-<li>写入端尽量将数据轮询到不同节点</li>
-</ul>
-</li>
-<li>客户端:<ul>
-<li>索引创建属于计算密集型,应该使用固定大小的线程池,来不及处理的放入队列.线程数配置为CPU核数+1,避免过多上下文切换</li>
-<li>队列大小可以适当增加,不要太大否则占用内存导致GC</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Index建模实践<ul>
-<li>如果只需要聚合不需要搜索,index设置为false</li>
-<li>如果不需要算分,Norms设为false</li>
-<li>不对字符串使用默认的dynamic mapping,字段数量过多会对性能产生较大影响</li>
-<li>Index_options控制在创建倒排索引时哪些内容会被添加到倒排索引中,节约CPU</li>
-<li>关闭_source减少IO操作,适合指标数据</li>
-</ul>
-</li>
-</ul>
-<h3 id="如何避免split-brain"><a href="#如何避免split-brain" class="headerlink" title="如何避免split-brain?"></a>如何避免split-brain?</h3><p>当节点崩溃或者节点通讯故障时,如果一个子节点无法连接到主节点,那么它会发起选举从与之连接的master eligible节点中选举一个新的主节点.新主节点将接管开始工作,如果旧的主节点重新加入集群或恢复通信,那么新主节点将降级到子节点.这过程在大多数情况下是不存在冲突,高效无缝衔接的.</p>
-<p>但是考虑集群中只有两个节点的极端情况,如果因为网络原因导致节点无响应,节点都相信对方已经挂掉.重新选举后会存在两个主节点,集群处于不一致状态,分片的两份数据分开了,如果不做全量的重索引很难进行重排序. </p>
-<p>极端情况下,客户端无法感知到这种不一致状态,因为index请求无论发往哪个节点都会成功,只有在查询时才可能发现问题.</p>
-<p>要避免脑裂,就是要关注discovery.zen.minimum_master_nodes的值,要设置为n/2+1,还有建议配置3节点以上的集群. 对于已经存在的两节点集群,可以添加一个新节点并将node.data设为false,放在一台便宜的服务器上.</p>
-<h3 id="ES对于大数据量-上亿量级-的聚合如何实现"><a href="#ES对于大数据量-上亿量级-的聚合如何实现" class="headerlink" title="ES对于大数据量(上亿量级)的聚合如何实现?"></a>ES对于大数据量(上亿量级)的聚合如何实现?</h3><p>有些算法可以分布式执行,类似一些单次请求获得精确结果的聚合.它们无需额外代价,就能在多台机器上运行,如max度量:</p>
-<ul>
-<li>请求广播到所有分片</li>
-<li>查看每个文档的price字段,如果price&gt;current_max就替换</li>
-<li>返回所有分片的最大值给协调节点</li>
-<li>找出所有分片返回的最大值即可<br>这种算法会随着机器数的线性增长而横向扩展,无需任何协调操作且内存消耗小. 但是不是所有算法都可以如此,一些复杂的算法需要在算法性能和内存使用上做出权衡.</li>
-</ul>
-<p>三角因子模型: 大数据,精确性,实时性</p>
-<ul>
-<li>精确+实时: 数据可以存入单台机器的内存中,结果会100%精确,响应会相对快速.</li>
-<li>大数据+精确: 传统的hadoop,可以处理PB级数据并且未我们提供精确的答案,但它可能需要几周的时间才能为我们提供答案.</li>
-<li>大数据+实时: 近似算法为我们提供准确但不精确的结果.</li>
-</ul>
-<p>ES目前支持两种近似算法(cardinality和percentiles),以牺牲一点小小的估算错误为代价换回高速的执行效率和极小的内存消耗.</p>
-<h4 id="Cardinality"><a href="#Cardinality" class="headerlink" title="Cardinality"></a>Cardinality</h4><p>Elasticsearch提供的首个近似聚合是Cardinality度量.它提供一个字段的基数,即该字段的distinct或者unique值的数目.基于HyperLogLog++(HLL)算法,HLL会先对用户输入做哈希运算,然后根据哈希运算结果中的bits做概率估算从而得到基数. 算法特性如下:</p>
-<ul>
-<li>可配置的精度用来控制内存的使用(更精确=更多内存)</li>
-<li>小的数据集精度非常高</li>
-<li>可以通过配置参数,来设置去重需要的固定内存使用量.无论数千还是数十亿的唯一值,内存使用量只与配置的精度相关.</li>
-</ul>
-<p>要配置精度,必须指定percision_threshold参数值,这个阈值定义了在何种基数水平下我们希望得到一个近乎精确的结果. 接受0-40,000之间的数字,更大的值还是会被当做40,000来处理.</p>
-<p>对于指定阈值,HLL的数据结构大概使用percision_threshold*8字节的内存,所以必须在牺牲内存和获得额外的准确度之间做平衡. 实际使用中,阈值=100时可以在唯一值为百万的情况下仍将误差维持在5%以内.</p>
-<p>如果想要获得唯一值的数目,通常需要查询整个数据集合,所有基于所有数据的操作都必须迅速.HyperLogLog已经很快了,它只是简单的对数据做哈希以及一些位操作,但是仍然可以进一步优化.</p>
-<p>HLL只需要字段内容的哈希值,因此我们可以在索引时就预先计算好,在查询时跳过哈希计算将哈希值直接从fielddata中加载出来. 在执行聚合时使用X.hash字段而非X字段,cardinality会读取预先计算的哈希值取代动态计算原始值的哈希. 单个文档节省时间非常少,但是如果聚合一亿数据,每个字段会多花费10ns时间,这样每次查询时都会额外增加1s. 如果我们在非常大量的数据里面使用cardinality需要权衡使用预计算的意义,是否需要提前计算hash,从而在查询中获得更好的性能.</p>
-<h4 id="Percentiles"><a href="#Percentiles" class="headerlink" title="Percentiles"></a>Percentiles</h4><p>百分位数通常用来找出异常,比如监控网站的延时来判断响应是否能保证良好的用户体验. 和基数一样,计算百分位需要一个近似算法,percentiles中使用一个TDigest算法</p>
-<ul>
-<li>百分位的准确度和百分位的极端程度相关. 1和99的百分位要比50百分位要准确</li>
-<li>数据集合小的情况,百分位非常准确</li>
-<li>随着桶里数值的增长,算法会开始对百分位进行估算.有效在准确度和内存节省之间做出权衡.</li>
-</ul>
-<p>通过修改compression参数来控制内存和准确度之间的比值.TDigest算法用节点近似计算百分比,节点越多准确度越高.compression参数限制节点的最大数目为20*compression.</p>
-<p>通过增加compression可以以消耗更多内存未代价提高百分位数准确性,更大的压缩比值会使得算法运行更慢,因为底层的树形结构的存储会增长,导致操作的代价更高.默认compression=100</p>
-<p>一个节点大约使用32字节的内存,所以在最坏情况下,默认设置会生成一个64KB的TDigest.</p>
-<h3 id="ES主分片数量可以在后期更改吗-为什么"><a href="#ES主分片数量可以在后期更改吗-为什么" class="headerlink" title="ES主分片数量可以在后期更改吗?为什么?"></a>ES主分片数量可以在后期更改吗?为什么?</h3><p>ES 2.X版本时不可以,因为ES对document的处理是通过路由算法来进行处理,更改主分片数量会导致路由被破坏,间接导致数据丢失.所以主分片数量不可以修改.</p>
-<p>如果修改分片数量后重新分配数据,分片的切分成本和reindex成本差不多,所以官方直接使用reindex. 如果数据不重复,其实新的业务数据可以切换到新的索引上继续写,查询时查询新旧两个索引.</p>
-<p>从ES6.1以后支持在线扩大shard的数量,但是操作期间需要对index锁写:</p>
-<ul>
-<li>创建一个新的目标索引,定义与源索引相同,但具有更多的主分片</li>
-<li>将段从源索引硬链接到目标索引,如果文件系统不支持hard link,则将所有段都复制到新索引中(非常耗时)</li>
-<li>创建低级文件后,再次对所有文档进行hash处理,删除属于不同分片的文档</li>
-<li>恢复目标索引</li>
-</ul>
-<h3 id="ES更新文档-删除文档的执行流程"><a href="#ES更新文档-删除文档的执行流程" class="headerlink" title="ES更新文档/删除文档的执行流程"></a>ES更新文档/删除文档的执行流程</h3><h4 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h4><ul>
-<li>在进行写操作时,ES根据传入的_routing参数按照公式计算出文档要分配的分片,从集群元数据中找出对应主分片的位置,将请求路由到该分片.</li>
-<li>文档写入Lucene后不能被立即查询,ES提供refresh操作,定时的调用Lucene的reopen(OpenIfChanged)为内存中新写入的数据生成一个新的segment.此时文档可以被检索.</li>
-<li>即使refresh后文档仍然在文件系统缓存中,如果服务器宕机这部分数据依旧会丢失. ES为此增加了translog,文档写入时会先将文档写入Lucene,然后写入一份到translog落盘.(如果可靠性要求不高可以设置异步落盘)translog是追加写入,性能比随机写入要好.先写Lucene后写translog是因为写入Lucene可能会失败,减少写入失败回滚的复杂度.</li>
-<li>间隔30分钟或者translog大小到达阈值时触发flush操作,ES会先执行refresh操作将buffer生成segment,然后调用Lucene的commit方法将所有内存中的segment fsync到磁盘中.此时Lucene中数据完成持久化,清空translog中数据(6.X版本为了实现sequenceIDs,不删除translog)</li>
-<li>由于refresh默认间隔1s,会产生大量的小segment,ES会运行一个任务检测当前磁盘中的segment,对符合条件的进行合并,减少Lucene中的segment个数,提高查询速度减少负载.</li>
-</ul>
-<p>Lucene仅支持文档整体更新,ES为了支持局部更新,在Lucene的Store索引中存储一个_source字段,key时文档ID内容是文档原文.更新时先从_source中获取原文,与更新部分合并,再调用Lucene API进行全量更新. 增加版本机制防止其他线程并发写.</p>
-<h4 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h4><ul>
-<li>提交删除操作,先查询要删除文档所属的segment</li>
-<li>commit中包含一个.del文件,记录哪些segment中的哪些文档被标记为deleted.</li>
-<li>当.del文件中存储的文档足够多时,ES执行物理删除操作,清楚文档<ul>
-<li>在删除中进行搜索操作: 依次查询所有segment,根据.del文件过滤掉标记为deleted的文档,然后返回搜索结果</li>
-<li>在删除过程中更新: 将旧文档标记为deleted,将新文档写入新的segment中.执行查询时通过.del过滤掉旧版本文档</li>
-</ul>
-</li>
-</ul>
-<h3 id="ES-shard内部是由什么组成的"><a href="#ES-shard内部是由什么组成的" class="headerlink" title="ES shard内部是由什么组成的?"></a>ES shard内部是由什么组成的?</h3><p>Shard 实际上就是一个Lucene的实例(Lucene Index),单个Lucene实例中最多包含Integer.MAX_VALUE-128个documents</p>
-<p>一个LuceneIndex在文件系统表现上来看就是存储了一系列文件的目录,由许多个独立的segments组成. segments包含了文档中的词汇字典,词汇字典的倒排索引,以及document的字段数据. 所有segments数据存储于_<segments_name>.cfs文件中</segments_name></p>
-<h4 id="Segments"><a href="#Segments" class="headerlink" title="Segments"></a>Segments</h4><p>segments直接提供了搜索功能,ES中的一个shard由大量的segments文件组成,且每一次fresh都会产生一个新的segment文件,segment文件有大有小,相当碎片化. ES内部则会开启一个线程将小的segment合并减少碎片化,降低文件打开数提升IO性能.</p>
-<p>segment文件是不可变更的,当一个document更新时,实际上是将旧的文档标记删除,索引一个新文档(在_<segment_name>.del标记某个文档删除,查询时会跳过).在Merge时会将旧文档删除掉(物理删除).</segment_name></p>
-<h3 id="ES中分析器是什么"><a href="#ES中分析器是什么" class="headerlink" title="ES中分析器是什么?"></a>ES中分析器是什么?</h3><p>分析 包含以下过程:</p>
-<ul>
-<li>将文本分成适合于倒排索引的独立词条</li>
-<li>将词条统一化为标准格式以提高可搜索性<br>分析器执行上述工作,实际上将三个功能封装到一个包中:</li>
-<li><strong>字符过滤器:</strong> 分词前整理字符串</li>
-<li><strong>分词器:</strong> 拆分字符串到单个词条</li>
-<li><strong>Token过滤器:</strong> 词条按顺序通过每个token过滤器,该过程可能会改变词条(大小写),删除此条(无用词删除),或者增加词条(同义词).</li>
-</ul>
-<p>ES附带了可以直接使用的预包装的分析器:</p>
-<ul>
-<li><strong>标准分析器:</strong> ES默认使用的分析器, 分析各语言文本最常用的选择,根据Unicode定义的单词边界划分文本. 删除绝大部分标点并将词条小写.</li>
-<li><strong>简单分析器:</strong> 在任何不是字母的地方分割文本,将词条小写</li>
-<li><strong>空格分析器:</strong> 在空格的地方划文本</li>
-<li><strong>语言分析器:</strong> 考虑指定语言的特点,如英语分析器删除无用的单词(the and…),并且提取英语单词的词干</li>
-</ul>
-<p>当我们索引一个文档,它的全文域被分析成词条以用来创建倒排索引.当全文域检索的时候,需要将查询字符串通过相同的分析过程,以保证搜索的词条格式和索引中词条格式一致.</p>
-<h3 id="客户端和集群连接时-如果选择特定的节点执行请求"><a href="#客户端和集群连接时-如果选择特定的节点执行请求" class="headerlink" title="客户端和集群连接时,如果选择特定的节点执行请求?"></a>客户端和集群连接时,如果选择特定的节点执行请求?</h3><p>TransportClient利用transport模块远程连接一个elasticsearch集群。它并不加入到集群中，只是简单的获得一个或者多个初始化的transport地址，并以 轮询 的方式与这些地址进行通信。</p>
-<h3 id="ES中倒排索引是什么"><a href="#ES中倒排索引是什么" class="headerlink" title="ES中倒排索引是什么?"></a>ES中倒排索引是什么?</h3><p>Inverted Index也叫反向索引,通过value找key. 对比词典的话,Term就相当于词语,Term Dictionary相当于词典,Term Index相当于词典的目录索引, Posting List相当于词语在字典的页数集合.</p>
-<ul>
-<li>Term: 一段文本经过分析器分析后会输出一串单词,单词即是Term</li>
-<li>Term Dictionary: 里面维护的Term,可以理解为Term集合. </li>
-<li>Term Index: 为了更快的找到某个单词,我们为单词建立索引.B-Tree通过减少磁盘寻道次数来提高查询性能. ES也是采用同样思路,直接通过内存查找Term,不读磁盘. 如果term过多,Term dictionary会很大无法都放入内存,因此通过TermIndex(字典树). 这棵树不会包含所有的Term,包含的是一些Term的前缀,通过term index快速定位到Term dictionary的offset,然后从这个位置向后顺序查找. 再加上一些压缩基数,term index的尺寸可以只有所有Term尺寸的几十分之一,使得内存可以缓存整个term index.</li>
-<li>PostingList(倒排列表):记录了出现过某个单词的所有文档的文档列表,以及该单词出现的位置信息,每条记录成为一个倒排项Posting.</li>
-</ul>
-<p>为什么Elasticsearch/Lucene检索可以比mysql快了? Mysql只有term dictionary这一层，是以b-tree排序的方式存储在磁盘上的。检索一个term需要若干次的random access的磁盘操作。而Lucene在term dictionary的基础上添加了term index来加速检索，term index以树的形式缓存在内存中。从term index查到对应的term dictionary的block位置之后，再去磁盘上找term，大大减少了磁盘的random access次数。</p>
-<p>ES在建立倒排索引时，会对拆分的各个单词进行相应处理，以提升后面搜索的时候能够搜索到相关联的文档的概率，这就是标准化规则转换，主要包括：时态的转换（例如liked转换为like）、单复数的转换（hospitals转换为hospitals）、同义词的转换（small转换为little）、大小写的转换（默认转换为小写）</p>
-<p>当利用ES进行查询时，查询结果都会返回一个对应词条的相关度分数（score）。相关度分数的计算基于TF/IDF算法（Term Frequence&amp;Inverse Doucument Frequency）</p>
-<ul>
-<li>Term Frequence ，TF(t in f)：我们查询的词条在文本中出现多少次，出现次数越多，相关度越高.</li>
-<li>Inverse Doucument Frequency，IDF(t in all-f)：查询词条在所有文本中出现的次数，出现次数越高，相关度越低。</li>
-<li>Field-length(字段长度规约)：字段的长度越长，相关度越低。</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/08/02/设计模式之美第一周/" itemprop="url">
-                  设计模式之美第一周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-08-02T16:55:00+08:00" content="2020-08-02">
-              2020-08-02
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>之前也下决心看过《HeadFirst设计模式》和《HeadFirst面向对象分析与设计》，但是都没有坚持读完。看了下极客上的这个课程比较适合自己，希望能坚持下来✊</p>
-<h2 id="码农要尽早学习并掌握设计模式相关知识"><a href="#码农要尽早学习并掌握设计模式相关知识" class="headerlink" title="码农要尽早学习并掌握设计模式相关知识"></a>码农要尽早学习并掌握设计模式相关知识</h2><p>设计模式能更直接地提高我们的开发能力，如同数据结构和算法教人如何写出高效代码，设计模式教我们如何写出可扩展、可读、可维护的高质量代码。</p>
-<h3 id="为什么学习设计模式？"><a href="#为什么学习设计模式？" class="headerlink" title="为什么学习设计模式？"></a>为什么学习设计模式？</h3><ul>
-<li>应对面试中的设计模式相关问题<ul>
-<li>不管是前端、后端还是全栈工程师，在面试中设计模式问题总是被问得频率比较高。因此平时要多注意积累。</li>
-</ul>
-</li>
-<li>被人吐槽代码烂<ul>
-<li>Talk is cheap。 代码能力是码农最基础的能力，是展示程序员基础素养的最直接的衡量标准。这个专栏不仅讲解设计模式，还会通过实战教我们避免类似命名不规范、类设计不合理、分层不清晰、没有模块化概念、代码结构混乱、高度耦合等代码问题</li>
-</ul>
-</li>
-<li>提高复杂代码的设计和开发能力</li>
-<li>让读源码、学框架事半功倍<ul>
-<li>优秀的开源项目、框架、中间件、代码量、类个数都会比较多，为了保证代码的扩展性、灵活性、可维护性，代码中会使用到很多设计模式或者设计思想。学习设计模式相关知识，可以让我们更轻松地读开源项目。</li>
-</ul>
-</li>
-<li>为职场发展做铺垫</li>
-</ul>
-<p>投资要趁早，这样才能尽早享受复利。设计模式作为一门与编码、开发有着直接关系的基础知识，早点学习就可以在项目中早点实践锻炼。</p>
-<h2 id="从哪些维度评判代码质量的好坏？如何具备写出高质量代码的能力？"><a href="#从哪些维度评判代码质量的好坏？如何具备写出高质量代码的能力？" class="headerlink" title="从哪些维度评判代码质量的好坏？如何具备写出高质量代码的能力？"></a>从哪些维度评判代码质量的好坏？如何具备写出高质量代码的能力？</h2><h3 id="如何评价代码质量的高低？"><a href="#如何评价代码质量的高低？" class="headerlink" title="如何评价代码质量的高低？"></a>如何评价代码质量的高低？</h3><ul>
-<li><strong>可维护性 Maintainability</strong>，对于一个项目来说，维护代码的时间远远大于编写代码的时间。工程师大部分的时间可能都是花在了修bug，改老功能逻辑，添加新功能之类的工作上。如果代码分层清晰、模块化好、高内聚低耦合、遵从基于接口而非事先编程的设计原则，那么就可能意味着代码易维护。除此之外，还跟项目代码量的多少、业务复杂程度、利用到的技术复杂程序、文档是否全面、团队成员的开发水平等诸多因素有关。</li>
-<li><strong>可读性 Readability</strong>，Any fool can write code that a computer can understand, Good programmer write code that humans can understand. 看代码是否符合编码规范、命名是否达意、注释是否详尽、函数是否长短合适、模块划分是否清晰、是否符合高内聚低耦合等。 Code revie是很好的检测代码可读性的手段。</li>
-<li><strong>可扩展性 Extensibility</strong>，对修改关闭，对扩展开放设计准则</li>
-<li><strong>灵活性 Flexibility</strong>， 代码易扩展、易复用、或者易用。</li>
-<li><strong>简洁性 Simplicity</strong>， KISS原则， ”Keep It Simple， Stupid“，思从深而行从简，真正的高手能云淡风轻地用最简单的方法解决最复杂的问题。</li>
-<li><strong>复用性 Reusability</strong>， DRY设计原则，Don’t Repeat Yourself</li>
-<li><strong>可测试性 Testability</strong>， 易写单元测试。</li>
-</ul>
-<h3 id="如何写出高质量代码？"><a href="#如何写出高质量代码？" class="headerlink" title="如何写出高质量代码？"></a>如何写出高质量代码？</h3><p>需要掌握一些更加细化、更加能落地的编程方法论，包括面向对象设计思想、设计原则、设计模式、编码规范、重构技巧等。</p>
-<h2 id="面向对象、设计原则、设计模式、编码规范重构，五者有何关系？"><a href="#面向对象、设计原则、设计模式、编码规范重构，五者有何关系？" class="headerlink" title="面向对象、设计原则、设计模式、编码规范重构，五者有何关系？"></a>面向对象、设计原则、设计模式、编码规范重构，五者有何关系？</h2><h3 id="面向对象"><a href="#面向对象" class="headerlink" title="面向对象"></a>面向对象</h3><ul>
-<li>四大特性： 封装、抽象、继承、多态</li>
-<li>面向对象编程和面向过程编程的区别和联系</li>
-<li>面向对象分析、面向对象设计、面向对象编程</li>
-<li>接口和抽象类的区别以及各自的应用场景</li>
-<li>基于接口而非实现编程的设计思想</li>
-<li>多用组合少用继承的设计思想</li>
-<li>面向过程的贫血模型和面向对象的充血模型</li>
-</ul>
-<h3 id="设计原则"><a href="#设计原则" class="headerlink" title="设计原则"></a>设计原则</h3><ul>
-<li>SOLID原则-SRP 单一职责原则</li>
-<li>SOLID原则-OCP 开闭原则</li>
-<li>SOLID原则-LSP 里式替换原则</li>
-<li>SOLID原则-ISP 接口隔离原则</li>
-<li>SOLID原则-DIP 依赖倒置原则</li>
-<li>DRY原则、KISS原则、YAGNI原则、LOD法则</li>
-</ul>
-<h3 id="设计模式"><a href="#设计模式" class="headerlink" title="设计模式"></a>设计模式</h3><p>经典的设计模式有23种，随着编程语言的演进，一些设计模式Singleton随时过时，甚至成了反模式，一些则被内置在编程语言中（如Iterator），另外还有一些新模式诞生（如Monostate）。</p>
-<p>23中经典的设计模式，可以分为三大类：创建型、结构型、行为型。</p>
-<ul>
-<li>创建型 <ul>
-<li>常用的： 单例模式、工厂模式、建造者模式</li>
-<li>不常用： 原型模式</li>
-</ul>
-</li>
-<li>结构型<ul>
-<li>常用的： 代理模式、桥接模式、装饰者模式、适配器模式</li>
-<li>不常用： 门面模式、组合模式、享元模式</li>
-</ul>
-</li>
-<li>行为型<ul>
-<li>常用的： 观察者模式、模版模式、策略模式、指责链模式、迭代器模式、状态模式</li>
-<li>不常用： 访问者模式、备忘录模式、命令模式、解释器模式、中介模式</li>
-</ul>
-</li>
-</ul>
-<h3 id="编程规范"><a href="#编程规范" class="headerlink" title="编程规范"></a>编程规范</h3><p>编程规范主要解决的是代码的可读性问题。编程规范相对于设计原则、设计模式，更加具体、更加偏重代码细节。 《重构》《代码大全》《代码整洁之道》书籍推荐</p>
-<h3 id="代码重构"><a href="#代码重构" class="headerlink" title="代码重构"></a>代码重构</h3><p>重构是软件开发中非常重要的一个环节。持续重构是保持代码质量不下降的有效手段，能有效避免代码腐化到无可救药的地步。</p>
-<p>重构的工具就是前面罗列的那些面向对象设计思想、设计原则、设计模式、编码规范。实际上，设计思想、设计原则、设计模式一个最重要的应用场景就是在重构的时候。虽然设计模式可以提高代码的可扩展性，但是过度不恰当地使用，会增加代码的复杂度，影响代码的可读性。在开发初期，除非特别必须，一定不要过度设计，应用复杂的设计模式。而是当代码出现问题的时候，再针对问题，应用原则和模式进行重构。这样就能有效避免前期的过度设计。</p>
-<ul>
-<li>重构的目的Why、对象What、时机When、方法How</li>
-<li>保证重构不出错的技术手段：单元测试和代码的可测试性</li>
-<li>两种不同规模的重构：大重构（大规模高层次）和小重构（小规模低层次）</li>
-</ul>
-<h3 id="五者之间的联系"><a href="#五者之间的联系" class="headerlink" title="五者之间的联系"></a>五者之间的联系</h3><ul>
-<li>面向对象编程因其具有丰富的特性，可以实现很多复杂的设计思路，是很多设计原则设计模式等编码实现的基础。</li>
-<li>设计原则指导我们代码设计的一些经验总结。</li>
-<li>设计模式是针对软件开发中经常遇到的一些设计问题，总结出来的一套解决方案或者设计思路。相比设计原则更具体更加可执行。</li>
-<li>编程规范主要解决代码的可读性问题，相比设计原则、设计模式更具体，更偏重代码细节、更加能落地。持续小重构依赖的理论基础就是编程规范。</li>
-<li>重构作为保持代码质量不下降的有效手段，利用的就是面向对象、设计原则、设计模式、编程规范这些理论。</li>
-</ul>
-<h2 id="本周回顾"><a href="#本周回顾" class="headerlink" title="本周回顾"></a>本周回顾</h2><p>专栏中所涉及的知识点都在下图中。<br><img src="/2020/08/02/设计模式之美第一周/DesignModelAll.jpg" alt>  </p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1890,8 +1825,8 @@ public class Ostrich implements Tweetable, Egglayable {
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">38</span>
-              <span class="site-state-item-name">Artikel</span>
+              <span class="site-state-item-count">40</span>
+              <span class="site-state-item-name">posts</span>
             </a>
           </div>
 
@@ -1900,8 +1835,8 @@ public class Ostrich implements Tweetable, Egglayable {
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">10</span>
-                <span class="site-state-item-name">Tags</span>
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">tags</span>
               </a>
             </div>
           
@@ -1945,7 +1880,7 @@ public class Ostrich implements Tweetable, Egglayable {
 </div>
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

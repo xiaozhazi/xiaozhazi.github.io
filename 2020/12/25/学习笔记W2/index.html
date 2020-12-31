@@ -1,0 +1,665 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="随记," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="笔记汇总1. K8S垃圾收集器详解Kubernetes垃圾收集器的实现原理
+垃圾收集器在K8S中以控制器的形式设计实现，删除以前有所有者但是现在所有者不存在的对象。引入垃圾收集器之前，所有的级联删除逻辑都由客户端完成，垃圾收集器的引入使得级联删除实现移动到了服务端。
+级联删除： 对象的API中加入了metadata.ownerReferences字段，包含当前对象的所有依赖者。当所有依赖者都被删除">
+<meta property="og:type" content="article">
+<meta property="og:title" content="学习笔记W2">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/12/25/学习笔记W2/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="笔记汇总1. K8S垃圾收集器详解Kubernetes垃圾收集器的实现原理
+垃圾收集器在K8S中以控制器的形式设计实现，删除以前有所有者但是现在所有者不存在的对象。引入垃圾收集器之前，所有的级联删除逻辑都由客户端完成，垃圾收集器的引入使得级联删除实现移动到了服务端。
+级联删除： 对象的API中加入了metadata.ownerReferences字段，包含当前对象的所有依赖者。当所有依赖者都被删除">
+<meta property="og:updated_time" content="2020-12-31T14:36:33.076Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="学习笔记W2">
+<meta name="twitter:description" content="笔记汇总1. K8S垃圾收集器详解Kubernetes垃圾收集器的实现原理
+垃圾收集器在K8S中以控制器的形式设计实现，删除以前有所有者但是现在所有者不存在的对象。引入垃圾收集器之前，所有的级联删除逻辑都由客户端完成，垃圾收集器的引入使得级联删除实现移动到了服务端。
+级联删除： 对象的API中加入了metadata.ownerReferences字段，包含当前对象的所有依赖者。当所有依赖者都被删除">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2020/12/25/学习笔记W2/"/>
+
+  <title> 学习笔记W2 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                学习笔记W2
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-12-25T22:00:00+08:00" content="2020-12-25">
+              2020-12-25
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="笔记汇总"><a href="#笔记汇总" class="headerlink" title="笔记汇总"></a>笔记汇总</h2><h3 id="1-K8S垃圾收集器"><a href="#1-K8S垃圾收集器" class="headerlink" title="1. K8S垃圾收集器"></a>1. K8S垃圾收集器</h3><p><a href="https://draveness.me/kubernetes-garbage-collector/" target="_blank" rel="external">详解Kubernetes垃圾收集器的实现原理</a></p>
+<p>垃圾收集器在K8S中以控制器的形式设计实现，删除以前有所有者但是现在所有者不存在的对象。引入垃圾收集器之前，所有的级联删除逻辑都由客户端完成，垃圾收集器的引入使得级联删除实现移动到了服务端。</p>
+<p>级联删除： 对象的API中加入了metadata.ownerReferences字段，包含当前对象的所有依赖者。当所有依赖者都被删除，默认情况下该对象也会被删除。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">type ObjectMeta struct &#123;</div><div class="line">	...</div><div class="line">	OwnerReferences []OwnerReference</div><div class="line">&#125;</div><div class="line">type OwnerReference struct &#123;</div><div class="line">	APIVersion string</div><div class="line">	Kind string</div><div class="line">	Name string</div><div class="line">	UID types.UID</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<h4 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h4><p>GarbageCollector负责处理对象之间的联系并在所有依赖者不存在时将对象删除。其中包含了一个GraphBuilder结构体，该结构体会以Goroutine的形式运行使用Informer监听集群中几乎全部资源变动，一但发生变更事件，就将该事件交给主循环体处理。主循环体根据事件的不同选择将处理对象加入不同的队列，GarbageCollector持有的另外两组队列会负责删除或孤立目标对象。</p>
+<ul>
+<li><p>attemptToDeleteItem ： 首先获取待处理对象及其ownerReferences列表，使用classifyReferences将所有者进行分类处理：</p>
+<ul>
+<li>所有者还有存在于集群中的，当前对象不会被删除。将已经被删除、等待删除的所有者从对象ownerReferences删除；</li>
+<li>当正在被删除的所有者不存在任何依赖且ownerReference.blockOwnerDeletion=true时会阻止依赖方的删除，当前对象会等待ownerReference.blockOwnerDeletion=true的所有对象删除后才会被删除；</li>
+<li><p>当前对象不包含任何依赖，会选择三种不同的策略处理依赖：</p>
+<ul>
+<li>当前对象有FinalizerOrphanDependents终结器，DeletePropagationOrphan将对象的所有依赖者变成孤立的；</li>
+<li>当前对象有FinalizerDeleteDependents终接器，deletePropagationBackground策略在前台等待所有依赖被删除后才会删除，整个过程是同步的；</li>
+<li>默认情况下使用DeletePropagationDefault策略在后台删除当前对象的所有依赖；</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>attemptToOrphanItem</li>
+</ul>
+<h3 id="2-Go-Select实现原理"><a href="#2-Go-Select实现原理" class="headerlink" title="2. Go Select实现原理"></a>2. Go Select实现原理</h3><p><a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-select/" target="_blank" rel="external">Go 语言select实现原理</a></p>
+<p>Go语言中select能够让Goroutine同时等待多个Channel的可读/可写，在Channel发生状态改变之前会一直阻塞当前Goroutine。其与switch不同的是，case中的表达式必须是Channel的收发操作。</p>
+<ul>
+<li><strong>select 能在 Channel 上进行非阻塞的收发操作</strong>；</li>
+<li><strong>select 在遇到多个 Channel 同时响应时会随机挑选 case 执行</strong>；(随机的引入是为了避免饥饿问题)</li>
+</ul>
+<p>通常情况下select语句会阻塞当前Goroutine并等待多个Channel中一个达到可以收发的状态，但是如果存在default：</p>
+<ul>
+<li>当存在可以收发的Channel时，直接处理该Channel对应的case； </li>
+<li>当不存在可以收发的Channel时，执行default中语句；<br>非阻塞的Channel发送和接收操作还是很有必要的，在很多场景下我们不希望向Channel发送消息或者从Channel中接收消息会阻塞当前Goroutine，只是想看看 Channel的可读或者可写状态。</li>
+</ul>
+<p>编译器在中间代码生成期间会根据select中case的不同对控制语句进行优化，这一过程都发生在 cmd/compile/internal/gc.walkselectcases 函数中：</p>
+<ul>
+<li>select 不存在任何的 case； 将select{}转换为调用runtime.block，通过gopark让出当前Goroutine对处理器的使用权，导致当前G进入无法被唤醒的永久休眠状态</li>
+<li>select 只存在一个 case； 将select改写成if条件预计，当case中Channel是空指针时，挂起当前G并永久休眠</li>
+<li><p>select 存在两个 case，其中一个 case 是 default； </p>
+<ul>
+<li>非阻塞发送：编译器使用if else改写代码，selectnbsend向Channel非阻塞发送数据，即向chansend函数传入false，哪怕不存在接收方或者缓冲区空间不足都不会阻塞当前G，直接返回。</li>
+<li>非阻塞接收：根据接收数据返回值数量的不同使用selectnbrecv或者selectnbrecv2对返回值进行处理</li>
+</ul>
+</li>
+<li><p>select 存在多个 case； </p>
+<p>  将所有case转换成包含Channel以及类型信息的runtime.scase结构体，调用runtime.selectgo选择一个可执行的scase。runtime.selectgo 函数首先会进行执行必要的初始化操作并决定处理 case 的两个顺序 — <strong>轮询顺序 pollOrder 和加锁顺序 lockOrder：</strong></p>
+<ul>
+<li>轮询顺序：通过 runtime.fastrandn 函数引入随机性； (避免Channel饥饿问题保证公平)</li>
+<li>加锁顺序：按照 Channel 的地址排序后确定加锁顺序；(避免死锁)</li>
+</ul>
+</li>
+</ul>
+<p>selectgo 处理流程    </p>
+<ul>
+<li>随机生成一个遍历的轮询顺序pollOrder 并根据Channel地址生成锁定顺序lockOrder；</li>
+<li>根据pollOrder遍历所有的 case 查看是否有可以立刻处理的 Channel；</li>
+<li>如果存在就直接获取 case 对应的索引并返回；</li>
+<li>如果不存在就会创建 runtime.sudog 结构体，将当前 Goroutine 加入到所有相关 Channel 的收发队列，并调用 runtime.gopark 挂起当前 Goroutine 等待调度器的唤醒；</li>
+<li>当调度器唤醒当前 Goroutine 时就会再次按照 lockOrder 遍历所有的 case，从中查找需要被处理的 runtime.sudog 结构对应的索引；</li>
+</ul>
+<p>###　３.　ETCD九连问<br><a href="https://mp.weixin.qq.com/s/Ht4fsgig0DtKwjPYaLZ8zw" target="_blank" rel="external">ETCD九连问</a></p>
+<p>ETCD是一个可信的分布式键值对存储服务，为分布式集群存储一些关键数据，协助分布式集群的正常运转。</p>
+<ul>
+<li>什么是键值数据库？ 答：一种非关系型数据库，它使用简单的键值方法来存储数据，键作为唯一标识符。</li>
+<li>KV存储服务能干啥？ 答： 用存储服务为服务中介提供服务。</li>
+<li>什么是服务中介？ 答：包含k-v键值对的字典，key是服务名称，value是服务提供者的地址列表。为服务提供者和服务消费者之间建立联系。</li>
+<li>服务发现是什么？ 答：服务提供者、消费者和服务中介三者，实现了服务发现机制，同时etcd还提供服务注册中心的功能。通过服务发现让消费者找到服务提供者。</li>
+<li>服务注册和服务发现的目的是？答：在微服务和容器化环境中，应用的增加和弹性伸缩发生频率很高，服务地址可能经常发生变化，因此需要服务注册和发现机制。<ul>
+<li>服务注册：服务提供者的实例（如pod）在启动时或者位置信息发生变化时，向etcd注册自身，在停止时注销自身。如果该实例发生故障，一段时间没有发送心跳之后会被服务注册表注销；</li>
+<li>服务发现：服务消费者请求服务，首先被发往一个中央路由器或负载均衡器（Service、Router等），查询服务注册表获取服务者的位置信息将请求转发给提供者。</li>
+</ul>
+</li>
+<li>etcd作为分布式键值存储服务，必须要保证分布式系统数据的可用性和一致性。一致性算法有Paxos、Raft，其中Paxos比较复杂很多KV数据库都采用后者。ETCD也不例外。<ul>
+<li>HTTP Server：用于处理用户发送的API请求以及其他ETCD节点的同步与心跳信息请求</li>
+<li>Store: 用于处理ETCD支持的各类功能的事务，包括数据索引、节点状态变更、监控与反馈、时间处理与执行等</li>
+<li>Raft：Raft强一致行算法的具体实现</li>
+<li>WAL：Write Ahead Log，预写式日志，除了内存中存有所有数据状态以及节点索引之外，ETCD通过WAL进行持久化存储，所有数据提交前都会时间记录日志。Snapshot是为了防止数据过多而进行的状态快照，Entry表示存储的具体日志内容。</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-GO-STRUCT对齐"><a href="#4-GO-STRUCT对齐" class="headerlink" title="4. GO STRUCT对齐"></a>4. GO STRUCT对齐</h3><p>合理重排字段可以减少填充，使STRUCT字段排列紧密减少空间浪费。零大小字段指struct{}通常不需要对齐，但是当作为结构体最后一个字段时需要对齐。因为如果有指针指向该字段，返回的地址将在结构体之外。如果此指针一直存活不释放对应的内存会出现内存泄露。（该内存不因结构体释放而释放）因此零大小字段要避免作为 struct 最后一个字段，防止内存浪费。</p>
+<p>32 位系统上对 64 位字的原子访问要保证其是 8bytes 对齐的；当然如果不必要的话，还是用加锁（mutex）的方式更清晰简单</p>
+<h2 id="一周算法汇总"><a href="#一周算法汇总" class="headerlink" title="一周算法汇总"></a>一周算法汇总</h2><h2 id="面试问题汇总"><a href="#面试问题汇总" class="headerlink" title="面试问题汇总:"></a>面试问题汇总:</h2><ol>
+<li>为什么redis选择单线程模型 </li>
+</ol>
+<p>答： Redis从一开始选择使用单线程模型处理客户端的绝大多数网络请求，原因是：</p>
+<ul>
+<li>使用单线程模型可维护性高，方便开发和调试；</li>
+<li>单线程模型也能并发处理客户端请求； （IO多路复用，通过select函数）</li>
+<li>Redis服务中运行的绝大多数操作的性能瓶颈都不是CPU；</li>
+</ul>
+<p>多线程技术能够帮助我们重复利用CPU的计算资源来并发执行不同的任务，但是CPU资源往往不是Redis服务器的瓶颈。Redis如果不开启AOF备份，所有的Redis操作都会在内存中完成不涉及IO，处理非常快。</p>
+<p>普通的Linux服务器上启动Redis也能处理1s 1，000,000个请求。如果这种吞吐量不满足需求，应考虑使用分片的方式将请求发送给不同的Redis来处理。</p>
+<p>Redis 4.0之后的版本加入了多线程的支持，是因为新版本中加入了一些可以被其他线程异步处理的删除操作。UNLINK，FLUSHALL ASYNC，FLUSHDB ASYNC。 删除超大键值对时，几十M，几百M的数据不能在几ms时间内处理完，Redis可能会需要在释放内存空间上消耗过多时间，这些操作会阻塞待处理任务，影响Redis的PCT99和可用性。释放内存的工作由后台线程异步进行处理来提升性能。</p>
+<ol>
+<li>Kafka如何保证数据不丢？</li>
+</ol>
+<p>答： 需要分别从生产者、服务端、消费者三方面处理来保证数据不丢失。</p>
+<ul>
+<li><p>生产者：可以通过配置ACK策略或者retries策略保证数据不丢失：</p>
+<ul>
+<li>ACK=all或-1，生产者发送消息后，需要等待ISR中所有的副本都成功写入消息之后才能接收来自服务端的成功响应。即发送消息时需要leader向follow同步完数据，ISR队列中所有broker全部保存这条消息后，才向ACK发送消息。</li>
+<li>对于可恢复错误（leader选举、网络抖动），配置retries&gt;0进行重试并设置重试时间间隔确保重试时可恢复错误都已恢复；对于不可恢复错误，发生异常时把消息写入DB或者本地缓存文件中，等错误修复后再把数据发送给broker端</li>
+</ul>
+</li>
+<li>broker端：设置unclean.leader.election.enable=false，默认值为true，表示当存有最新一条记录的replication宕机时，kafka自己选举一个主节点，true表示允许未同步最新数据的replication所在节点作为主节点，数据会丢失。</li>
+<li>消费端：处理好offset保证exactly-once &amp; at-least-once数据。设置enable.auto.commit=false手动提交offset，并保证offset的正确性。</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/随记/" rel="tag">#随记</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/12/13/学习笔记W1/" rel="next" title="学习笔记W1">
+                <i class="fa fa-chevron-left"></i> 学习笔记W1
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">40</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#笔记汇总"><span class="nav-number">1.</span> <span class="nav-text">笔记汇总</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-K8S垃圾收集器"><span class="nav-number">1.1.</span> <span class="nav-text">1. K8S垃圾收集器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#实现原理"><span class="nav-number">1.1.1.</span> <span class="nav-text">实现原理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Go-Select实现原理"><span class="nav-number">1.2.</span> <span class="nav-text">2. Go Select实现原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-GO-STRUCT对齐"><span class="nav-number">1.3.</span> <span class="nav-text">4. GO STRUCT对齐</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一周算法汇总"><span class="nav-number">2.</span> <span class="nav-text">一周算法汇总</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#面试问题汇总"><span class="nav-number">3.</span> <span class="nav-text">面试问题汇总:</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

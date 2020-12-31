@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -235,6 +235,464 @@
             
               
                 
+                <a class="post-title-link" href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/" itemprop="url">
+                  《Linux 性能优化实战》第一周--CPU性能篇(上)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-05-31T22:57:55+08:00" content="2020-05-31">
+              2020-05-31
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>首先，非常感谢Go夜读杨文大佬组织了这样一个读书会， 可以让大家在繁忙的工作生活之余抽出时间来一起学习进步。希望能和群里小伙伴共同讨论学习，一起坚持下去。</p>
+<p>第一本严格意义上并不是书籍，而是极客时间上倪老师的专栏《Linux性能优化实战》。无论是软件业务逻辑还是底层架构实现，我们在设计时都要尽可能的考虑性能开销，性能优化是软件系统中最有挑战的工作之一，比较考验程序员的综合能力。</p>
+<p>在平时工作中我也会经常遇到一些性能相关的问题，不知如何排查和解决。希望读完这个专栏后能真正做到<strong>将性能问题和系统原理关联起来，特别是把系统从应用程序、库函数、系统调用再到内核和硬件等不同的层级贯穿起来</strong>。</p>
+<hr>
+<h2 id="Lesson-1-如何学习Linux性能优化"><a href="#Lesson-1-如何学习Linux性能优化" class="headerlink" title="Lesson 1 如何学习Linux性能优化"></a>Lesson 1 如何学习Linux性能优化</h2><p>解决性能问题首先需要理解应用程序和系统的少数几个基本原理，再<strong>进行大量的实战练习</strong>，建立起整体性能的全局观。</p>
+<h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><p>高并发和响应快对应着性能优化的两个核心指标：<strong>吞吐</strong>和<strong>延时</strong>。</p>
+<p><img src="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/week1_1.png" alt>  </p>
+<ul>
+<li><strong>应用负载</strong>角度：直接影响了产品终端的用户体验</li>
+<li><strong>系统资源</strong>角度：资源使用率、饱和度等 </li>
+</ul>
+<p><strong>性能问题的本质</strong>就是系统资源已经到达瓶颈，但请求的处理还不够快，无法支撑更多的请求。 性能分析实际上就是找出应用或系统的瓶颈，设法去避免或缓解它们。</p>
+<ul>
+<li>选择指标评估应用程序和系统性能</li>
+<li>为应用程序和系统设置性能目标</li>
+<li>进行性能基准测试</li>
+<li>性能分析定位瓶颈</li>
+<li>性能监控和告警</li>
+</ul>
+<p>对于不同的性能问题要选取不同的性能分析工具。 下面是常用的Linux Performance Tools以及对应分析的性能问题类型。</p>
+<p><img src="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/LinuxPerformanceTool.png" alt>  </p>
+<h3 id="学习重点"><a href="#学习重点" class="headerlink" title="学习重点"></a>学习重点</h3><p>建立整体系统性能的全局观：</p>
+<ul>
+<li>理解最基本的几个系统知识原理</li>
+<li>掌握必要的性能工具</li>
+<li>通过实际的场景演练，贯穿不同的组件。</li>
+</ul>
+<hr>
+<h2 id="Lesson-2-到底应该怎么理解“平均负载”"><a href="#Lesson-2-到底应该怎么理解“平均负载”" class="headerlink" title="Lesson 2 到底应该怎么理解“平均负载”"></a>Lesson 2 到底应该怎么理解“平均负载”</h2><p><strong>平均负载：</strong>单位时间内，系统处于可运行状态和不可中断状态的平均进程数，也就是平均活跃进程数。它和我们传统意义上理解的CPU使用率并没有直接关系。</p>
+<p>其中不可中断进程是正处于内核态关键流程中的进程（如常见的等待设备的I/O响应）。<strong>不可中断状态实际上是系统对进程和硬件设备的一种保护机制。</strong></p>
+<h3 id="平均负载多少时合理"><a href="#平均负载多少时合理" class="headerlink" title="平均负载多少时合理"></a>平均负载多少时合理</h3><p>实际生产环境中将系统的平均负载监控起来，根据历史数据判断负载的变化趋势。当负载存在明显升高趋势时，及时进行分析和调查。 当然也可以当设置阈值（如当平均负载高于CPU数量的70%时）</p>
+<p>现实工作中我们会经常混淆平均负载和CPU使用率的概念，其实两者并不完全对等：</p>
+<ul>
+<li>CPU密集型进程，大量CPU使用会导致平均负载升高，此时两者一致</li>
+<li>I/O密集型进程，等待I/O也会导致平均负载升高，此时CPU使用率并不一定高</li>
+<li>大量等待CPU的进程调度会导致平均负载升高，此时CPU使用率也会比较高</li>
+</ul>
+<h3 id="平均负载案例分析"><a href="#平均负载案例分析" class="headerlink" title="平均负载案例分析"></a>平均负载案例分析</h3><p>分别对上述三种场景进行分析，使用的工具为<strong>iostat，mpstat，pidstat</strong></p>
+<p>其中还用到了Linux系统压力测试工具<strong>stress</strong></p>
+<h4 id="CPU密集型进程"><a href="#CPU密集型进程" class="headerlink" title="CPU密集型进程"></a>CPU密集型进程</h4><pre><code>stress --cpu 1 --timeout 600 #模拟CPU使用率100%
+watch -d uptime              #查看平均负载变化情况
+mpstat -P ALL 5              #查看CPU使用率的变化情况
+</code></pre><p>此实验中，CPU使用率为100%，但是iowait只有0，说明平均负载高是由CPU使用率导致</p>
+<pre><code>pidstat -u 5 1               #可以查看具体哪个进程导致了CPU使用率高
+</code></pre><h4 id="I-O密集型进程"><a href="#I-O密集型进程" class="headerlink" title="I/O密集型进程"></a>I/O密集型进程</h4><pre><code>stress -i 1 --timeout 600    #模拟I/O压力，不停地执行sync
+watch -d uptime              #查看平均负载变化情况
+mpstat -P ALL 5 1              #查看CPU使用率的变化情况
+</code></pre><p>此实验中，CPU使用率为23%，而iowait高达67%，说明平均负载高是由iowait升高导致</p>
+<pre><code>pidstat -u 5 1               #可以查看具体哪个进程导致了iowait高
+</code></pre><h4 id="大量进程"><a href="#大量进程" class="headerlink" title="大量进程"></a>大量进程</h4><pre><code>stress -c 8 --timeout 600    #模拟8进程（高于CPU核数）
+watch -d uptime              #查看平均负载变化情况
+mpstat -P ALL S              #查看CPU使用率的变化情况
+</code></pre><p>此实验中，CPU严重过载，8个进程在抢占CPU，导致平均负载升高</p>
+<pre><code>pidstat -u 5 1               #可以查看具体哪个进程导致了CPU使用率高
+</code></pre><p>###总结<br> <strong>平均负载高时可能是CPU密集型进程导致，也可能是I/O繁忙导致。具体分析时可以结合mpstat/pidstat工具辅助分析负载来源。</strong></p>
+<hr>
+<h2 id="Lesson-3-经常说的CPU上下文切换是什么意思？-上"><a href="#Lesson-3-经常说的CPU上下文切换是什么意思？-上" class="headerlink" title="Lesson 3 经常说的CPU上下文切换是什么意思？(上)"></a>Lesson 3 经常说的CPU上下文切换是什么意思？(上)</h2><p><strong>CPU上下文切换</strong>，就是把前一个任务的CPU上下文（CPU寄存器和PC）保存起来，然后加载新任务的上下文到这些寄存器和程序计数器，最后再跳转到程序计数器所指的位置，运行新任务。其中，保存下来的上下文会存储在系统内核中，待任务重新调度执行时再加载，保证原来的任务状态不受影响。</p>
+<p>按照任务类型，CPU上下文切换分为：</p>
+<ul>
+<li>进程上下文切换</li>
+<li>线程上下文切换</li>
+<li>中断上下文切换</li>
+</ul>
+<h3 id="进程上下文切换"><a href="#进程上下文切换" class="headerlink" title="进程上下文切换"></a>进程上下文切换</h3><p>Linux进程按照等级权限将进程的运行空间分为内核空间和用户空间。从用户态向内核态转变时需要通过系统调用来完成。</p>
+<p>一次系统调用过程其实进行了两次CPU上下文切换：</p>
+<ul>
+<li>CPU寄存器中用户态的指令位置先保存起来，CPU寄存器更新为内核态指令的位置，跳转到内核态运行内核任务；</li>
+<li>系统调用结束后，CPU寄存器恢复原来保存的用户态数据，再切换到用户空间继续运行。</li>
+</ul>
+<p>系统调用过程中并不会涉及虚拟内存等进程用户态资源，也不会切换进程。和传统意义上的进程上下文切换不同。因此<strong>系统调用通常称为特权模式切换</strong>。</p>
+<p>进程是由内核管理和调度的，进程上下文切换只能发生在内核态。 因此相比系统调用来说，在保存当前进程的内核状态和CPU寄存器之前，需要先把该进程的虚拟内存，栈保存下来。再加载新进程的内核态后，还要刷新进程的虚拟内存和用户栈。</p>
+<p>进程只有在调度到CPU上运行时才需要切换上下文，有以下几种场景： CPU时间片轮流分配，系统资源不足导致进程挂起，进程通过sleep函数主动挂起，高优先级进程抢占时间片，硬件中断时CPU上的进程被挂起转而执行内核中的中断服务。</p>
+<h3 id="线程上下文切换"><a href="#线程上下文切换" class="headerlink" title="线程上下文切换"></a>线程上下文切换</h3><p>线程上下文切换分为两种：</p>
+<ul>
+<li>前后线程同属于一个进程，切换时虚拟内存资源不变，只需要切换线程的私有数据，寄存器等；</li>
+<li>前后线程属于不同进程，与进程上下文切换相同。</li>
+</ul>
+<p>同进程的线程切换消耗资源较少，这也是多线程的优势。</p>
+<h3 id="中断上下文切换"><a href="#中断上下文切换" class="headerlink" title="中断上下文切换"></a>中断上下文切换</h3><p>中断上下文切换并不涉及到进程的用户态，因此中断上下文只包括内核态中断服务程序执行所必须的状态（CPU寄存器，内核堆栈，硬件中断参数等）。</p>
+<p><strong>中断处理优先级比进程高，所以中断上下文切换和进程上下文切换不会同时发生。</strong></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><strong>尽量在程序中使用多线程，因为多线程上下文切换资源消耗较少。</strong></p>
+<hr>
+<h2 id="Lesson-4-经常说的CPU上下文切换是什么意思？-下"><a href="#Lesson-4-经常说的CPU上下文切换是什么意思？-下" class="headerlink" title="Lesson 4 经常说的CPU上下文切换是什么意思？(下)"></a>Lesson 4 经常说的CPU上下文切换是什么意思？(下)</h2><p>通过vmstat可以查看系统总体的上下文切换情况。</p>
+<pre><code>vmstat 5         #每隔5s输出一组数据
+</code></pre><ul>
+<li>cs （context switch）     每秒上下文切换次数</li>
+<li>in （interrupt）          每秒中断次数</li>
+<li>r （runnning or runnable）就绪队列的长度，正在运行和等待CPU的进程数</li>
+<li>b （Blocked）             处于不可中断睡眠状态的进程数</li>
+</ul>
+<p>要查看每个进程的详细情况，需要使用pidstat来查看每个进程上下文切换情况</p>
+<pre><code>pidstat -w 5
+</code></pre><ul>
+<li>cswch   每秒自愿上下文切换次数 （进程无法获取所需资源导致的上下文切换）</li>
+<li>nvcswch 每秒非自愿上下文切换次数 （时间片轮流等系统强制调度）</li>
+</ul>
+<h3 id="实验分析"><a href="#实验分析" class="headerlink" title="实验分析"></a>实验分析</h3><pre><code>vmstat 1 1    #首先获取空闲系统的上下文切换次数
+sysbench --threads=10 --max-time=300 threads run #模拟多线程切换问题
+
+vmstat 1 1    #新终端观察上下文切换情况
+此时发现cs数据明显升高，同时观察其他指标：
+r列： 远超系统CPU个数，说明存在大量CPU竞争
+us和sy列： sy列占比80%，说明CPU主要被内核占用
+in列： 中断次数明显上升，说明中断处理也是潜在问题
+</code></pre><p>综合以上分析，说明运行/等待CPU的进程过多，导致大量的上下文切换，上下文切换导致系统的CPU占用率高。</p>
+<pre><code>pidstat -w -u 1  #查看到底哪个进程导致的问题
+</code></pre><p>从结果中看出是sysbench导致CPU使用率过高，但是pidstat输出的上下文次数加起来也并不多。分析sysbench模拟的是线程的切换，因此需要在pidstat后加-t参数查看线程指标。</p>
+<p>另外对于中断次数过多，我们可以通过/proc/interrupts文件读取</p>
+<pre><code>watch -d cat /proc/interrupts
+</code></pre><p>发现次数变化速度最快的是重调度中断（RES），该中断用来唤醒空闲状态的CPU来调度新的任务运行。分析还是因为过多任务的调度问题，和上下文切换分析一致。</p>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p><strong>每秒上下文切换多少才正常呢？</strong><br><strong>经验来说，当每秒上下文切换超过1w次，或者切换次数出现数量级的增长时，系统可能出现了性能问题。此时可以根据上下文切换类型来具体分析是I/O问题还是CPU瓶颈，或者具体哪一类中断导致的异常。</strong></p>
+<hr>
+<h2 id="Lesson-5-某个应用的CPU使用率达到100-，怎么办？"><a href="#Lesson-5-某个应用的CPU使用率达到100-，怎么办？" class="headerlink" title="Lesson 5 某个应用的CPU使用率达到100%，怎么办？"></a>Lesson 5 某个应用的CPU使用率达到100%，怎么办？</h2><p>Linux作为多任务操作系统，将CPU时间划分为很短的时间片，通过调度器轮流分配给各个任务使用。为了维护CPU时间，Linux通过事先定义的节拍率，触发时间中断，并使用全局变了jiffies记录开机以来的节拍数。时间中断发生一次该值+1.</p>
+<p><strong>CPU使用率</strong>，除了空闲时间以外的其他时间占总CPU时间的百分比。可以通过/proc/stat中的数据来计算出CPU使用率。因为/proc/stat时开机以来的节拍数累加值，计算出来的是开机以来的平均CPU使用率，一般意义不大。可以间隔取一段时间的两次值作差来计算该段时间内的平均CPU使用率。 <strong>性能分析工具给出的都是间隔一段时间的平均CPU使用率，要注意间隔时间的设置。</strong></p>
+<p>CPU使用率可以通过top 或 ps来查看。分析进程的CPU问题可以通过perf，它以性能事件采样为基础，不仅可以分析系统的各种事件和内核性能，还可以用来分析指定应用程序的性能问题。</p>
+<p>perf top / perf record / perf report （-g 开启调用关系的采样）</p>
+<h3 id="实验案例"><a href="#实验案例" class="headerlink" title="实验案例"></a>实验案例</h3><pre><code>sudo docker run --name nginx -p 10000:80 -itd feisky/nginx
+sudo docker run --name phpfpm -itd --network container:nginx feisky/php-fpm
+
+ab -c 10 -n 100 http://XXX.XXX.XXX.XXX:10000/ #测试Nginx服务性能
+</code></pre><p>发现此时每秒可承受请求给长少，此时将测试的请求数从100增加到10000。 在另外一个终端运行top查看每个CPU的使用率。发现系统中几个php-fpm进程导致CPU使用率骤升。</p>
+<p>接着用perf来分析具体是php-fpm中哪个函数导致该问题。</p>
+<pre><code>perf top -g -p XXXX #对某一个php-fpm进程进行分析
+</code></pre><p>发现其中sqrt和add_function占用CPU过多， 此时查看源码找到原来是sqrt中在发布前没有删除测试代码段，存在一个百万次的循环导致。 将该无用代码删除后发现nginx负载能力明显提升。</p>
+<h3 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h3><p><strong>在碰到CPU使用率过高问题时，可以借助top pidstat确定引发CPU性能问题的来源，然后用perf来具体定位到引起性能问题的函数。可以用来代码性能进一步优化。</strong></p>
+<hr>
+<h2 id="Lesson-6-系统的CPU使用率很高，为什么找不到高CPU的应用？"><a href="#Lesson-6-系统的CPU使用率很高，为什么找不到高CPU的应用？" class="headerlink" title="Lesson 6 系统的CPU使用率很高，为什么找不到高CPU的应用？"></a>Lesson 6 系统的CPU使用率很高，为什么找不到高CPU的应用？</h2><p>按照上篇的CPU性能问题分析套路，看起来CPU使用率问题很容易排查，真实场景中却不然。</p>
+<h3 id="实验案例分析"><a href="#实验案例分析" class="headerlink" title="实验案例分析"></a>实验案例分析</h3><pre><code>sudo docker run --name nginx -p 10000:80 -itd feisky/nginx:sp
+sudo docker run --name phpfpm -itd --network container:nginx feisky/php-fpm:sp
+ab -c 100 -n 1000 http://XXX.XXX.XXX.XXX:10000/ #并发100个请求测试
+</code></pre><p>实验结果中每秒请求数依旧不高，我们将并发请求数降为5后，nginx负载能力依旧很低。</p>
+<p>此时用top和pidstat发现系统CPU使用率过高，但是并没有发现CPU使用率高的进程。</p>
+<p>出现这种情况一般时我们分析时遗漏的什么信息，重新运行top命令并观察一会。发现就绪队列中处于Running状态的进行过多，超过了我们的并发请求次数5. 再仔细查看进程运行数据，发现nginx和php-fpm都处于sleep状态，真正处于运行的却是几个stress进程。</p>
+<p>下一步就利用pidstat分析这几个stress进程，发现没有任何输出。用ps aux交叉验证发现依旧不存在该进程。说明不是工具的问题。再top查看发现stress进程的进程号变化了，此时有可能时以下两种原因导致：</p>
+<ul>
+<li>进程不停的崩溃重启（如段错误/配置错误等），此时进程退出后可能又被监控系统重启；</li>
+<li>短时进程导致，即其他应用内部通过exec调用的外面命令，这些命令一般只运行很短时间就结束，很难用top这种间隔较长的工具来发现</li>
+</ul>
+<p>可以通过pstree来查找 stress的父进程，找出调用关系。</p>
+<pre><code>pstree | grep stress
+</code></pre><p>发现是php-fpm调用的该子进程，此时去查看源码可以看出每个请求都会调用一个stress命令来模拟I/O压力。 之前top显示的结果是CPU使用率升高，是否真的是由该stress命令导致的，还需要继续分析。 代码中给每个请求加了verbose=1的参数后可以查看stress命令的输出，在中断测试该命令结果显示stress命令运行时存在因权限问题导致的文件创建失败的bug。</p>
+<p>此时依旧只是猜测，下一步继续通过perf工具来分析。性能报告显示确实时stress占用了大量的CPU，通过修复权限问题来优化解决即可。</p>
+<h3 id="总结-3"><a href="#总结-3" class="headerlink" title="总结"></a>总结</h3><p><strong>对于常规问题无法解释的CPU使用率场景，首先要想到可能时短时应用导致的问题。对于短时进程，还可以用execsnoop工具来进行监控。</strong></p>
+<hr>
+<h2 id="Lesson-7-8-系统中出现大量不可中断进程和僵尸进程怎么办？"><a href="#Lesson-7-8-系统中出现大量不可中断进程和僵尸进程怎么办？" class="headerlink" title="Lesson 7/8 系统中出现大量不可中断进程和僵尸进程怎么办？"></a>Lesson 7/8 系统中出现大量不可中断进程和僵尸进程怎么办？</h2><h3 id="进程状态"><a href="#进程状态" class="headerlink" title="进程状态"></a>进程状态</h3><ul>
+<li>R Running/Runnable，表示进程在CPU的就绪队列中，正在运行或者等待运行；</li>
+<li>D Disk Sleep，不可中断状态睡眠，一般表示进程正在跟硬件交互，并且交互过程中不允许被其他进程中断；</li>
+<li>Z Zombie，僵尸进程，表示进程实际上已经结束，但是父进程还没有回收它的资源；</li>
+<li>S Interruptible Sleep，可中断睡眠状态，表示进程因为等待某个事件而被系统挂起，当等待事件发生则会被唤醒并进入R状态；</li>
+<li>I Idle，空闲状态，用在不可中断睡眠的内核线程上。 该状态不会导致平均负载升高；</li>
+<li>T Stop/Traced，表示进程处于暂停或跟踪状态（SIGSTOP/SIGCONT， GDB调试）；</li>
+<li>X Dead，进程已经消亡，不会在top/ps中看到。</li>
+</ul>
+<p>对于不可中断状态，一般都是在很短时间内结束，可忽略。但是如果系统或硬件发生故障，进程可能会保持不可中断状态很久，甚至系统中出现大量不可中断状态，此时需注意是否出现了I/O性能问题。</p>
+<p>僵尸进程一般多进程应用容易遇到，父进程来不及处理子进程状态时子进程就提前退出，此时子进程就变成了僵尸进程。大量的僵尸进程会用尽PID进程号，导致新进程无法建立。</p>
+<h3 id="实验案例分析-1"><a href="#实验案例分析-1" class="headerlink" title="实验案例分析"></a>实验案例分析</h3><h4 id="磁盘O-DIRECT问题"><a href="#磁盘O-DIRECT问题" class="headerlink" title="磁盘O_DIRECT问题"></a>磁盘O_DIRECT问题</h4><pre><code>sudo docker run --privileged --name=app -itd feisky/app:iowait
+ps aux | grep &apos;/app&apos;
+</code></pre><p>可以看到此时有多个app进程运行，状态分别时Ss+和D+。其中后面s表示进程是一个会话的领导进程，+号表示前台进程组。</p>
+<p>其中<strong>进程组</strong>表示一组相互关联的进程，子进程是父进程所在组的组员。 <strong>会话</strong>指共享同一个控制终端的一个或多个进程组。</p>
+<p>用top查看系统资源发现：1）平均负载在逐渐增加，且1分钟内平均负载达到了CPU个数，说明系统可能已经有了性能瓶颈；2）僵尸进程比较多且在不停增加；3）us和sys CPU使用率都不高，iowait却比较高；4）每个进程CPU使用率也不高，但有两个进程处于D状态，可能在等待IO。</p>
+<p>分析目前数据可知：iowait过高导致系统平均负载升高，僵尸进程不断增长说明有程序没能正确清理子进程资源。</p>
+<p>用dstat来分析，因为它可以同时查看CPU和I/O两种资源的使用情况，便于对比分析。</p>
+<pre><code>dstat 1 10    #间隔1秒输出10组数据
+</code></pre><p>可以看到当wai（iowait）升高时磁盘请求read都会很大，说明iowait的升高和磁盘的读请求有关。接下来分析到底时哪个进程在读磁盘。</p>
+<p>之前top查看的处于D状态的进程号，用pidstat -d -p XXX 展示进程的I/O统计数据。发现处于D状态的进程都没有任何读写操作。 在用pidstat -d 查看所有进程的I/O统计数据，看到app进程在进行磁盘读操作，每秒读取32MB的数据。进程访问磁盘必须使用系统调用处于内核态，接下来重点就是找到app进程的系统调用。</p>
+<pre><code>sudo strace -p XXX #对app进程调用进行跟踪
+</code></pre><p>报错没有权限，因为已经时root权限了。所以遇到这种情况，首先要检查进程状态是否正常。 ps命令查找该进程已经处于Z状态，即僵尸进程。</p>
+<p>这种情况下top pidstat之类的工具无法给出更多的信息，此时像第5篇一样，用perf record -d和perf report进行分析，查看app进程调用栈。</p>
+<p>看到app确实在通过系统调用sys_read()读取数据，并且从new_sync_read和blkdev_direct_IO看出进程时进行直接读操作，请求直接从磁盘读，没有通过缓存导致iowait升高。</p>
+<p>通过层层分析后，root cause是app内部进行了磁盘的直接I/O。然后定位到具体代码位置进行优化即可。</p>
+<h4 id="僵尸进程"><a href="#僵尸进程" class="headerlink" title="僵尸进程"></a>僵尸进程</h4><p>上述优化后iowait显著下降，但是僵尸进程数量仍旧在增加。首先要定位僵尸进程的父进程，通过pstree -aps XXX，打印出该僵尸进程的调用树，发现父进程就是app进程。</p>
+<p>查看app代码，看看子进程结束的处理是否正确（是否调用wait()/waitpid(),有没有注册SIGCHILD信号的处理函数等）。</p>
+<h3 id="总结-4"><a href="#总结-4" class="headerlink" title="总结"></a>总结</h3><p><strong>碰到iowait升高时，先用dstat pidstat等工具确认是否存在磁盘I/O问题，再找是哪些进程导致I/O，不能用strace直接分析进程调用时可以通过perf工具分析。</strong></p>
+<p><strong>对于僵尸问题，用pstree找到父进程，然后看源码检查子进程结束的处理逻辑即可。</strong></p>
+<p>——————————————————————————————————————————————————————————————————<br>LastModify：2020-05-31</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2019/06/16/Kubernetes学习——etcd/" itemprop="url">
+                  Kubernetes学习——etcd
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2019-06-16T22:57:55+08:00" content="2019-06-16">
+              2019-06-16
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="K8S学习之——ETCD"><a href="#K8S学习之——ETCD" class="headerlink" title="K8S学习之——ETCD"></a>K8S学习之——ETCD</h2><p>Etcd is distributed reliable key-value store for the most critical data of a distributed system, with a focus on being:  </p>
+<ul>
+<li><strong>Simple</strong>: well-defined, user-facing API (gRPC)  </li>
+<li><strong>Secure</strong>: automatic TLS with optional client cert authentication  </li>
+<li><strong>Fast</strong>: benchmarked 10,000 writes/sec  </li>
+<li><strong>Reliable</strong>: properly distributed using Raft<br>简单来说etcd是kubernetes提供默认的存储系统，通过分布式KV存储来保存集群中重要的数据，因此我们使用时需要为etcd数据提供备份计划。</li>
+</ul>
+<p>Etcd is written in Go and uses the Raft consensus algorithm to manage a highly-available replicated log.<br>它通过raft一致性算法来实现可靠的分布式存储，我们上个月在team meetup中也是主要探讨了raft算法原理以及它与zookeeper的一些区别，在此通过本文记录下。  </p>
+<h3 id="Raft算法原理"><a href="#Raft算法原理" class="headerlink" title="Raft算法原理"></a>Raft算法原理</h3><p>Raft算法和zookeeper类似，都是通过大多数机制来保证一致性。在Raft算法中通过选举出来的leader节点来接收客户端的请求日志数据，然后同步到集群中其它节点进行复制，当日志已经同步到超多半数以上节点的时候，该日志状态变为committed可提交状态，即可以提交到状态机中执行。此外leader节点还要通知其他节点哪些日志已经被复制成功。</p>
+<p><em>Raft算法将要解决的一致性问题分为以下三个子问题：</em>  </p>
+<ul>
+<li><strong>leader选举：</strong> 通过心跳机制来触发leader选举，保证集群中存在一个leader节点  </li>
+<li><strong>日志复制：</strong> leader节点将来自客户端的请求序列化成日志数据并且同步复制到其它节点  </li>
+<li><strong>安全性：</strong> 如果某个节点已经将一条日志数据提交到状态机中执行，那么其他节点不可能再将此条数据输入到状态机中重复执行。  </li>
+</ul>
+<p><em>Raft算法需要保证以下几个特性：</em>  </p>
+<ul>
+<li><strong>Election Safety：</strong>在一个任期内最多只能存在一个leader节点  </li>
+<li><strong>Leader Append-Only：</strong>leader节点只能添加日志数据，不会删除/覆盖以前的数据  </li>
+<li><strong>Log Matching：</strong>如果两个节点的日志在某个索引上的日志数据和任期号都相同，那么在此index之前的日志数据一定也匹配  </li>
+<li><strong>Leader Completeness：</strong>如果一条日志在某个任期被提交，那么该条日志数据在leader节点上更高任期号的日志数据中一定存在。  </li>
+<li><strong>State Machine Safety：</strong>一条提交到raft状态机执行过的数据不可能再被其他节点提交执行。</li>
+</ul>
+<h4 id="Leader选举"><a href="#Leader选举" class="headerlink" title="Leader选举"></a>Leader选举</h4><p><strong><em>Node节点状态</em></strong>  </p>
+<ul>
+<li>Leader： 领导者，一个集群中只能存在一个leader  </li>
+<li>Follower：跟随者，一个客户端的操作请求发送到follower上面，会首先由follwer重定向到leader上  </li>
+<li>Candidate：参与者，在此状态的节点会发起新的选举  </li>
+</ul>
+<p>节点状态切换如图所示<br><img src="/2019/06/16/Kubernetes学习——etcd/raft-states.jpg" alt>  </p>
+<ol>
+<li>所有节点启动时自动进入Follower状态</li>
+<li>Follower节点启动时会开启一个选举超时的定时器，当times out时节点切换到Candidate状态发起选举</li>
+<li>节点一旦转换为Candidate状态就开始进行选举，如果在下一次选举超时到来之前都没有选出Leader节点，那么节点会保持状态不变重新发起一次新的选举</li>
+<li>若Candidate节点收到集群中超过半数的节点选票（包含自身），那么状态切换到Leader</li>
+<li>若Candidate节点接收到来自Leader节点的消息，或者任期号更高的消息，即集群中已经存在Leader节点，此时节点状态切换回Follower</li>
+<li>Leader节点如果收到来自更高任期号的消息则切换回Follower节点（常见网络分区场景下）</li>
+</ol>
+<p><strong><em>其中节点之间的通信通过RPC来完成，etcd中主要由两种RPC请求：</em></strong>  </p>
+<ul>
+<li>RequestVote 用于Candidate节点发起选举  </li>
+<li>AppendEntries 用于Leader节点向其他节点进行复制日志数据，以及同步心跳</li>
+</ul>
+<p><strong><em>Raft算法通过心跳机制来触发Leader选举</em></strong></p>
+<p>节点启动时状态为Follower，只要一直接收到来自Leader或者Candidate的正常RPC消息，就会一直保持为Follower状态。<br>Leader节点周期性的向其它节点发送心跳请求来保持Leader状态，其中心跳请求即带有空数据的AppendEntries。<br>每个Follower节点都有一个选举超时定时器，如果在超时之前都没有接收到Leader的心跳请求将发起选举。发起选举时，Follower将自身的任期号+1并且切换到Candidate状态，然后向集群中其它节点发送RequestVote请求进行选举。  </p>
+<p><strong><em>Candidate节点保持状态不变，直到以下情况之一发生：</em></strong>   </p>
+<ul>
+<li>该节点收到集群中半数以上的节点投票，即赢得选举；  </li>
+<li>节点收到来自Leader节点的数据；  </li>
+<li>选举超时到来</li>
+</ul>
+<p>第一种情况，因为每个Follower节点在一个任期内只能给一个节点投票先来先到，通过大多数原则保证了每个任期最多只有一个节点赢得选票（存在无节点当选的情况）。当节点成为Leader后会向集群中其它节点发送心跳消息来阻止不必要的选举。<br>第二种情况，处于Candidate状态下的节点收到了来自其它节点的心跳/AppendEntries消息。如果AppendEntries请求中的任期号大于自身任期，说明集群中已经存在Leader节点，此时节点转换成Follower状态。反之如果消息中任期号小于自身，则拒绝该消息，继续保持节点状态不变。<br>第三种情况，在选举超时到来时该节点没有赢得选举且没有收到其它节点的AppendEntries消息，说明集群中没有Leader存在，该Candidate节点任期号+1，再次发起选举。<br>其中，第三种情况发生在集群节点为偶数个，且有两个Candidate节点同时选举。理论上这种无法选择Leader的情况可以无限循环下去。为了避免该情况，每个节点的选举超时时间通过随机函数决定，一般在150ms-300ms之间。 （<strong><em>我们也仔细讨论了这种情况，因为Leader发送心跳消息时间非常短暂，如果节点选举超时时间T都相同，Leader节点挂掉那么可以极端得考虑认为所有Follower节点会在同一时刻（距离上一个心跳消息T时间）得到该信息。此时会有很多Follower节点切换到Candidate状态并进行选举，任意一个节点获得大多数投票的概率都很低。 而如果每个节点的超时时间是个随机值，那么大概率集群中有一个超时时间短的节点先感知到原Leader挂掉的事实，然后首先发起选举，因为RPC消息时间耗时较短，该节点大概率能获得大多数投票。</em></strong>）  </p>
+<h4 id="日志复制"><a href="#日志复制" class="headerlink" title="日志复制"></a>日志复制</h4><p><strong><em>日志形式</em></strong></p>
+<p><img src="/2019/06/16/Kubernetes学习——etcd/log-entries.jpg" alt>  </p>
+<p>如上图所示，日志主要由以下三个成员组成：  </p>
+<ol>
+<li>index：索引号，即图中最上方的数字  </li>
+<li>term：任期号，每个日志条目中上方数字，表示该日志在哪个任期中生成  </li>
+<li>command：日志中的数据修改操作  </li>
+</ol>
+<p>如果一条日志被Leader节点同步到超过半数的节点中，被称为“<strong>成功复制</strong>”，这个日志条目就是committed状态（已经被提交）。如果某条日志条目状态为committed，那么在此日志之前的所有日志也都是committed状态。（如图中index&lt;=7的日志都是committed状态）<br>committed状态的日志可以被Leader输入到raft状态机中执行，执行过的日志状态为applied。  </p>
+<p><strong><em>日志复制过程</em></strong></p>
+<p><img src="/2019/06/16/Kubernetes学习——etcd/log-replication-1.jpg" alt><br><img src="/2019/06/16/Kubernetes学习——etcd/log-replication-2.jpg" alt><br><img src="/2019/06/16/Kubernetes学习——etcd/log-replication-3.jpg" alt></p>
+<ol>
+<li>首先客户端的消息转发到集群Leader节点上</li>
+<li>Leader节点首先在本地日志中添加一条日志</li>
+<li>Leader节点通过AppendEntries RPC消息的形式向集群中其它节点广播该日志</li>
+<li>Follower节点收到日志首先也同样在本地日志中添加一条日志</li>
+<li>Follower节点向Leader节点返回AppendEntries应答消息</li>
+<li>Leader节点收到超过半数的应答消息时认为该日志已经被成功复制，将本地的committedIndex指向该日志的index</li>
+<li>如果该committed状态的日志被提交到状态机中执行，那么Leader节点本地日志中的appliedIndex也要随之更新</li>
+<li>Leader节点在下次广播AppendEntries消息时会带上最新的committedIndex和appliedIndex，用于Follower节点本地日志的索引更新。</li>
+</ol>
+<p><strong><em>日志恢复过程</em></strong></p>
+<p>正常情况下Follower节点和Leader节点的日志会始终保持一致，但是当Leader节点突然挂掉时集群中节点日志会出现不一致的情况，当新的Leader选举出来后就需要进行相应的恢复操作。<br><img src="/2019/06/16/Kubernetes学习——etcd/inconsistentlog.jpg" alt></p>
+<p>Raft算法通过Leader节点同步来解决数据不一致问题。 对于集群中任意一个节点，Leader中都存储着两个与它们日志相关的数据。  </p>
+<ol>
+<li>nextIndex： 下一次向该Follower节点同步时的日志索引  </li>
+<li>matchIndex： 该Follower节点的最大日志索引<br>在Follower节点和Leader节点日志复制正常的情况下，nextIndex = matchIndex + 1。如果日志不一致情况出现那么该等式不成立。<br>集群中原Leader宕机，新Leader选出后将初始化nextIndex为新Leader节点的最后一条日志索引，matchIndex均为0。这样做的目的是首先从Follower节点的最后一条日志进行探索，如果不匹配则从前向后进行复制。<br>如上图所示，Leader节点存储每个Follower节点的nextIndex=10，matchIndex=0。成为Leader首次向其它节点复制日志时，会复制index&gt;=10的日志，同时带上2⃣️元组<6,10>告知Follower节点将要复制Term=6，index=10的日志数据。  </6,10></li>
+</ol>
+<ul>
+<li>只有（a）节点的最大日志数据2⃣️元组<6,9>和Leader传来的<6,10>紧邻，复制成功且matchIndex也随之更新。  </6,10></6,9></li>
+<li>其他几个节点的2⃣️元组都不匹配，返回复制失败。Leader节点收到拒绝消息后修改该follwer节点的索引数据，将nextIndex复制为matchIndex+1即1。下次同步时从索引1到10的数据给该Follwer节点，且Follower节点中未提交的数据被清除。  </li>
+</ul>
+<h4 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h4><p>Raft算法对选举进行限制来保证安全性。  </p>
+<ul>
+<li>一个节点向成为Leader就必须得到集群中超过半数的选票  </li>
+<li>节点A投票给另一个节点B的必要条件时B的日志比A的要新（首先对比任期号，相同时再比较索引）</li>
+</ul>
+<h3 id="Raft算法处理只读请求"><a href="#Raft算法处理只读请求" class="headerlink" title="Raft算法处理只读请求"></a>Raft算法处理只读请求</h3><p>一般情况下，客户端的命令需要经过日志复制过程，当集群超过半数节点应答之后才可以提交给状态机执行，执行结束后再应答给客户端。这样的流程对于只读数据来说太漫长，如果不经过这样的流程Leader节点直接将本节点上保存的数据返回给客户端又是不安全的，因为可能返回的数据已经过期。因此Raft中针对只读请求有特殊的高效处理：  </p>
+<ol>
+<li>Leader节点需要有当前已提交的日志数据。如果该节点新成为Leader需要提交一个dummy空日志来确保上一个任期的日志全部提交。  </li>
+<li>Leader节点保存该只读请求到来时的committedIndex为readIndex  </li>
+<li>Leader节点确认自己是否还是集群中的leader（广播心跳给集群中节点，收到半数以上应答即可判断）同时readIndex索引也是当前集群日志AppliedIndex的最大索引  </li>
+<li>读取Leader节点中数据  </li>
+</ol>
+<p>——————————————————————————————————————————————————————————————————<br>LastModify：2019-06-18</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2019/04/18/Dynamic-Programming/" itemprop="url">
                   Dynamic Programming
                 </a>
@@ -248,7 +706,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2019-04-18T23:31:19+08:00" content="2019-04-18">
               2019-04-18
             </time>
@@ -388,7 +846,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2019-04-17T23:38:48+08:00" content="2019-04-17">
               2019-04-17
             </time>
@@ -484,7 +942,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-31T15:54:03+08:00" content="2016-12-31">
               2016-12-31
             </time>
@@ -592,7 +1050,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-23T15:53:56+08:00" content="2016-12-23">
               2016-12-23
             </time>
@@ -693,7 +1151,7 @@ There are two ways to reach the bottom-right corner:
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-16T10:56:39+08:00" content="2016-12-16">
               2016-12-16
             </time>
@@ -850,7 +1308,7 @@ Test:2000 good engines,10 anomalous
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
               2016-12-08
             </time>
@@ -1038,7 +1496,7 @@ xj&apos; = xj - uj
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
               2016-12-04
             </time>
@@ -1168,7 +1626,7 @@ but many slower to train.
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2016-11-27T15:46:44+08:00" content="2016-11-27">
               2016-11-27
             </time>
@@ -1272,276 +1730,6 @@ It&apos;s who has the most data.
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/11/24/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第五周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第五周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-11-24T15:10:34+08:00" content="2016-11-24">
-              2016-11-24
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="5、Neural-Networks：Learning"><a href="#5、Neural-Networks：Learning" class="headerlink" title="5、Neural Networks：Learning"></a>5、Neural Networks：Learning</h2><h3 id="5-1、Cost-Function-and-Backpropagation"><a href="#5-1、Cost-Function-and-Backpropagation" class="headerlink" title="5.1、Cost Function and Backpropagation"></a>5.1、Cost Function and Backpropagation</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/5_1.png" alt="5_1"></p>
-<h3 id="5-2、Backprogation-algorithm"><a href="#5-2、Backprogation-algorithm" class="headerlink" title="5.2、Backprogation algorithm"></a>5.2、Backprogation algorithm</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/5_2.png" alt="5_2"></p>
-<h3 id="5-3、Gradient-checking"><a href="#5-3、Gradient-checking" class="headerlink" title="5.3、Gradient checking"></a>5.3、Gradient checking</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/5_3.png" alt="5_3"></p>
-<pre><code>Important:
-Be sure to disable your gradient checking code before training your claaifier. otherwise code will be very slow.
-</code></pre><h3 id="5-4-Random-initialization"><a href="#5-4-Random-initialization" class="headerlink" title="5.4 Random initialization"></a>5.4 Random initialization</h3><pre><code>initial each initialtheta to a random value in[-EPSILON,EPSILON]
-</code></pre><h3 id="5-5-Put-it-together"><a href="#5-5-Put-it-together" class="headerlink" title="5.5 Put it together"></a>5.5 Put it together</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/5_4.png" alt="5_4"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/5_5.png" alt="5_5"></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/11/24/毕设论文相关知识索引笔记/" itemprop="url">
-                  毕设论文相关知识索引笔记
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-11-24T14:14:40+08:00" content="2016-11-24">
-              2016-11-24
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="压缩相关"><a href="#压缩相关" class="headerlink" title="压缩相关"></a>压缩相关</h2><p><a href="http://blog.csdn.net/zhangskd/article/details/17009111" target="_blank" rel="external">速度之王-lz4压缩算法</a></p>
-<p><a href="http://blog.csdn.net/zhangskd/article/details/17009111" target="_blank" rel="external">使用tar+lz4+ssh更快的数据传输</a></p>
-<p><a href="http://mogu.io/docker-162" target="_blank" rel="external">Docker源码分析之Docker daemon启动和销毁</a></p>
-<p><a href="http://www.readern.com/sublime-text-latex-chinese-under-mac.html" target="_blank" rel="external">部署MAC上的Sublime Text + LaTex 中文环境</a></p>
-<h2 id="Cgroup介绍、应用实例及原理描述"><a href="#Cgroup介绍、应用实例及原理描述" class="headerlink" title="Cgroup介绍、应用实例及原理描述"></a>Cgroup介绍、应用实例及原理描述</h2><p><a href="http://www.ibm.com/developerworks/cn/linux/1506_cgroup/index.html" target="_blank" rel="external">Cgroup介绍、应用实例及原理描述</a></p>
-<p><a href="http://tech.meituan.com/cgroups.html" target="_blank" rel="external">Linux资源管理之cgroups简介</a></p>
-<p><a href="https://www.linuxplumbersconf.org/2015/ocw//system/presentations/2619/original/2015-08-20-CRIU_Support_in_Docker_for_Native_Checkpoint_and_Restore.pdf" target="_blank" rel="external">CRIU support in Docker C/R</a></p>
-<h3 id="Cgroup设计原理分析"><a href="#Cgroup设计原理分析" class="headerlink" title="Cgroup设计原理分析"></a>Cgroup设计原理分析</h3><p>Linux中，管理进程的数据结构是task_struct</p>
-<pre><code>#ifdef CONFIG_CGROUPS
-/*Control Group info protected by css_set_lock*/
-struct css_set *cgroups;
-/*cg_list protected by css_set_lock and tsk-&gt;alloc_lock*/
-struct list_head cg_list;
-#endif
-</code></pre><p>其中*cgroups指向css_set结构，css_set存储了与进程相关的cgroups信息。cg_list是一个嵌入式的list_head结构，将链到同一个css_set的进程组织成一个链表。</p>
-<pre><code>struct css_set{
-  atomic_t refcount;
-  struct hlist_node hlist;
-  struct list_head tasks;
-  struct list_head cg_links;
-  struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
-  struct rcu_head ruc_head;
-};
-</code></pre><p>其中，refcount是该css_set的引用数，因为一个css_set可以被多个进程公用，只要这些进程的cgroups信息相同。</p>
-<p>hlist是嵌入的hlist_node，用于把所有css_set组成一个hash表，这样内核可以快速定位css_set。</p>
-<p>tasks指向所有连到此css_set的进程指向的链表。</p>
-<p>cg_links指向一个由struct_cg_group_link连城的链表。</p>
-<p>subsys是一个指针数组，存储一组指向cgroup_subsys_state的指针，一个cgroup_subsys_state就是进程与一个特定子系统相关的信息。通过这个数组，进程可以获得相应的cgroup控制信息了。</p>
-<pre><code>struct cgroup_subsys_state{
-  struct cgroup *cgroup;
-  atomic_t refcnt;
-  unsigned long flags;
-  struct css_id *id;
-};
-</code></pre><p>*cgroup指向一个cgroup结构，也就是进程属于的cgroup。</p>
-<pre><code>task_struct--&gt;css_set--&gt;cgroup_subsys_state--&gt;cgroup
-</code></pre><p>这样进程就和cgroup连接起来了。</p>
-<pre><code>struct cgroup{
-  unsigned long flags;
-  atomic_t count;
-  struct list_head sibling;
-  struct list_head children;
-  struct cgroup *parent;
-  struct dentry *dentry;
-  struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT]
-  struct cgroupfs_root *root;
-  struct cgroup *top_cgroup;
-  struct list_head css_sets;
-  struct list_head release_list;
-  struct list_head pidlists;
-  struct mutex pidlist_mutex;
-  struct rcu_head rcu_head;
-  struct list_head event_list;
-  spinlock_t event_list_lock;
-};
-</code></pre><p>sibling,children,parent三个嵌入的list_head负责将同一层级的cgroup连接成一颗cgroup树。</p>
-<p>subsys指针数组，存储一组指向cgroup_subsys_state的指针。这组指针指向了此cgroup跟各个子系统相关的信息。类似css_set中。</p>
-<p>root指向一个cgroupfs_root结构，就是cgroup所在层级对应的结构体。</p>
-<p>top_cgroup指向了所在层级的根cgroup，即创建层级时自动创建的那个cgroup。</p>
-<p>css_set指向一个由struct_cg_cgroup_link连成的链表。</p>
-<pre><code>struct cg_cgroup_link{
-  struct list_head cgrp_link_list;
-  struct cgroup *cgrp;
-  struct list_head cg_link_list;
-  struct css_set *cg;
-};
-</code></pre><p>cgrp_link_list连入到 cgroup-&gt;css_set链表，cgrp指向此cg_group_link相关的cgroup。</p>
-<p>cg_link_list连入到css_set-&gt;cg_links指向的链表，cg指向此cg_group_link相关的css_set。</p>
-<p>cgroup和css_set是一个多对多的关系，必须添加一个中间结构来将两者联系起来，这既是cg_cgroup_link的作用。cgrp和cg为此结构体的联合主键，cgrp_link_list和cg_link_list分别连入cgroup和css_set，使后两者都可以尽心遍历查询。</p>
-<p>####为什么cgroup和css_set是多对多的关系？<br>一个进程对应一个css_set，一个css_set存储了一组进程跟各个子系统相关的信息，但是这些信息由可能不是从一个cgroup那里获得的，因为一个进程可以同时属于多个cgroup，只要这些cgroup不在同一个层级。</p>
-<pre><code>eg：
-我们创建一个层级A，A上面附加了CPU和memory两个子系统，进程a属于A的根cgroup；创建一个层级B，B上面附加了ns和blkio两个子系统，进程a也属于B的根cgroup；那么进程a对应的CPU和memory是从A的根cgroup获得的，ns和blkio则是从B的根cgroup获得。因此一个css_set存储的cgroup_subsys_state可以对应多个cgroup。另一方面cgroup也存储了一组cgroup_subsys_state，这一组则是cgroup从所在的层级附加的子系统获得的。一个cgroup可以有多个进程，这些进程的css_set不一定都相同，因为有些进程可能还加入了其他cgroup，但是同一个cgroup中的进程与该cgroup关联的cgroup_subsys_state都受到该cgroup的管理，所以一个cgroup也可以对应多个css_set。
-</code></pre><p>从前面的分析，我们可以看出从 task 到 cgroup 是很容易定位的，但是从 cgroup 获取此 cgroup 的所有的 task 就必须通过这个结构了。每个进程都回指向一个 css_set，而与这个 css_set 关联的所有进程都会链入到 css_set-&gt;tasks 链表，而 cgroup 又通过一个中间结构 cg_cgroup_link 来寻找所有与之关联的所有 css_set，从而可以得到与 cgroup 关联的所有进程。<br><img src="http://ofacak8l3.bkt.clouddn.com/cgroups_1.png" alt="cgroups_1"></p>
-<p>上面这个图从整体结构上描述了进程与 cgroups 之间的关系。最下面的P代表一个进程。每一个进程的描述符中有一个指针指向了一个辅助数据结构css_set（cgroups subsystem set）。 指向某一个css_set的进程会被加入到当前css_set的进程链表中。一个进程只能隶属于一个css_set，一个css_set可以包含多个进程，隶属于同一css_set的进程受到同一个css_set所关联的资源限制。</p>
-<p>上图中的”M×N Linkage”说明的是css_set通过辅助数据结构可以与 cgroups 节点进行多对多的关联。但是 cgroups 的实现不允许css_set同时关联同一个cgroups层级结构下多个节点。 这是因为 cgroups 对同一种资源不允许有多个限制配置。</p>
-<p>一个css_set关联多个 cgroups 层级结构的节点时，表明需要对当前css_set下的进程进行多种资源的控制。而一个 cgroups 节点关联多个css_set时，表明多个css_set下的进程列表受到同一份资源的相同限制。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1587,8 +1775,8 @@ struct list_head cg_list;
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">38</span>
-              <span class="site-state-item-name">Artikel</span>
+              <span class="site-state-item-count">40</span>
+              <span class="site-state-item-name">posts</span>
             </a>
           </div>
 
@@ -1597,8 +1785,8 @@ struct list_head cg_list;
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">10</span>
-                <span class="site-state-item-name">Tags</span>
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">tags</span>
               </a>
             </div>
           
@@ -1642,7 +1830,7 @@ struct list_head cg_list;
 </div>
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

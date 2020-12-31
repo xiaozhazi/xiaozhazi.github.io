@@ -1,0 +1,671 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="随记," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="1207-1213Go知识图谱 图片链接
+代码规范[曹大博客] (https://mp.weixin.qq.com/s/MRZZOX7cZPIJPelcuihXUw)主要总结了初级程序员容易犯的代码不规范问题: 
+
+命名规范: 业务内部逻辑变量命名讲究单词打全,函数名尽量能让人清晰明了其功能.
+魔法数字: 在配置文件中集中维护特殊变量,可以引入各种方便的配置系统.可以即时修改和配置下发无需系统上下">
+<meta property="og:type" content="article">
+<meta property="og:title" content="学习笔记W1">
+<meta property="og:url" content="http://xiaozhazi.github.io/2020/12/13/学习笔记W1/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="1207-1213Go知识图谱 图片链接
+代码规范[曹大博客] (https://mp.weixin.qq.com/s/MRZZOX7cZPIJPelcuihXUw)主要总结了初级程序员容易犯的代码不规范问题: 
+
+命名规范: 业务内部逻辑变量命名讲究单词打全,函数名尽量能让人清晰明了其功能.
+魔法数字: 在配置文件中集中维护特殊变量,可以引入各种方便的配置系统.可以即时修改和配置下发无需系统上下">
+<meta property="og:updated_time" content="2020-12-31T14:34:20.744Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="学习笔记W1">
+<meta name="twitter:description" content="1207-1213Go知识图谱 图片链接
+代码规范[曹大博客] (https://mp.weixin.qq.com/s/MRZZOX7cZPIJPelcuihXUw)主要总结了初级程序员容易犯的代码不规范问题: 
+
+命名规范: 业务内部逻辑变量命名讲究单词打全,函数名尽量能让人清晰明了其功能.
+魔法数字: 在配置文件中集中维护特殊变量,可以引入各种方便的配置系统.可以即时修改和配置下发无需系统上下">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2020/12/13/学习笔记W1/"/>
+
+  <title> 学习笔记W1 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                学习笔记W1
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Posted on</span>
+            <time itemprop="dateCreated" datetime="2020-12-13T22:00:00+08:00" content="2020-12-13">
+              2020-12-13
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1207-1213"><a href="#1207-1213" class="headerlink" title="1207-1213"></a>1207-1213</h2><h3 id="Go知识图谱"><a href="#Go知识图谱" class="headerlink" title="Go知识图谱"></a>Go知识图谱</h3><p> <a href="https://www.processon.com/view/link/5a9ba4c8e4b0a9d22eb3bdf0#map" target="_blank" rel="external">图片链接</a></p>
+<h3 id="代码规范"><a href="#代码规范" class="headerlink" title="代码规范"></a>代码规范</h3><p>[曹大博客] (<a href="https://mp.weixin.qq.com/s/MRZZOX7cZPIJPelcuihXUw" target="_blank" rel="external">https://mp.weixin.qq.com/s/MRZZOX7cZPIJPelcuihXUw</a>)<br>主要总结了初级程序员容易犯的代码不规范问题: </p>
+<ul>
+<li>命名规范: 业务内部逻辑变量命名讲究单词打全,函数名尽量能让人清晰明了其功能.</li>
+<li>魔法数字: 在配置文件中集中维护特殊变量,可以引入各种方便的配置系统.可以即时修改和配置下发无需系统上下线. 如java中常用的disconf,或借助现在流行的etcd/zookeeper自己开发</li>
+<li>配置文件长度: 对配置文件进行业务逻辑分类(掌握好粒度,配置文件最好有对应的comment进行检索,将系统模块拆分不同模块管理自己的配置文件)</li>
+<li>函数内容长度: 根据功能进行简单的小函数划分</li>
+<li>滥用回调:使用消息队列来解耦.如果系统里发生一个事件,其他模块对事件的数据有依赖,那么就让其订阅系统里产生的消息即可.(Kafka)不过可能会由于引入基于消息队列的分布式系统产生可靠性问题,saga pattern可以解决部分问题.</li>
+<li>分层结果返回没有明确界限和定义: 设计模式修炼,但是要避免滥用设计模式</li>
+<li>公共接口不可重入</li>
+<li>访问数据库不做批量: 即使存在数据库连接池,也要尽可能批量操作提升性能</li>
+<li>尽量少用if else多层嵌套</li>
+<li>数据库查询使用开源builder来减少函数</li>
+<li>工作流系统update前判断修改前的状态</li>
+<li>考虑线程安全问题:有全局map之类的变量访问时考虑加锁</li>
+<li>open资源用后关闭<h3 id="栈内存管理原理分析"><a href="#栈内存管理原理分析" class="headerlink" title="栈内存管理原理分析"></a>栈内存管理原理分析</h3><a href="https://mp.weixin.qq.com/s/1laT9M9WlLldFMYhkKxzsg" target="_blank" rel="external">链接</a><br>介绍了源码runtime/stack.go中是如何管理栈内存的</li>
+</ul>
+<h4 id="堆内存管理"><a href="#堆内存管理" class="headerlink" title="堆内存管理"></a>堆内存管理</h4><p>C语言申请内存通过调用malloc函数指定分配大小向操作系统直接申请,会涉及用户态和内核态的切换,导致性能下降.<br>Golang的内存管理基于tmalloc模型设计,但是局部缓存并不分配给进程/线程,而是分配给P;GC是STW,并不是每个进程单独GC.</p>
+<ul>
+<li>span: golang内存管理的基本单位,管理指定规格(page为单位,67种)的内存块. 最大32KB,超过32KB大小的由特殊的class表示,该classID=0.每个class只包含一个对象.</li>
+<li>内存管理单元: 内存分配器器由mcache,mcentral,mheap组成<ul>
+<li>mcache绑定在P上,用来给协程分配对象存储空间,不需要锁.初始化时没有任何mspan资源,使用过程中动态申请,通过双向链表连接;</li>
+<li>mcentral是公共资源,会有多个mcache向它申请mspan,需要加锁.</li>
+<li>mheap,当mcentral空间不足会向mheap申请新的页,也需要加锁.</li>
+</ul>
+</li>
+<li>分配原则:<ul>
+<li>tiny对象,直接向mcache的tiny对象分配器申请,空间不足时向mcache的tinySpanClass规格的span链表申请,没有继续向mcentral申请对应规格mspan,依旧没有则向mheap申请,最后都不存在向操作系统申请;</li>
+<li>小对象内存分配,先向本线程mcache申请,mspan没有空闲空间-&gt;mcentral-&gt;mheap-&gt;OS page</li>
+<li>大对象内存分配,直接向mheap申请spanclass=0,没有向操作系统申请</li>
+</ul>
+</li>
+<li>GC改进: <ul>
+<li>1.12版本对mheap结构添加了reclaimCredit成员变量,每次mcentral向mheap申请新的page创建span时,先扫描arenas里面的heapArena,清理GC需回收的page数量空间,由于扫描不可能刚好相等,多清理的page大小存到reclaimCredit里.下次再次扫描时先抵消这部分不够再扫描.防止mheap使用率过快增长.</li>
+<li>1.12版本mheap引入scavengeCredit成员变量，当向操作系统申请内存空间的时候，会先去扫描free这个二叉树堆,span从大到小的扫描，释放所需大小的空间给os，多余释放的存储scavengeCredit中，下次再次扫描的时候会先扣除这个值。<h4 id="全局栈内存初始化"><a href="#全局栈内存初始化" class="headerlink" title="全局栈内存初始化"></a>全局栈内存初始化</h4>go程序启动时调用stackinit()初始化,涉及两个重要全局变量stackpool/stackLarge, mspanList初始化头尾为nil. <h4 id="申请内存"><a href="#申请内存" class="headerlink" title="申请内存"></a>申请内存</h4></li>
+</ul>
+</li>
+<li>_StackMin：值为2048,表示go 代码使用最小的栈空间大小</li>
+<li>stackalloc()的stacksize 是一个根据当前系统计算出来的值，win64=8kb、win32=4kb、plan9=4kb、其他系统如linux/bsd/drawin=2kb</li>
+<li>从空闲池中分配栈空间，如果池为空，则向mheap申请内存，并把多余的空间缓存到池中<h4 id="栈扩容"><a href="#栈扩容" class="headerlink" title="栈扩容"></a>栈扩容</h4>linux系统下协程初始栈空间大小为仅仅只有2KB很小，仅分配了保障协程运行的最小空间。go的策略是按需申请，动态扩容，尽量减少内存浪费，每次扩容时会调用运行时方法runtime.morestack(SB) -&gt;runtime.newstack(SB) 。<h4 id="栈收缩"><a href="#栈收缩" class="headerlink" title="栈收缩"></a>栈收缩</h4>栈收缩是由gc触发执行的源码位置runtime/mgcmark.go，收缩时调用方法shrinkstack</li>
+</ul>
+<h3 id="深入理解StatefulSet"><a href="#深入理解StatefulSet" class="headerlink" title="深入理解StatefulSet"></a>深入理解StatefulSet</h3><p><a href="https://mp.weixin.qq.com/s/y60q0-RMh8isd4u4PuLfUg" target="_blank" rel="external">深入理解StatefulSet</a></p>
+<p>StatefulSet是一种特殊的Deployment，它使用K8S里的两个标准功能Headless Service和PVC实现对拓扑状态和存储状态的维护。通过Headless Service管控每个Pod创建一个固定不变的DNS域名作为Pod在集群的网络标识。加上为Pod编号并严格按照编号顺序进行Pod调度，保证了StatefulSet对维护应用拓扑状态的支持。StatefulSet定义文件中的volumeClainTemplates声明Pod使用的PVC，它创建出来的PVC会以名称编号与Pod进行绑定，借助PVC独立于Pod的生命周期完成对应用存储状态的维护。</p>
+<h3 id="分布式事务的实现原理"><a href="#分布式事务的实现原理" class="headerlink" title="分布式事务的实现原理"></a>分布式事务的实现原理</h3><p><a href="https://draveness.me/distributed-transaction-principle/" target="_blank" rel="external">分布式事务的实现原理</a></p>
+<p>数据库事务拥有ACID四大特性：</p>
+<ul>
+<li>Atomicity  原子性</li>
+<li>Consistency 一致性</li>
+<li>Isolation 隔离性</li>
+<li>Durability 持久性</li>
+</ul>
+<p>为了保证事务能在执行任意过程中回滚(原子性)并且提交的事务会永久保存在数据库中，使用事务日志来存储事务执行过程中数据库的变动，每个事务日志包含事务ID、当前被修改的元素、变动前后的值。当事务尝试对数据库进行修改时，先生成一条日志并刷新到磁盘中（append追加速度比较快），然后才会向数据库写入或更新相应的记录。</p>
+<p>MYSQL中常用的存储引擎InnoDB中，事务日志有undo log、redo log两种。</p>
+<p>并发执行SQL过程中可能无法保证数据库对隔离性的要求，为了避免并发带来的一致性问题、满足数据库对隔离性的要求，数据库系统往往都会使用并发控制机制来充分利用效率。常用的有：锁、时间戳、MVCC</p>
+<h4 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h4><p>单机中相对可靠的方法调用以及进程间通信方式没办法使用，由于网络不稳定服务之间的传递会出现障碍。分布式事务就是在不可靠的通信下实现事务的特性，分布式事务也会依赖数据库、Zookeeper、ETCD等服务追踪事务的执行过程，保证事务特性。</p>
+<ul>
+<li>2PC： 两阶段提交分为投票阶段和提交阶段，在投票阶段协调者向事务的参与者询问是否可以执行操作的请求，等待参与者相应。参与者执行相应的事务操作并记录重做和回滚日志，所有执行成功的参与者向协调者发送AGGREMENT/ABORT表示执行操作结果。协调者根据投票结果向参与者发送提交或回滚指令。两阶段提交是一种阻塞协议，如果事务执行过程中协调者宕机，事务的一部分参与者将永远无法完成事务，可能出现参与者状态不一致的问题。</li>
+<li>3PC：为了解决上述问题，引入超时机制和准备阶段。如果协调者或者参与者在规定时间内没有接收到来自其他节点的响应根据当前的状态选择提交或终止整个事务。当参与者向协调者发送 ACK 后，如果长时间没有得到协调者的响应，在默认情况下，参与者会自动将超时的事务进行提交，不会像两阶段提交中被阻塞住；</li>
+</ul>
+<p>MySQL 的 InnoDB 引擎其实能够支持分布式事务，即 XA 事务；XA 事务就是用了2PC实现分布式事务，其中事务管理器为协调者，而资源管理器就是分布式事务的参与者。XA 确实能够保证较强的一致性，但是在 MySQL XA 的执行过程中会对相应的资源加锁，阻塞其他事务对该资源的访问，如果事务长时间没有 COMMIT 或者 ROLLBACK，其实会对数据库造成比较严重的影响。</p>
+<h4 id="Saga"><a href="#Saga" class="headerlink" title="Saga"></a>Saga</h4><p>两阶段提交其实可以保证事务的强一致性，但是在很多业务场景下，我们其实只需要保证业务的最终一致性，在一定的时间窗口内，多个系统中的数据不一致是可以接受的，在过了时间窗口之后，所有系统都会返回一致的结果。放弃满足ACID，选择实现 BASE(Basic Availability, Soft, Eventual consistency) 事务。</p>
+<p>Saga 其实就一种简化的分布式事务解决方案，它将一系列的分布式操作转化成了一系列的本地事务，在每一个本地事务中我们都会更新数据库并且向集群中的其他服务发送一条的新的消息来触发下一个本地的事务；一旦本地的事务因为违反了业务逻辑而失败，那么就会立刻触发一系列的回滚操作来撤回之前本地事务造成的副作用。</p>
+<p>Sagas解决长事务问题。</p>
+<h3 id="一周算法汇总"><a href="#一周算法汇总" class="headerlink" title="一周算法汇总"></a>一周算法汇总</h3><p><a href="https://leetcode.com/problems/jump-game/" target="_blank" rel="external">lc55_jump-game_Medium</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc55_jumpgame.go" target="_blank" rel="external">实现</a></p>
+<p><a href>lc51_nqueen_Hard</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc51_nqueen.go" target="_blank" rel="external">实现</a></p>
+<p><a href="https://leetcode-cn.com/problems/coin-change/" target="_blank" rel="external">lc322_coin-change_Medium</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc322_coinchange.go" target="_blank" rel="external">实现</a><br><a href="https://leetcode.com/problems/shortest-subarray-with-sum-at-least-k/" target="_blank" rel="external">lc862_shortest-subarray-with-sum-at-least-k_Hard</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc862_subarraywithsumatleastk.go" target="_blank" rel="external">实现</a></p>
+<p><a href="https://leetcode-cn.com/problems/house-robber/" target="_blank" rel="external">lc198_house-robber_Easy</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc198_houserobber.go" target="_blank" rel="external">实现</a><br><a href="https://leetcode-cn.com/problems/fancy-sequence" target="_blank" rel="external">lc1622_fancy-sequence_Hard</a><br><a href="https://github.com/xiaozhazi/leetcode_go/blob/master/lc1622_fancysequence.go" target="_blank" rel="external">实现</a></p>
+<h3 id="面试问题汇总"><a href="#面试问题汇总" class="headerlink" title="面试问题汇总:"></a>面试问题汇总:</h3><ol>
+<li><p>new 和 make的区别<br>答:<br>参考这篇文章<a href="https://draveness.me/golang/docs/part2-foundation/ch05-keyword/golang-make-and-new/" target="_blank" rel="external">Go语言中的make和new</a><br>make是初始化内置的数据结构,如切片,哈希表,channel;<br>在编译期间的类型检查阶段,GO语言将代表make关键字的OMAKE节点根据参数类型不同转换为OMAKESLICE,OMAKEMAP,OMAKECHAN三种节点,这些节点调用不同的运行时函数来初始化相应数据结构.</p>
+<ul>
+<li>slice := make([]int, 0, 100)</li>
+<li>hash := make(map[int]bool, 10)</li>
+<li>channel := make(chan int, 5)<br>new的作用是根据传入的类型分配一片内存空间,并返回这片内存空间的指针.<br>对于new关键字编译器会在中间代码生成阶段先转换为ONEWOBJ类型的阶段,然后根据申请内存空间大小:0返回表示空指针的zerobase变量,反之转换成runtime.newobject函数在堆上申请内存.<br>其中runtime.newobject函数会是获取传入类型占用空间的大小,调用runtime.malloc并返回指向这片内存的指针</li>
+<li>i := new(int) </li>
+<li>var v int | i := &amp;v</li>
+</ul>
+</li>
+<li><p>go 引用类型有哪些<br>答：<br>值类型有int，float， bool， string， 数组， struct<br>引用类型有 指针，slice切片，map，channel，函数等<br>两者的区别是，值类型变量直接存储值，内存通常在栈中分配；引用类型变量通常存储的是一个地址，这个地址对应的内存空间存储真正的数值，内存通常在堆中分配。</p>
+</li>
+<li><p>go的内存模型中，为什么小对象多了会造成gc压力<br>答： 小对象过多会导致GC三色法消耗过多的GPU</p>
+</li>
+<li><p>将10阶对称矩阵压缩存储到一维数组A中，则数组A的长度最少为 10*10/2</p>
+</li>
+<li><p>golang中selct的多个case同时成立时，选择的是哪一个？<br>答： select在遇到多个Channel同时响应时会随机挑选case执行， 这个设计是十多年前select提交引入并一直保留到现在的。如果多个条件满足时我们按顺序执行，那么后面的条件将会得不到执行，随机的引入是为了避免饥饿问题的发生。</p>
+</li>
+<li><p>golang 中除了使用 sync 锁，还可以如何保证并发安全? atomic 是什么？<br>答： golang的auomic院子操作是所有锁机制中效率最高的，能够使用原子操作的地方尽量使用。</p>
+</li>
+<li><p>sync.Map 对键的类型有什么要求么？<br>答： go语言规定键类型的值之间必须支持==和！=操作符判断，而函数类型，字典类型，切片类型不支持判等操作，因此键类型不能是上述几种类型。</p>
+</li>
+<li><p>如何避免死锁? golang 中如何检测死锁?<br>答： </p>
+</li>
+<li><p>不使用 goroutine 怎么实现监听三个 channel，合并三个 channel，变成一个新的 channel，这三个任意有消息的时候都要给 新 channel 传递，都没消息的时候要关闭那个新的 channel？</p>
+<p> func merge(ins …&lt;-chan string) &lt;- chan string {<br>   var wg sync.WaitGroup<br>   out := make(chan string)</p>
+<p>   p := func (in &lt;-chan string) {</p>
+<pre><code>defer wg.Done()
+for c := range in {
+  out &lt;-c
+}
+</code></pre><p>   }<br> }</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/随记/" rel="tag">#随记</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/11/14/深入理解计算机系统第8周/" rel="next" title="《深入理解计算机系统》第8周">
+                <i class="fa fa-chevron-left"></i> 《深入理解计算机系统》第8周
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/12/25/学习笔记W2/" rel="prev" title="学习笔记W2">
+                学习笔记W2 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">40</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1207-1213"><span class="nav-number">1.</span> <span class="nav-text">1207-1213</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Go知识图谱"><span class="nav-number">1.1.</span> <span class="nav-text">Go知识图谱</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码规范"><span class="nav-number">1.2.</span> <span class="nav-text">代码规范</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#栈内存管理原理分析"><span class="nav-number">1.3.</span> <span class="nav-text">栈内存管理原理分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#堆内存管理"><span class="nav-number">1.3.1.</span> <span class="nav-text">堆内存管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#全局栈内存初始化"><span class="nav-number">1.3.2.</span> <span class="nav-text">全局栈内存初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#申请内存"><span class="nav-number">1.3.3.</span> <span class="nav-text">申请内存</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#栈扩容"><span class="nav-number">1.3.4.</span> <span class="nav-text">栈扩容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#栈收缩"><span class="nav-number">1.3.5.</span> <span class="nav-text">栈收缩</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#深入理解StatefulSet"><span class="nav-number">1.4.</span> <span class="nav-text">深入理解StatefulSet</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分布式事务的实现原理"><span class="nav-number">1.5.</span> <span class="nav-text">分布式事务的实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式事务"><span class="nav-number">1.5.1.</span> <span class="nav-text">分布式事务</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Saga"><span class="nav-number">1.5.2.</span> <span class="nav-text">Saga</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一周算法汇总"><span class="nav-number">1.6.</span> <span class="nav-text">一周算法汇总</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#面试问题汇总"><span class="nav-number">1.7.</span> <span class="nav-text">面试问题汇总:</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
