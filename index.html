@@ -235,6 +235,830 @@
             
               
                 
+                <a class="post-title-link" href="/2021/03/10/GO学习--调度器源码分析/" itemprop="url">
+                  GO学习--调度
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-03-10T22:00:00+08:00" content="2021-03-10">
+              2021-03-10
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="CPU寄存器"><a href="#CPU寄存器" class="headerlink" title="CPU寄存器"></a>CPU寄存器</h2><ul>
+<li>通用寄存器： rax,rbx,rcx,rdx,rsi,rdi,rbp,rsp,r8-r15 64位，可以作为32/16/8位寄存器使用，需要换个名字，如eax，ax，al/ah</li>
+<li>程序计数器： rip，存放下一条即将执行的指令地址  64位</li>
+<li>段寄存器：fs和gs。一般用来实现线程本地存储TLS。 16位</li>
+</ul>
+<h2 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h2><p>一个内存单元是1字节，任何大于一个字节的变量在内存中都存储在相邻连续的的几个内存单元之中。存储模式有两种（存储模式和CPU相关）：</p>
+<ul>
+<li>大端：数据的高字节保存在内存的低地址中，低字节保存在高地址中</li>
+<li>小端：数据的高字节保存在内存的高地址中，低字节保存在低地址中</li>
+</ul>
+<h2 id="函数调用栈"><a href="#函数调用栈" class="headerlink" title="函数调用栈"></a>函数调用栈</h2><p>进程在内存中的布局： 从高到低 内核-&gt;栈-&gt;堆-&gt;全局数据-&gt;代码-&gt;系统保留区</p>
+<ul>
+<li>代码：能被CPU执行的机器代码（指令）和只读数据（如字符串常量），程序加载后该区域大小不变化</li>
+<li>全局数据：程序的全局变量，静态变量（C中有Go不包含），程序加载后大小不变</li>
+<li>堆： 程序运行时动态分配的内存，由内存分配器管理。大小随程序运行而变化。C++代码必须小心处理内存分配和释放，GO有垃圾回收器。</li>
+</ul>
+<p>栈主要用来：保存函数局部变量；向被调用函数传参；返回函数的返回值；保存函数的返回地址（指从被调用函数返回后调用者应该继续执行的指令地址）</p>
+<p>位于栈内存中的函数局部变量所使用的内存随函数调用而分配，随函数返回后自动释放。rsp寄存器始终指向栈顶，rbp寄存器指向函数栈帧的起始位置。</p>
+<p>即便是同一个函数，每次调用都会产生一个不同的栈帧，因此对于递归要考虑是否存在栈溢出的风险。</p>
+<h2 id="汇编指令"><a href="#汇编指令" class="headerlink" title="汇编指令"></a>汇编指令</h2><p>AT&amp;T格式的汇编指令格式：</p>
+<ul>
+<li>寄存器名前要加%作为前缀</li>
+<li>有2个操作数的，第一个为源操作数，第二个为目的操作数。</li>
+<li>立即操作数前面$前缀</li>
+<li>寄存器间接寻址的格式为offset(%register)，offset为0时省去。 括号也省去时表示直接寻址</li>
+</ul>
+<p>常用指令：</p>
+<ul>
+<li>add/sub</li>
+<li>call/ret call首先会把rip寄存器的值入栈，然后设置rip值为目标地址。ret指令从被调用函数返回调用函数，实现原理是把call入栈的返回地址返回弹出给rip寄存器</li>
+<li>jmp/je/jle/jge 跳转指令</li>
+<li>push/pop指令，自动修改rsp寄存器</li>
+<li>leave 指令没有操作数，一般放在函数尾部ret指令之前，用于调整rsp和rbp</li>
+</ul>
+<h2 id="GO汇编语言"><a href="#GO汇编语言" class="headerlink" title="GO汇编语言"></a>GO汇编语言</h2><p>引入了几个没有任何硬件寄存器对应的虚拟寄存器：</p>
+<ul>
+<li>FP虚拟寄存器: 主要用来引用函数参数，指向调用者的栈帧</li>
+<li>SB寄存器：保存程序地址空间的起始地址。即代码区的起始地址。主要用来定位全局符号</li>
+</ul>
+<p>操作码： 寄存器操作码没有%前缀，且寄存器名称用大写<br>操作数宽度： 寄存器名称没有位数之分，操作码带后缀B(8) W(16) D(32) Q(64)</p>
+<p>TEXT runtime·gogo(SB), NOSPLIT, $16-8</p>
+<ul>
+<li>TEXT runtime·gogo(SB) 在代码区定义一个名称为gogo的全局函数，函数属于runtime包</li>
+<li>NOSPLIT 编译器不要在此函数中插入栈是否溢出的代码</li>
+<li>$16-8 函数栈帧大小为16字节，参数和返回值一共占用8字节。</li>
+</ul>
+<h2 id="从汇编层面看函数调用的实现原理"><a href="#从汇编层面看函数调用的实现原理" class="headerlink" title="从汇编层面看函数调用的实现原理"></a>从汇编层面看函数调用的实现原理</h2><p>函数调用过程:</p>
+<ul>
+<li>参数传递：GCC编译器的C、C++代码一般通过寄存器传递参数，在AMD64 linux平台，gcc约定函数调用前面6个参数分别通过rdi rsi rdx r10 r8 r9传递。GO语言通过栈传递给别调用函数，最后一个参数最先入栈。参数在调用者的栈帧中，被调用函数通过rsp加一定的偏移量来获取参数；</li>
+<li>call指令负责把执行call指令的rip寄存器入栈 （函数返回地址）</li>
+<li>GCC通过rbp+偏移量的方式来访问局部和临时变量。GO编译器则通过rsp寄存器加偏移量的方式</li>
+<li>ret指令负责将call指令入栈的返回地址出站给rip，从而实现从被调用函数返回后继续执行</li>
+<li>GCC使用rax寄存器返回函数的返回值，GO语言使用栈返回函数调用的返回值。</li>
+</ul>
+<p>main函数<br>push %rbp<br>mov %rsp，%rbp<br>sub $0x20,%rsp 栈给函数局部变量和临时变量预留32字节栈空间</p>
+<p>普通函数开始<br>push %rbp<br>mov %rsp，%rbp</p>
+<p>leaveq 相当于：<br>mov %rbp，%rsp<br>pop %rbp</p>
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><p>系统调用是指使用类似函数调用的方式调用操作系统提供的API。</p>
+<p>用户代码调用操作系统API不是通过函数名调用，而是需要根据操作系统为每个API提供一个整型编号来调用。AMD64 Linux约定在系统调用时用rax寄存器存放该编号，同时约定使用rdi rsi rdx r10 r8 r9来传递前6个系统调用参数。</p>
+<pre><code>mov   0x10(%rsp),%rdi #第1个参数
+mov   0x18(%rsp),%rsi #第2个参数
+mov   0x20(%rsp),%rdx #第3个参数
+mov   0x28(%rsp),%r10 #第4个参数
+mov   0x30(%rsp),%r8  #第5个参数
+mov   0x38(%rsp),%r9  #第6个参数
+mov   0x8(%rsp),%rax  #系统调用编号 rax = 267，表示调用openat系统调用
+syscall               #系统调用指令，进入Linux内核
+</code></pre><h2 id="操作系统线程及线程调度"><a href="#操作系统线程及线程调度" class="headerlink" title="操作系统线程及线程调度"></a>操作系统线程及线程调度</h2><p>C语言中一般使用pthread线程库，其创建的用户态线程其实就是Linux内核所支持的线程。和Go语言工作线程一样，都是由Linux内核负责管理和调度。</p>
+<p>Go语言在操作系统线程之上又做了Goroutine，实现了一个二级线程模型。</p>
+<ul>
+<li><p>什么时候会发生调度？</p>
+<ul>
+<li>用户程序使用系统调用进入操作系统内核；</li>
+<li>硬件中断。硬件中断由操作系统提供，当硬件发生中断时，就会执行操作系统代码。其中比较重要的是时钟中断，这是操作系统发起抢占调度的基础。</li>
+</ul>
+</li>
+<li><p>调度的时候会做哪些事情？<br>操作系统把不同的线程调度到同一个CPU上运行，每个线程都会使用CPU的寄存器。所以操作系统把线程B调度运行时首先把之前的A线程所使用的寄存器值保存在内存。然后把保存在内存中的B线程的寄存器值放回CPU寄存器，接着线程B恢复之前状态运行。</p>
+</li>
+</ul>
+<p>线程调度时操作系统还需要保存指令指针寄存器rip以及与栈相关的rsp和rbp。所以恢复寄存器的值相当于改变的CPU下一条需要执行的指令，同时切换了函数调用栈。</p>
+<p>因此可以对线程进行如下定义： 操作系统线程是由内核负责调度且拥有自己私有的一组寄存器值和栈的执行流。</p>
+<h2 id="线程本地存储及实现原理"><a href="#线程本地存储及实现原理" class="headerlink" title="线程本地存储及实现原理"></a>线程本地存储及实现原理</h2><p>TLS，其实就是存储线程私有的全局变量。 普通的全局变量在多线程中共享，而线程的私有全局变量是其私有财产，每个线程都有一个副本，线程对其修改只会修改到自己的副本。</p>
+<pre><code>int g = 0；
+void* start(void* arg){
+  printf(&quot;start, g[%p]: %d \n&quot;, &amp;g, g)  // print start, g[0x601064] : 100
+  g++;
+  return NULL;
+}
+int main(int argc, char* argv[]) {
+  pthread_t tid;
+  g = 100;
+  pthread_create(&amp;tid, NULL, start, NULL); //start thread to run start()
+  pthread_join(tid, NULL); // wait thread finish
+  printf(&quot;main, g[%p]: %d \n&quot;, &amp;g, g) // print main, g[0x601064] : 101
+  return 0;
+}
+
+------------------------------------------
+__thread int g = 0; 
+void* start(void* arg){
+  printf(&quot;start, g[%p]: %d \n&quot;, &amp;g, g)  // print start, g[0x7f0181b046fc] : 0
+  g++;
+  return NULL;
+}
+int main(int argc, char* argv[]) {
+  pthread_t tid;
+  g = 100;  // =&gt; 0x0000000000400793 &lt;+30&gt;:movl   $0x64,%fs:0xfffffffffffffffc    fs段基址-4
+  pthread_create(&amp;tid, NULL, start, NULL); //start thread to run start()
+  pthread_join(tid, NULL); // wait thread finish
+  printf(&quot;main, g[%p]: %d \n&quot;, &amp;g, g) // print main, g[0x7f01823076fc] : 100
+  return 0;
+}
+
+子线程fs段基地址为0x7f36757c8700，g的地址为0x7f36757c86fc，它正好是基地址 - 4
+主线程fs段基地址为0x7f3675fcb700，g的地址为0x7f3675fcb6fc，它也是基地址 - 4
+</code></pre><p>gcc编译器（其实还有线程库以及内核的支持）使用了CPU的fs段寄存器来实现线程本地存储，不同的线程中fs段基地址是不一样的</p>
+<h2 id="goroutine简介"><a href="#goroutine简介" class="headerlink" title="goroutine简介"></a>goroutine简介</h2><p>操作系统线程有两个问题：</p>
+<ul>
+<li>创建和切换开销过大： 都需要进入内核，存在性能消耗 </li>
+<li>内存使用过大：内核在创建线程时都会默认为其分配一个较大的栈内存（虚拟地址空间），多数情况下用不了。栈内存空间创建后就不会变化，在某些场景下存在溢出风险。</li>
+</ul>
+<p>用户态goroutine则相对轻量级：</p>
+<ul>
+<li>用户态，创建和切换无需进入内核，开销较小；</li>
+<li>启动时默认栈为2K，多数情况足够，不够还可以动态扩容和收缩。</li>
+</ul>
+<p>goroutine建立在操作系统线程基础上，与操作系统线程实现了多对多的两级线程模型。对goroutine的调度就是程序代码按照一定的算法在适当的时候挑选合适的goroutine并放到CPU上运行的过程。</p>
+<p>调度的实质同样也是，通过保存和修改CPU寄存器的值来达到切换线程 goroutine的目的。</p>
+<p>为了实现需要引入一个数据结构来保存cpu寄存器的值以及goroutine的其他状态信息。在Go调度器源码中，这个数据结构是一个g的结构体，保存了goroutine的所有信息。一个实例对象对应了一个goroutine，调度器代码可以通过g对象来对goroutine进行调度。</p>
+<p>仅仅有g结构体对象是不够的，至少还需要一个存放所有goroutine的容器。Go调度器引入schedt结构体，一方面保存调度器自身状态，另一方面还用来保存goroutine的运行队列。 因为每个Go程序中schedt结构体只有一个实例对象，共享的全局变量，每个工作线程都可以访问它，因此它拥有的运行队列为全局运行队列。</p>
+<p>全局队列访问需要频繁加锁，因此调度器又为每个工作线程引入一个私有的局部goroutine运行队列。该局部队列被包含在p结构体的实例对象中。每个运行着go代码的工作线程都会与一个p结构体的实例对象关联在一起。</p>
+<p>代表工作线程的是m结构体，每个工作线程都有唯一一个m结构体的实例对象与之对应。m结构体对象除了记录工作线程的诸如栈的起止位置、当前正在执行的goroutine以及是否空闲等状态信息，还通过指针维持着与p结构体的实例对象之间的绑定关系。</p>
+<p>通过TLS，每个工作线程拥有各自私有的m结构体全局变量，因此能在不同的工作线程中使用相同的全局变量名来访问不同的m结构体对象。</p>
+<pre><code>for i = 0; i &lt; N; i++ {
+  create_os_thread(schedule)
+}
+
+ThreadLocal self *m //定义一个线程私有全局变量，一个指向m结构体对象的指针
+schedule(){
+  self = initm()
+  if(self.p.runqueue is empty) {
+    g = find_a_runnable_goroutine_from_global_runqueue()
+  }else {
+    g = find_a_runnable_goroutine_from_local_runqueue()
+  }
+  run_g(g)
+  save_status_of_g(g)
+}
+</code></pre><p>程序入口 JMP _rt0_amd64(SB)， 这个符号中分别执行了下列步骤<br>    TEXT _rt0_amd64(SB), NOSPLIT, $-8<br>      MOVQ 0(SP), DI  //argc<br>      MOVQ 8(SP), SI //argv<br>      JMP runtime.rt0_go(SB) //rt0_go函数完成了go程序启动时的所有初始化工作</p>
+<p>初始化g0，g0主要作用是提供一个栈供runtime代码执行，这里主要对g0的几个与栈有关的成员进行初始化。 栈大约64K，SP-64<em>1024+104 ~ SP, 其中stackguard1，stackguard0，stack.hi均指向SP-64</em>1024+104， stack.hi指向SP</p>
+<p>主线程和m0绑定，首先调用settls函数初始化主线程的TLS，把m0和主线程关联在一起。验证TLS功能是否正常，不正常直接abort退出程序。主线程通过get_tls可以获取g0，通过g0的m成员又可以找到m0</p>
+<pre><code>//把m0和g0关联起来m0-&gt;g0 =g0，g0-&gt;m =m0
+// save m-&gt;g0 =g0
+MOVQ CX, m_g0(AX) //m0.g0 = &amp;g0
+// save m0 to g0-&gt;m 
+MOVQ AX, g_m(CX) //g0.m = &amp;m0
+</code></pre><p>初始化m0：接下来命令行参数处理完后调用osinit函数获取CPU核数量并保存在全局变量ncpu中。全局变量sched.maxmcount=10000，最多启动1w个工作线程。 mcommoninit将m0放入全局链表allm之中，确保GC不会自动回收。然后继续调用procresize创建和初始化p结构体对象。会创建指定个数（CPU核数和GOMAXPROCS决定）的p结构体对象，然后放到allp全局变量中。并把m0和allp[0]绑定在一起。</p>
+<pre><code>m0.p = allp[0]
+allp[0].m = &amp;m0
+</code></pre><p>至此，m0，g0，和m需要的p完全关联在一起。</p>
+<p>其中，procresize初始化allp流程如下 </p>
+<ul>
+<li>使用make([]*p, nprocs)初始化全局变量allp</li>
+<li>循环创建并初始化nprocs个p结构体对象，并依次放入allp切片中</li>
+<li>把m0和allp[0]绑定在一起，即m0.p=allp[0],allp[0].m=m0</li>
+<li>把除了allp[0]之外的所有p放入全局变量sched.pidle空闲队列之中</li>
+</ul>
+<h2 id="创建main-goroutine"><a href="#创建main-goroutine" class="headerlink" title="创建main goroutine"></a>创建main goroutine</h2><p>schedinit完成调度系统初始化后，返回到rt0_go函数开始调用newproc()创建一个新的goroutine用于执行main函数。</p>
+<p>newproc有两个参数，第二个参数fn是新建的goroutine将从这个fn函数开始执行，第一个参数是fn函数的参数以字节为单位的大小。</p>
+<p>newproc是对newproc1的一个包装，主要获取fn函数第一个参数的地址，另一个使用systemstack函数切换到g0栈上（初始化场景本来就在g0，无需切换）</p>
+<p>newproc1第一个参数fn，第二个参数是fn函数第一个参数的地址，第三个参数是fn参数以字节为单位的大小。其代码主要：从堆上分配一个g结构体对象newg，并为其分配一个2k的栈，并设置好栈成员。然后把newg需要执行的函数参数从newproc函数的栈拷贝到newg栈中。 然后对newg的sched成员初始化，该成员包含了调度器代码在调度goroutine到CPU运行时所必须的一些信息。其中sched的sp表示newg被调度运行时应该使用的栈的栈顶，pc成员表示当newg调度运行时从这个地址开始执行指令。</p>
+<p>然而代码中newg.sched.pc被设置成了goexit函数地址＋１，即其第二条指令地址，而不是fn.fn</p>
+<p>主要是因为gostartcallfn函数的处理，其首先从参数fc中提取出函数地址（初始化是runtime.main，然后调用gostartcall函数）。</p>
+<p>gostartcall函数作用：1.调整newg的栈空间，把goexit函数的第二条指令地址入栈，伪造成goexit函数调用了fn，从而使fn执行完ret指令时返回到goexit函数执行最后的清理工作 2.重新设置newg.buf.pc为需要执行的函数的地址，即fn</p>
+<p>newproc1函数最后设置了几个无关调度的成员变量，然后把newg状态改为_Grunnable，并放入运行队列。</p>
+<h2 id="调度main-goroutine"><a href="#调度main-goroutine" class="headerlink" title="调度main goroutine"></a>调度main goroutine</h2><p>mstart1首先调用save函数来保存g0的调度信息。（非常重要，是理解调度循环的关键点之一）</p>
+<pre><code>//getcallerpc()获取mstart1执行完的返回地址
+//getcallersp()获取调用mstart1时的栈顶地址
+save(getcallerpc(), getcallersp())
+
+func save(pc, sp uintptr) {
+  _g_ := getg()
+
+  _g_.sched.pc = pc //再次运行时的指令地址
+  _g_.sched.sp = sp //再次运行时到栈顶
+  _g_.sched.lr = 0
+  _g_.sched.ret = 0
+  _g_.sched.g = guintptr(unsafe.Pointer(_g_))
+  // We need to ensure ctxt is zero, but can&apos;t have a write
+  // barrier here. However, it should always already be zero.
+  // Assert that.
+  if _g_.sched.ctxt != nil {
+      badctxt()
+  }
+}
+</code></pre><p>调度核心函数schedule()</p>
+<pre><code>func schedule(){
+  _g_ := getg()
+  var gp *g
+  if gp == nil {
+    //为了保证调度公平，每进行61次调度就优先从全局队列中获取goroutine
+    if _g_.m.p.ptr().schedtick%61 == 0 &amp;&amp; sched.runqsize &gt; 0 {
+      lock(&amp;sched.lock)
+      gp = globrunqget(_g_.m.p.ptr(),1) //从全局队列中获取1个goroutine
+      unlock(&amp;sched.lock)
+    }
+  }
+  if gp == nil {
+    gp, inheritTime = runqget(_g_.m.p.ptr())
+    if gp != nil &amp;&amp; _g_.m.spinning {
+      throw(&quot;schedule: spinning with local work&quot;)
+    }
+  }
+  //如果本地和全局都没有找到需要运行的，调用findrunnable从其他工作的线程运行队列中偷取，偷取不到则进入睡眠
+  //直到获取到需要运行的goroutine之后findrunnable才返回
+  if gp == nil {
+    gp,inheritTime = findrunnable() //blocks until work is available
+  }
+  execute(gp, inheritTime) //切换到gp的代码和栈空间运行
+}
+
+func execute() {
+  _g_ := getg() //g0
+  casgstatus(gp, _Grunnable, _Grunning)
+  _g_.m.curg = gp
+  gp.m = _g_.m
+  gogo(&amp;gp.sched) //gogo完成从g0到gp真正的切换
+}
+</code></pre><p>execute函数的第一个参数gp即是需要调度起来运行的goroutine，这里首先把gp的状态从_Grunnable修改为_Grunning，然后把gp和m关联起来，这样通过m就可以找到当前工作线程正在执行哪个goroutine，反之亦然。</p>
+<p>完成gp运行前的准备工作之后，execute调用gogo函数完成从g0到gp的的切换：CPU执行权的转让以及栈的切换。</p>
+<p>gogo函数通过汇编编写，因为涉及寄存器及函数调用栈的切换，只能靠汇编指令来达成。</p>
+<ul>
+<li>把gp.sched的成员恢复到CPU的寄存器完成状态以及栈的切换；</li>
+<li>跳转到gp.sched.pc所指的指令地址（runtime.main）处执行</li>
+</ul>
+<p>main函数工作流程：</p>
+<ul>
+<li>启动一个sysmon系统监控线程，该线程负责整个程序的gc、抢占调度以及netpoll等功能的监控，在抢占调度一章我们再继续分析sysmon是如何协助完成goroutine的抢占调度的；</li>
+<li>执行runtime包的初始化；</li>
+<li>执行main包以及main包import的所有包的初始化；</li>
+<li>执行main.main函数；</li>
+<li>从main.main函数返回后调用exit系统调用退出进程；</li>
+</ul>
+<p>runtime.main是main函数的入口，通过schedule()-&gt;execute()-&gt;gogo()调用链的gogo函数中用汇编代码直接跳转过来的，所以不需要返回。</p>
+<p>总结来说 从g0切换到main goroutine的流程：</p>
+<ul>
+<li>保存g0的调度信息，主要是保存CPU栈顶寄存器SP到g0.sched.sp成员之中；</li>
+<li>调用schedule函数寻找需要运行的goroutine，我们这个场景找到的是main goroutine;</li>
+<li>调用gogo函数首先从g0栈切换到main goroutine的栈，然后从main goroutine的g结构体对象之中取出sched.pc的值并使用JMP指令跳转到该地址去执行；</li>
+<li>main goroutine执行完毕直接调用exit系统调用退出进程。</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2021/02/23/GO学习--GC/" itemprop="url">
+                  GO学习--GC
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-02-23T22:00:00+08:00" content="2021-02-23">
+              2021-02-23
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="GC的认识"><a href="#GC的认识" class="headerlink" title="GC的认识"></a>GC的认识</h2><ol>
+<li>什么是GC，有什么作用？<br>答： GC即垃圾回收，是一种自动内存管理的机制。 当程序向操作系统申请的内存不再需要时，垃圾回收自动将其回收并供其他代码进行内存申请时复用，或者将其归还给操作系统。<br>通常垃圾回收的执行过程被划分为两个半独立的组件：</li>
+</ol>
+<ul>
+<li>赋值器Mutator：指代用户态的代码。修改对象之间的引用关系，即在对象图上进行操作；</li>
+<li>回收器Collector：执行垃圾回收代码。</li>
+</ul>
+<ol>
+<li><p>根对象是什么？<br>答：在垃圾回收中术语又叫做根集合，是垃圾回收器在标记过程中最先检查的对象。包括：</p>
+<ul>
+<li>全局变量：程序在编译期间就确定的存在于程序整个声明周期的对象；</li>
+<li>执行栈：每个goroutine都包含自己的执行栈，这些执行栈上包含栈上的变量即其指向分配的堆内存块的指针。</li>
+<li>寄存器：寄存器的值可能表示为一个指针，可能指向某些赋值器分配的堆内存区块。</li>
+</ul>
+</li>
+<li><p>常见的GC实现方式有哪些？<br>答： 所有的GC算法其存在的形式可以归结为追踪和引用计数两种形式的混合运用。</p>
+<ul>
+<li>追踪式GC，从根对象出发，根据对象之间的引用信息，一步步推进直到扫描完毕整个堆并确定要保留的对象。Go Java V8对JS的实现均为追踪式GC</li>
+<li>引用计数GC，每个对象自身包含一个被引用的计数器，当计数器归零时自动得到回收。缺陷较高，在追求高性能时不适用。Python，Object-C等均为引用基数。</li>
+</ul>
+</li>
+</ol>
+<p>目前常见的GC实现方式：</p>
+<ul>
+<li>标记清扫： 从根对象出发，将确定存活的进行标记，并清扫可回收的对象；</li>
+<li>标记整理：为了解决内存碎片而提出，在标记过程中将对象尽可能整理到一块连续的内存上；</li>
+<li>增量式：将标记和清扫的过程分批执行，每次执行很小的部分，从而增量的推进垃圾回收，达到近实时无停顿的目的；</li>
+<li>增量整理：在增量式基础上增加整理过程；</li>
+<li>分代式：将对象根据存活时间长短进行分类。存活时间小于某个值为年轻代，大于某个值为老年代，永远不参与回收的为永久代。根据分代假设进行回收（一个对象存活时间不长更倾向于被回收）</li>
+<li>引用计数：根据对象的自身引用计数来回收，归零时立即回收</li>
+</ul>
+<p>Go的GC目前使用的是无分代、不整理、并发的三色标记清扫算法。 原因在于：</p>
+<ul>
+<li>Go运行时的分配算法基于tcmalloc，基本上不存在碎片问题。并且顺序内存分配器在多线程场景下并不适用。因此整理不会带来实质性的性能提升</li>
+<li>Go编译器会通过逃逸分析将大部分新生对象存储在栈上（栈直接被回收），只有那些需要长期存在的对象才会被分配到需要垃圾回收的堆上。分代假设并没有带来直接优势。并且Go的垃圾回收器和用户代码并发执行，使得STW的时间和对象的代际、size没有关系。Go团队更关注如何更好的并发执行而不是减少停顿时间这一单一目标。</li>
+</ul>
+<ol>
+<li>三色标记法是什么？<br>答： 理解三色标记法的关键是理解对象的三色抽象和波面推进。<ul>
+<li>白色对象（可能死亡），未被回收器访问到的对象。在开始阶段所有对象均为白色，当回收结束后白色对象均不可达</li>
+<li>灰色对象（波面）：已经被回收器访问的对象，但回收器需要对其中的一个或多个指针进行扫描，因为他们还可能指向白色对象</li>
+<li>黑色对象（确定存活）：已经被回收器访问的对象且所有字段都已扫描，任何一个指针都不指向白色对象</li>
+</ul>
+</li>
+</ol>
+<p>垃圾回收结束后只有白色和黑色对象。</p>
+<ol>
+<li><p>STW是什么意思？<br>答： STOP the World，指在垃圾回收过程中为了保证实现的正确性、防止无止境的内存增长，而不可避免的需要停止赋值器进一步操作对象图的一段过程。<br>Go1.14之后STW的时间不会超过半个毫秒。</p>
+</li>
+<li><p>如何观察GC？<br>答：</p>
+<ul>
+<li>GODEBUG=gctrace=1 </li>
+<li>go tool trace (调用trace API 可视化展示)</li>
+<li>debug.ReadGCStats</li>
+<li>runtime.ReadMemStats</li>
+</ul>
+</li>
+<li><p>有了GC，为什么还会发生内存泄露？<br>答： 在包含GC的语言中，我们常说的内存泄露是指：预期能很快被释放的内存由于附着在了长期存活的内存上，或生命期意外地被延长，导致预计能够立即回收的内存长时间得不到回收。<br>1）预期很快能释放的内存被根对象引用，而没有迅速释放 （比如将某个变量附着在全局变量上，且忽略将其释放）</p>
+<p> var cache = map[interface{}]interface{}<br> func keepalloc() {<br>   for i := 0; i &lt; 1000; i++ {</p>
+<pre><code>m := make([]byte, 1&lt;&lt;10)
+cache[i] = m
+</code></pre><p>   }<br> }</p>
+</li>
+</ol>
+<p>2) goroutine泄露 （如一个程序不断的产生新的goroutine，且不结束已创建的goroutine并复用这部分内存）</p>
+<pre><code>func keepalloc2(){
+  for i := 0; i &lt; 10000; i++ {
+    go func() {
+      select {}
+    }()
+  }
+}
+//或者channel泄露导致
+var ch = make(chan struct{})
+func keepalloc2(){
+  for i := 0; i &lt; 10000; i++ {
+    go func(){ ch &lt;- struct{}{}}() //没有接收方，goroutine一直阻塞
+  }
+}
+</code></pre><ol>
+<li><p>并发标记清除法的难点是什么？<br>答： 难点在于用户代码在回收过程中会并发的更新对象图，从而造成渎职器和回收器对对象图的机构产生不同的认知。<br>回收器不会重新扫描黑色对象，在扫描完之后用户代码对该黑色对象修改，导致有些对象可能错误地被回收。 因此难点在于如何保证标记和清除过程的正确性。</p>
+</li>
+<li><p>什么是写屏障、混合写屏障，如何实现？<br>答： 垃圾回收器的正确性体现在不应出现对象的丢失，也不应错误的回收还不需要回收的对象。当下面两个条件同时满足时会破坏正确性：</p>
+</li>
+</ol>
+<ul>
+<li>条件1，当赋值器修改对象图，导致某一黑色对象引用白色对象；</li>
+<li>条件2，从灰色对象出发，到达白色对象的、未经访问过的路径被赋值器破坏。<br>只要能够避免其中任何一条件，正确性都能得到满足。因此我们可以将三色不变性所定义的波面根据这两个条件进行削弱：</li>
+<li>当满足原有的三色不变性定义的情况成为强三色不变形</li>
+<li>当赋值器另黑色对象引用白色对象时，称为弱三色不变形<br>当赋值器进一步破坏灰色对象到达白色对象的路径时，即打破弱三色不变形，也就破坏了正确性。</li>
+</ul>
+<p>因此可以引入赋值器的颜色： </p>
+<ul>
+<li>黑色赋值器：已经由回收器扫描过，不会再次对其进行扫描</li>
+<li>灰色赋值器：尚未被回收器扫描过，或尽管已经扫描过，但仍需重新扫描</li>
+</ul>
+<p>为了确保强弱三色不变性的并发指针更新操作，需要通过赋值器屏障技术来保证指针的读写操作一致。</p>
+<p>因此Go中的写屏障、混合写屏障，其实是指赋值器的写屏障，用来保证赋值器在进行指针操作时不会破坏弱三色不变性。</p>
+<p>Dijkstra插入屏障： 避免条件1， 需要标记终止阶段STW时进行重新扫描<br>Yuasa删除屏障：避免条件2，依然会产生丢失的对象，需要在标记前对整个对象图进行快照</p>
+<p>Go在1.8时为了简化GC流程，同时减少标记终止阶段的重新扫描成本，将两种方法进行了混合，形成混合写屏障： 对正在被覆盖的对象进行着色，且如果当前栈未扫描完成，则同样对指针进行着色。</p>
+<p>因为着色成本是双倍的，而且编译器需要插入的代码也成倍增加，随之带来的结果就是编译后的二进制文件大小也进一步增加。 Go 1.10 前后，Go 团队随后实现了批量写屏障机制。其基本想法是将需要着色的指针统一写入一个缓存，每当缓存满时统一对缓存中的所有 ptr 指针进行着色。</p>
+<h2 id="GC的实现细节"><a href="#GC的实现细节" class="headerlink" title="GC的实现细节"></a>GC的实现细节</h2><ol>
+<li>当前版本的Go1.14以STW为界限，将GC划分为5个阶段</li>
+</ol>
+<ul>
+<li>GCMark, 标记准备，为并发标记做准备工作，启动写屏障。 STW</li>
+<li>GCMark， 扫描标记阶段，与赋值器并行执行，写屏障开启。 并发</li>
+<li>GCMarkTermination， 标记终止阶段，保证一个周期内标记任务完成，停止写屏障。 STW</li>
+<li>GCoff， 内存清扫阶段，将需要回收的内存归还到堆中，写屏障关闭， 并发</li>
+<li>GCoff，内存归还阶段，将过多的内存归还给操作系统，写屏障关闭，并发</li>
+</ul>
+<ol>
+<li>触发GC的时机是什么？<br>答： 存在两种形式：</li>
+</ol>
+<ul>
+<li>主动触发，调用runtime.GC来触发，阻塞式等待当前GC运行完毕；</li>
+<li>被动触发<ul>
+<li>使用系统监控：超过两分钟没有任何GC时，强制触发</li>
+<li>使用步调Pacing算法，控制内存增长的比例</li>
+</ul>
+</li>
+</ul>
+<ol>
+<li>如果内存分配速度超过了标记清除速度怎么办？<br>答：目前go实现中，当GC触发后会首先进入并发标记阶段，该阶段会设置一个标志，当mallocgc调用时进行检查。当存在新的内存分配时，会暂停分配内存过快的那些goroutine，将其转去执行一些辅助标记Mark Assist的工作，从而达到放缓继续分配、辅助GC标记工作的目的。</li>
+</ol>
+<p>编译器会分析用户代码，并在需要分配内存的位置，将申请内存的操作翻译为 mallocgc 调用。</p>
+<h2 id="GC的优化问题"><a href="#GC的优化问题" class="headerlink" title="GC的优化问题"></a>GC的优化问题</h2><ol>
+<li><p>GC关注的指标有哪些？<br>答： CPU利用率，GC停顿时间（STW，Mark Assist两部分可能造成），GC停顿频率，GC可扩展性（当堆内存变大时，垃圾回收器性能如何？）</p>
+</li>
+<li><p>GC如何调优？<br>答： GO的GC被设计为极致简洁，与Java GC数十个可控参数相比，严格意义上Go可供用户调整的只有GOGC环境变量。</p>
+</li>
+</ol>
+<p>GC调优：减少用户代码对GC产生的压力，即减少用户代码分配的内存数量，最小化Go的GC对CPU的使用率</p>
+<p>所谓 GC 调优的核心思想也就是充分的围绕两点来展开：优化内存的申请速度，尽可能的少申请内存，复用已申请的内存。或者简单来说，不外乎这三个关键字：控制、减少、复用<br>1） 合理化内存分配速度、提高赋值器的CPU利用率 （goroutine 池的使用）<br>2） 降低并复用已经申请的内存（使用 sync.Pool 复用需要的 buf， concat 函数可以预先分配一定长度的缓存而后再通过 append 的方式将字符串存储到缓存中）<br>3） 调整GOGC （治标不治本，更妥当的做法仍然是，定位问题的所在，并从代码层面上进行优化）</p>
+<p>GC 调优过程中 go tool pprof 和 go tool trace 可以帮助我们快速定位 GC 导致瓶颈的具体位置</p>
+<p>过早优化是万恶之源。</p>
+<ol>
+<li>Go的垃圾回收器有哪些相关的API？</li>
+</ol>
+<ul>
+<li>runtime.GC: 手动触发 GC</li>
+<li>runtime.ReadMemStats: 读取内存相关的统计信息，其中包含部分 GC 相关的统计信息</li>
+<li>debug.FreeOSMemory: 手动将内存归还给操作系统</li>
+<li>debug.ReadGCStats: 读取关于 GC 的相关统计信息</li>
+<li>debug.SetGCPercent: 设置 GOGC 调步变量</li>
+<li>debug.SetMaxHeap: 设置 Go 程序堆的上限值</li>
+</ul>
+<h2 id="GC的历史及演进"><a href="#GC的历史及演进" class="headerlink" title="GC的历史及演进"></a>GC的历史及演进</h2><ol>
+<li>GO历史各版本在GC方面的改进</li>
+</ol>
+<ul>
+<li>Go1 串行三色标记清扫</li>
+<li>Go1.3 并行清扫，标记过程需要STW，停顿时间约几百ms</li>
+<li>Go1.5 并发标记清扫，停顿时间在100ms以内</li>
+<li>Go1.6 使用bitmap记录回收内存的位置，大幅优化垃圾回收器自身消耗的内存，停顿时间在10ms以内</li>
+<li>Go1.7 停顿时间在2ms以内</li>
+<li>Go1.8 混合写屏障，停顿时间在半个ms以内</li>
+<li>Go1.9 彻底移除了栈的重新扫描过程</li>
+<li>Go1.12 整合和两个阶段的Mark Termination，但引入了一个严重的GC bug，至今未修复</li>
+<li>Go1.13 着手解决向操作系统归还内存，提出新的Scavenger</li>
+<li>Go1.14 替代了仅存活一个版本的Scavenger，全新的页分配器，优化分配内存过程中的速率和现有的扩展性问题，引入异步抢占，解决密集循环导致的STW时间过长的问题</li>
+</ul>
+<ol>
+<li>Go GC在演化过程中还有哪些设计？ 为什么没有被采用？<br>答： </li>
+</ol>
+<ul>
+<li>并发栈重扫：允许灰色赋值器存在的垃圾回收器需要引入重扫过程来保证正确性，除了混合写屏障消除该过程外，还可以通过并发重扫提高性能。没有得以实现： 实现过程相比引入混合写屏障复杂，而且引入混合写屏障可以消除重扫过程，简化垃圾</li>
+<li>ROC: Request Oriented Collector, 面向请求的回收器，其实也是分代GC的一种重新叙述。它提出一个请求假设：与一个完整请求、休眠goroutine所关联的对象更容易死亡。 但是在实现上由于垃圾回收器必须确保是否有goroutine私有指针被写入公共对象，因此写屏障要一直打开。 昂贵的写屏障以及其带来的缓存未命中是未被采用的原因</li>
+<li>传统分代GC：不适用于Go的运行栈机制。年轻代对象其实在栈上就已经死亡，扫描本就该回收的执行栈并没有带来性能提升。</li>
+</ul>
+<ol>
+<li>目前提供GC的语言有哪些？GC和NOGC的优缺点？<br>答：目前提供GC的有go，python，java，javascript，objective-c，Swift，没有提供但是支持自行实现GC的有C，C++，也有一些语言在编译器就可以依靠插入清理代码的方式实现精确的清理，如Rust</li>
+</ol>
+<p>NOGC： </p>
+<ul>
+<li>在仍然有指向内存区域的指针存在情况下释放该内存，会产生悬挂指针。</li>
+<li>多重释放同一块内存区域，可能导致不可知的内存损坏。</li>
+<li>没有额外的扫描性能开销</li>
+<li>精确的手动内存管理，极致的利用机器性能。</li>
+</ul>
+<ol>
+<li>GO对比Java，V8中的Javascript GC性能<br>答： java和javascript都基于分代假设，每次回收只回收其中一个区域。</li>
+</ol>
+<ul>
+<li>V8的GC： 将内存分为新生代和老生代。1）新生代的对象通过副垃圾回收器进行回收，采用复制的方式实现垃圾回收，将堆内存一分为2，只有一个处于使用中From，另一个闲置To。分配对象先在From分配，当开始垃圾回收时检查From中存活对象，复制到To空间中，非存活空间被释放。完成复制后From、To角色互换。2）老生代由主垃圾回收器负责，实现标记清扫过程，并且清扫完成后进行整理碎片。</li>
+<li>Java： G1将堆分为年轻代、老年代、永久代。包括4种操作，从上往下依次执行。1）只对年轻代进行收集整理;2）只对老年代进行收集整理；3）混合年轻代和老年代进行收集整理；4）完成GC对整个堆进行收集整理。在回收过程中G1会对停顿时间进行预测，竭尽所能调整GC策略达到用户代码配置的-XX：MaxGCPauseMillis对停顿时间的要求。</li>
+</ul>
+<ol>
+<li>目前Go GC存在的问题？<br>答：</li>
+</ol>
+<ul>
+<li>Mark Assit停顿时间过长</li>
+<li>Sweep停顿时间过长</li>
+<li>由于GC算法不正确性导致GC被迫重新运行：（能够在 1334 次构建中发生一次）</li>
+<li>创建大量Goroutine后导致GC消耗更多的CPU： 通常发生于峰值流量后，大量 goroutine 由于任务等待被休眠，从而运行时不断创建新的 goroutine，旧的 goroutine 由于休眠未被销毁且得不到复用，导致 GC 需要扫描的执行栈越来越多，进而完成 GC 所需的时间越来越长。一个解决办法是使用 goroutine 池来限制创建的 goroutine 数量。</li>
+</ul>
+<p>垃圾回收器的设计权衡了很多方面的因素，同时还受语言自身设计的影响，因为语言的设计也直接影响了程序员编写代码的形式，也就自然影响了产生垃圾的方式。但总的来说，他们三者对垃圾回收的实现都需要 STW，并均已达到了用户代码几乎无法感知到的状态（据 Go GC 作者 Austin 宣称 STW 小于 100 微秒）。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2021/02/06/GO学习--基础/" itemprop="url">
+                  GO学习--基础问题
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-02-06T22:00:00+08:00" content="2021-02-06">
+              2021-02-06
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <ol>
+<li><p>context 如何被取消？</p>
+</li>
+<li><p>context 是什么？有什么作用？</p>
+</li>
+<li><p>context.value的查找过程是怎样的？</p>
+</li>
+<li><p>gomaxprocs调高引起调度性能损耗<br><a href="http://xiaorui.cc/archives/6334" target="_blank" rel="external">golang gomaxprocs调高引起调度性能损耗</a><br>golang运行时调度依赖PMG抽象，P为逻辑处理器，M为执行线程，G为协程。P的runq中存放可执行的G结构。golang默认的P数量是cpu的物理核心数目。同一时间一个P只能绑定一个M线程，PM绑定后会寻找合适的G运行。</p>
+</li>
+</ol>
+<p>增加P的数量是够可以加大运行时对于协程的吞吐量呢？</p>
+<p>大多数golang项目都偏重网络IO，network io在netpoll设计下都是非阻塞的，所涉及的syscall不会阻塞。如果是CPU密集的业务，增加多个P也没用，毕竟CPU计算资源有限，增加P会导致额外的切换开销。因此，多数场景下增加P并不能增加吞吐量。如果业务逻辑中有不少的cgo以及阻塞syscall的操作，那么增加P还是有效果的。因为这类操作可能因为过慢引起阻塞，阻塞期间P被该MG绑定，其他M无法获取P的所有权。虽然findrunnable steal机制里其他P的M可以偷取该P任务，但是在解绑P之前终究还是少了并行通道。</p>
+<p>golang在docker中初始化processor是依据/proc/cpuinfo信息的，和宿主机一样都是和物理核数相同。但是容器一般会限定CPU、memory资源，因此最终也只能用到限制的CPU核数。两种方法可以校对：要么在K8S pod中加入限制变量，golang启动时获取CPU信息；要么解析cpu.cfs_period_us cpu.cfs_quota_us配置来计算CPU资源。</p>
+<p>如果运行时processor多了会出现什么问题？</p>
+<p>一个是运行时findrunnable产生损耗，一个是线程引起上下文切换。findrunnable方法是解决m找到可程的函数，当绑定P本地runq上找不到可执行的G时，尝试从全局链表中拿，再拿不到从netpoll和事件池里拿，最后会从别的P里偷任务。</p>
+<p>因此建议gomaxprocs配置为CPU core数量就可以了，默认就是该配置。如果涉及阻塞syscall可以适当调整，但是最好测试用指标验证是否合理。</p>
+<ol>
+<li><p>深入理解WaitGroup</p>
+</li>
+<li><p>go 栈内存的内存和逃逸分析</p>
+</li>
+<li><p>Go指针和unsafe.Pointer有什么区别？</p>
+</li>
+<li><p>如何利用unsafe包修改私有成员？</p>
+</li>
+<li><p>如何利用unsafe包获取slice和map的长度</p>
+</li>
+<li><p>如何实现字符串和btye切片的零拷贝转换？</p>
+</li>
+<li><p>new和make的区别？</p>
+</li>
+<li><p>引用类型有哪些？</p>
+</li>
+<li><p>go的内存模型中，为什么小对象多了会造成gc压力？</p>
+</li>
+</ol>
+<ol>
+<li>go 并发调度器解析<br><a href="https://zhuanlan.zhihu.com/p/37754274" target="_blank" rel="external">GO并发调度器解析之实现一个高性能协程池</a></li>
+</ol>
+<ul>
+<li>Goroutine&amp;Scheduler<br>goroutine并非传统意义上的协程coroutine的golang实现。现在主流线程模型有三种：用户级线程模型、内核级线程模型、两级线程模型。传统的协程基于用户级线程模型，而goroutine个go scheduler在底层实现上其实是属于两级线程模型。</li>
+<li>三种线程模型分析<br>三种线程模型之间最大的差异就在于用户线程与内核调度实体KSE（Kernel Scheduler Entity）之间的对应关系。KSE指可以被操作系统内核调度器调度的对象实体，即内核级线程。<ul>
+<li>用户级线程： 和KSE多对一映射，多个用户线程一般属于单个进程并且多线程调度由用户自己的线程库完成。线程创建、销毁、以及多线程之间的协调操作都是由用户自己的线程库负责。一个进程中所有的线程都只和同一个KSE动态绑定。 <ul>
+<li>调度在用户层面完成，相比于内核调度减少了用户态内核态切换开销，实现比较轻量级。</li>
+<li>不能做到真正意义上的并发，假设某个进程上的一个用户线程因为阻塞调用被CPU中断，那么该进程中上所有线程都被阻塞。因此很多协程库会把自己一些阻塞操作重新封装为完全的非阻塞模式，在之前的阻塞点主动让出自己，并以某种方式通知或唤醒其他待执行的用户线程在该KSE上运行。</li>
+</ul>
+</li>
+<li>内核级线程： 和KSE一对一映射，线程调度完全交给内核完成。<ul>
+<li>实现简单，直接借助操作系统内核的线程和调度器，CPU可以快速切换调度线程，真正做到并发处理</li>
+<li>线程创建、销毁、切换调度开销较大</li>
+</ul>
+</li>
+<li>两级线程： 和KSE多对多映射，一个进程可以和多个内核线程KSE关联，即一个进程内的多个线程可以分别绑定一个自己的KSE。区别与内核级线程模型的是，它的进程里的线程并不与KSE唯一绑定，而是多个用户线程映射同一个KSE，当某个KSE因为其绑定的线程阻塞操作被内核调度出CPU时，其关联进程中其余用户线程可以重新和该KSE绑定。 Go语言的runtime调度器就采用这种实现方案，用户调度器实现用户线程到KSE的调度，内核调度器实现KSE到CPU上的调度。</li>
+</ul>
+</li>
+<li>GPM模型<br>Goroutine栈采用动态扩容方式，初始2KB，随着任务执行按需增长最大可达1GB（32位256M），且完全由golang自己的调度器Go Scheduler来调度。GC会周期性地将不再使用的内存回收，收缩栈空间。因此Go程序可以同时并发成千上万个goroutine得益于它的调度器和高效的内存模型。<ul>
+<li>G：Goroutine，存储Goroutine的运行堆栈、状态以及任务函数，可重用。G需要绑定到P上才能执行</li>
+<li>P：Processor，逻辑处理器，对于G来说其相当于CPU核，G只有绑定到P中才能被调度。对M来说P提供了相关的执行环境Context，如内存分配状态mcache，任务队列等。P的数量决定了系统内最大可并行的G数量，用户配置GMAXPROCS来决定，但无论用户设置其最大值不超过256.</li>
+<li>M：Machine，操作系统线程抽象，代表真正执行计算的资源，在绑定有效P后进入schedule循环；循环从Global队列、P的Local队列、以及等待队列中获取G，切换到G的执行栈上并执行G的函数，调用goexit清理后回到M，如此反复。M并不保留G的状态，因此G可以跨M调度。M数量有Go runtime调整，默认最大为1w个。</li>
+</ul>
+</li>
+<li>GPM模型调度<br>Go调度器工作时会维护两个队列：Global和每个P的Local任务队列。当通过go关键字创建G时，它会被优先放入P的本地队列。为了运行G，M需要持有并绑定一个P，接着M启动系统线程循环从P的本地队列读取G执行。当M执行完本地队列中所有G后，P会尝试从Global队列寻找G来执行，如果Global为空，则随机挑选另外一个P，从其Local队列中拿走一半的G到自己队列。</li>
+</ul>
+<ol>
+<li>go 内存分配<br><a href="https://mp.weixin.qq.com/s/Hm8egXrdFr5c4-v--VFOtg" target="_blank" rel="external">图解Go语言内存分配</a><br>Golang运行时内存分配算法源自Google为C语言开发的TCMalloc算法，ThreadCachingMalloc。把内存多级管理，降低锁的粒度。将可用的堆内存采用二级分配的方式进行管理，每个线程都会自动维护一个独立的内存池，进行内存分配时优先从内存池中分配，不足时再向全局内存池申请。</li>
+</ol>
+<p>Go程序启动时首先会向OS申请一块内存（虚拟内存），切成小块自己进行管理。 申请到的内存分配3个区域：X86上为512M spans，16GB bitmaps，512GB arena。</p>
+<ul>
+<li>arena区域就是我们所谓的堆区，Go动态分配的内存都是在这个区域，它把内存分割成 8KB大小的页，一些页组合起来称为 mspan。</li>
+<li>bitmap区域标识 arena区域哪些地址保存了对象，并用 4bit标志位表示对象是否包含指针、 GC标记信息. 1 byte对应arena中4个指针大小的内存， 512GB/(4*8B)=16G</li>
+<li>spans区域存放mspan的指针，每个指针对应一页。spans的大小为512GB/8KB*8B=512M .创建mspan的时候，按页填充对应的spans区域，在回收object时，根据地址很容易就能找到它所属的 mspan。</li>
+</ul>
+<p>arena起始地址和bitmap起始地址一样，因为bitmap从高地址向低地址增长。</p>
+<p>mspan：Go中内存管理的基本单元，是由一片连续的 8KB的页组成的大块内存。是包含起始地址、mspan规格、页的数量等内容的双端链表。 每个mspan按照它自身的属性SizeClass的大小分割成若干个object，每个object可存储一个对象。 Size_Class= Span_Class/2， 其实每个SizeClass有两个mspan，也就是有两个SpanClass。其中一个分配给含有指针的对象，另一个分配给不含有指针的对象。SizeClass有67种， 对于微小对象（小于16B），分配器会将其进行合并，将几个对象分配到同一个 object中。</p>
+<p>内存分配由内存分配器完成。分配器由3种组件构成： mcache, mcentral, mheap。每个工作线程都会绑定一个mcache，本地缓存可用的mspan资源。</p>
+<ul>
+<li>mcache用 SpanClasses作为索引管理多个用于分配的 mspan，它包含所有规格的 mspan。它是 _NumSizeClasses的2倍，也就是 67*2=134，为什么有一个两倍的关系，前面我们提到过：为了加速之后内存回收的速度，数组里一半的 mspan中分配的对象不包含指针，另一半则包含指针。mcache在初始化的时候是没有任何 mspan资源的，在使用过程中会动态地从mcentral申请，之后会缓存下来。当对象小于等于32KB大小时，使用 mcache的相应规格的 mspan进行分配。</li>
+<li>mcentral：为所有 mcache提供切分好的 mspan资源。每个 central保存一种特定大小的全局 mspan列表，包括已分配出去的和未分配出去的。<ul>
+<li>获取： 加锁；从nonempty中找到一个可用的mspan；将其从nonempty中删除；将取出的mspan加入到empty链表；将mspan返回给线程；解锁。</li>
+<li>归还： 加锁；将mspan从empty中删除；加入到nonempty链表中；解锁</li>
+</ul>
+</li>
+<li>mheap：代表Go程序持有的所有堆空间，Go程序使用一个 mheap的全局对象 _mheap来管理堆内存。当 mcentral没有空闲的 mspan时，会向 mheap申请。而 mheap没有资源时，会向操作系统申请新内存。 mheap主要用于大对象的内存分配，以及管理未切割的 mspan，用于给 mcentral切割成小对象。</li>
+</ul>
+<p>Go的内存分配器在分配对象时，根据对象的大小，分成三类：小对象（小于等于16B）、一般对象（大于16B，小于等于32KB）、大对象（大于32KB）。</p>
+<ul>
+<li><blockquote>
+<p>32KB直接从mheap分配</p>
+</blockquote>
+</li>
+<li>&lt;=16B使用mcache的tiny分配器分配</li>
+<li>（16B，32KB]，首先计算对象规格大小，使用mcache相应规格大小的mspan分配<ul>
+<li>如果mcache没有相应规格大小的mspan，则向mcentral申请</li>
+<li>如果mcentral没有相应规格大小的mspan，则向mheap申请</li>
+<li>如果mheap中也没有合适大小的mspan，则向操作系统申请</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/12/25/学习笔记W2/" itemprop="url">
                   学习笔记W2
                 </a>
@@ -1276,515 +2100,11 @@ for c := range in {
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/09/27/深入理解计算机系统第2周/" itemprop="url">
-                  《深入理解计算机系统》第2周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-09-27T22:00:00+08:00" content="2020-09-27">
-              2020-09-27
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>本周主要学习第二章信息的表示和处理,数值处理部分相对比较枯燥.第一遍看到后面定理晕头转向的,后面看第二遍的时候将所有练习题都跟着动手完成,效果明显好了很多.</p>
-<p>对于整数运算,表示数字的有限字长限制了可能值的取值范围,结果存在溢出可能.C语言中强制类型转换等一些规定可能会产生非直观的结果,需要注意.</p>
-<p>浮点数计算只有有限的范围和精度,并且不遵守普遍的算数属性.</p>
-<p>重新温顾的知识点:</p>
-<p> <strong>大端/小端法</strong></p>
-<p>最低有效字节在前面的是小端法,最高有效字节在最前面的是大端法. (大多数Intel兼容机都只用小端法)</p>
-<p>假设变量x=0x01234567在地址0x100处</p>
-<pre><code> |0x100 0x101 0x102 0x103|
-大端 |01 | 23 | 45 | 67 |
-小端 |67 | 45 | 23 | 01 |
-</code></pre><ul>
-<li>网络传输二进制数据时通过网络标准转换来避免不同机器字节顺序的影响.</li>
-<li>反汇编代码阅读时需要考虑字节顺序.</li>
-<li>C语言中强制类型转换/Union允许一种数据类型引用一个对象时需要考虑字节顺序.</li>
-</ul>
-<p><strong>有符号数和无符号数之间的转换</strong></p>
-<p>补码转换为无符号数时</p>
-<pre><code>T2U(x)=x (x&gt;=0); T2U(x)=x+2^w(x&lt;0,w位)
-</code></pre><p>无符号数转换为补码时<br>    U2T(u)=u (u&lt;=TMax); U2T(u)=u-2^w(u&gt;=TMax)</p>
-<p>C语言中对同时包含有符号和无符号数的表达式处理时,会隐式的将有符号数强制转换为无符号数,对于标准运算符并无差异,但是遇到关系运算符时会导致问题.</p>
-<pre><code>如 -1 &lt; 0U, 会先将-1转换为4294967295U 导致非直观结果出现.
-</code></pre><p><strong>扩充整数字长时, 补码数符号扩展,无符号数零位扩展.</strong></p>
-<p><strong>无符号整数加法</strong> </p>
-<pre><code>x+y=x+y(正常) x+y=x+y-2^w (溢出时)
-</code></pre><p><strong>补码加法</strong></p>
-<pre><code>x+y=x+y-2^w(正溢出), x+y=x+y(正常), x+y=x+y+2^w(负溢出)
-</code></pre><p><strong>无符号数乘法</strong> </p>
-<pre><code>xy=(xy) mod 2^w
-</code></pre><p><strong>补码乘法</strong></p>
-<pre><code>xy=U2T((xy) mod 2^w)
-</code></pre><p><strong>浮点数</strong></p>
-<p>通过将数字编码为x*2^y的形式来近似地表示实数,最常见的浮点精度都float和double.</p>
-<p>IEEE浮点通过符号s/尾数M/阶码E来表示,32位1+8+23,64位1+11+52,被编码的值有三种不同的情况:</p>
-<ul>
-<li>规格化的值, 阶码不全为0也不全为1</li>
-<li>非规格化的值,阶码域全为0</li>
-<li>特殊值, 阶码域全为1,小数域全为0时(正无穷,负无穷); 阶码域全为1,小数域非零(NaN)</li>
-</ul>
-<p><strong>四种舍入方式</strong>中默认的是Round-to-even,将数字向上或向下舍入使得结果的最低有效数字是偶数.(可以避免统计偏差)</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/09/20/深入理解计算机系统第1周/" itemprop="url">
-                  《深入理解计算机系统》第1周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-09-20T22:00:00+08:00" content="2020-09-20">
-              2020-09-20
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>第一章主要是以helloworld程序为切入点对计算机系统整体进行阐述，硬件和软件如何通过协同操作来运行应用程序。对于编译链接的流程和基本概念比较熟悉所以本章主要记录以下两点笔记：</p>
-<p><strong>Amdahl定律：</strong></p>
-<p>当对系统的某个部分进行加速时，整体性能的影响取决于该部分的重要性和加速程序。该定律主要用于并行计算领域预测多个处理器时的理论最大加速比，实际场景中程序往往并不能有效的利用多核，因为系统中不可避免的会存在一些需要串行访问的资源。因此在多核处理器中还要考虑如何降低串行计算部分的比例以及降低交互开销。</p>
-<p><strong>Concurrency和parallelism：</strong></p>
-<p><strong>线程级并发：</strong><br>单处理器系统中并发是通过进程执行切换来模拟出并发的效果，允许多用户同时与系统交互。随着多核处理器的出现减少了执行多个任务时模拟并发的需要，但是要求程序以多线程方式进行编写来高效地并行执行。</p>
-<p>另外，超线程允许一个CPU执行多个控制流的技术，常规的处理器大约需要2w个时钟周期做线程切换，超线程处理器可以在单个周期的基础上决定执行哪个线程（FMT，通过拉长每个线程的平均执行时间来实现随时切换，英伟达和AMD的GPU中用的比较多）。现实中绝大多数程序并不会占用CPU的所有资源，超线程的引入主要就是为了更好得利用空闲资源。</p>
-<p><strong>指令级并行：</strong></p>
-<p>每条指令从开始到结束大约需要20+个时钟周期，但是处理器通过流水线技术，将指令划分为不同的阶段通过并行操作能够达到每个时钟周期2-4个指令的执行速率。</p>
-<p><strong>单指令多标量并行SIMD：</strong></p>
-<p>通过特殊的硬件来支持一条指令产生多个可以并行的操作。</p>
-<p>这些应该都是本科学习过的知识点，重新温习了一遍。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/08/15/设计模式之美第二周/" itemprop="url">
-                  设计模式之美第二周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-08-15T23:24:00+08:00" content="2020-08-15">
-              2020-08-15
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？"><a href="#理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？" class="headerlink" title="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？"></a>理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？</h2><p>本文主要针对四大特性，结合实际代码，帮助我们了解每个特性存在的意义和目的，以及它们能解决哪些编程问题。</p>
-<h3 id="封装-Encapsulation"><a href="#封装-Encapsulation" class="headerlink" title="封装 Encapsulation"></a>封装 Encapsulation</h3><p>封装也叫作信息藏匿或者数据访问保护。类通过暴露有限的访问接口，授权外部仅能通过类提供的方式来访问内部信息或数据。</p>
-<p>对于封装这个特性，我们需要编程语言本身提供一定的语法机制来支持。这个语法机制就是访问权限控制。</p>
-<p>如果对类中属性访问不做限制，那任何代码都可以访问、修改类中的属性，虽然这样看起来更灵活，但是从另一方面来说过度灵活意味着不可控。除此之外，类仅仅通过有限的方法暴露必要的操作，也提高类的易用性。调用者不需要了解太多背后的业务细节，用错的概率也会减少。</p>
-<h3 id="抽象-Abstraction"><a href="#抽象-Abstraction" class="headerlink" title="抽象 Abstraction"></a>抽象 Abstraction</h3><p>封装主要讲的是如何隐藏信息、保护数据，而抽象讲的是如何隐藏方法的具体实现，让调用者之需要关心方法提供了哪些功能，并不需要知道这些功能是如何实现的。</p>
-<p>在面向对象编程中，我们常借助编程语言提供的接口类（Interface）或者抽象类（Abstract）这两种语法机制，来实现抽象。</p>
-<p>抽象的意义，首先作为一种只关注功能不关注实现的设计思路，正好帮我们的大脑过滤掉许多非必要的信息。其次，抽象在代码设计中起到非常重要的指导作用。很多设计原则都体现了抽象这种设计思想，比如基于接口而非实现编程、开闭原则、代码解耦等。</p>
-<p>我们在定义类的方法时，也要有抽象思维，不要在方法定义中暴露太多的实现细节，以保证在某个时间点需要修改方法的实现逻辑时不用去修改其定义。</p>
-<h3 id="继承-Inheritance"><a href="#继承-Inheritance" class="headerlink" title="继承 Inheritance"></a>继承 Inheritance</h3><p>为了实现继承特性，编程语言需要提供特殊的语法机制来支持，如Java中使用extends来实现继承，C++使用冒号，Python使用paraentheses（）等。不过有些语言只支持单继承，如Java、PHP、C#、Ruby等，有些支持多重继承，如C++、python、Perl等。</p>
-<p>继承存在的最大好处就是代码复用。不过过度使用继承层次过深过复杂，会导致代码可读性、可维护性变差。所以继承应该尽量少用，甚至不用。（多用组合少用继承）</p>
-<h3 id="多态-Polymorphism"><a href="#多态-Polymorphism" class="headerlink" title="多态 Polymorphism"></a>多态 Polymorphism</h3><p>多态能提高代码的可扩展性和复用性。除此之外多态也是很多设计模式、设计原则、编程技巧的代码实现基础。比如策略模式、基于接口而非实现编程、依赖倒置原则、里氏替换原则、利用多态去掉冗长的if-else语句等。</p>
-<h3 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h3><p>Java不支持继承的原因是多重继承存在副作用：钻石问题（菱形继承）</p>
-<p>假设B和C都继承A，且都重写了A中同一方法，类D继承类B和类C，对于B、C重写的A中的方法，类D会继承哪一个会产生歧义。但是Java支持多接口实现，因为接口中的方法是抽象的，在实现接口时需要实现类自己实现，所以不会出现二义性问题。</p>
-<h2 id="理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？"><a href="#理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？" class="headerlink" title="理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？"></a>理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？</h2><h3 id="什么是面向过程编程与面向过程编程语言？"><a href="#什么是面向过程编程与面向过程编程语言？" class="headerlink" title="什么是面向过程编程与面向过程编程语言？"></a>什么是面向过程编程与面向过程编程语言？</h3><p>面向过程编程也是一种编程范式/风格，它以过程作为组织代码的基本单元。以数据与方法相分离为最主要的特点。面向过程风格是一种流程化的编程风格，通过拼接一组顺序执行的方法来操作数据完成一项功能。<br>面向过程编程语言首先是一种编程语言。它最大的特点是不支持类和对象两个语法概念，不支持丰富的面向对象编程特性。</p>
-<h3 id="面向对象编程相比面向过程编程有哪些优势？"><a href="#面向对象编程相比面向过程编程有哪些优势？" class="headerlink" title="面向对象编程相比面向过程编程有哪些优势？"></a>面向对象编程相比面向过程编程有哪些优势？</h3><h4 id="OOP更加能够应对大规模复杂程序的开发"><a href="#OOP更加能够应对大规模复杂程序的开发" class="headerlink" title="OOP更加能够应对大规模复杂程序的开发"></a>OOP更加能够应对大规模复杂程序的开发</h4><p>对于大规模复杂程序开发来说，整个程序的处理流程错综复杂，并非只有一条主线。如果用面向过程编程这种流程化、线性的思维方式，去翻译这个网状结构，去思考如何把程序拆解为一组顺序执行的方法会比较吃力。</p>
-<p>面向对象编程以类为思考对象。在进行面向对象编程的时候，我们并不是一上来就去思考如何讲复杂的流程拆解为一个一个方法，而是采用曲线救国的策略。先去思考如何给业务建模，如何将需求翻译为类，如何给类之间建立交互关系，完成这些工作完全不需要考虑错综复杂的处理流程。</p>
-<p>除此之外，面向对象编程还提供了一种更加清晰、更加模块化的代码组织方式。</p>
-<p>实际上利用面向过程的编程语言那样，也可以写出面向对象风格的代码。只不过可能会比用面向对象编程语言付出的代价更高一些。两种编程风格并不是完全对立的。</p>
-<h4 id="OOP代码更易复用、易扩展、易维护"><a href="#OOP代码更易复用、易扩展、易维护" class="headerlink" title="OOP代码更易复用、易扩展、易维护"></a>OOP代码更易复用、易扩展、易维护</h4><p>封装特性是两种编程风格最基本的区别，面向对象将数据和方法绑定在一起，通过访问权限控制，只允许外部调用者通过类暴露的有限方法访问数据，而不会像面向过程那样，数据可以被任意方法修改。因此面向对象提供的封装特性更有利于提高代码的易维护性。</p>
-<p>函数本身就是一种抽象，它隐藏了具体实现。我们在使用函数时之需要了解函数具有什么功能，而不需要了解它是怎么实现的。从这一点上两种编程风格都支持抽象特性。只是面向对象还提供了其他抽象特性的实现方式，如基于接口实现的抽象。基于接口的抽象可以让我们在不改变原有实现的情况下，轻松替换新的实现逻辑，提高了代码的可扩展性。</p>
-<p>继承特性是面向对象特有的，能避免代码重复写很多遍，提高了代码的复用性。</p>
-<p>多态特性也是面向对象特有，在需要修改一个功能实现的时候，可以通过实现一个新的子类的方式，在子类重写原来的逻辑功能。用子类替换父类遵从了“对修改关闭，对扩展开放”的原则，提高代码的扩展性。除此之外，多态特性使得不同类对象可以传递相同的方法，执行不同的逻辑，提高代码复用性。</p>
-<h4 id="OOP语言更加人性化、更高级智能"><a href="#OOP语言更加人性化、更高级智能" class="headerlink" title="OOP语言更加人性化、更高级智能"></a>OOP语言更加人性化、更高级智能</h4><p>面向对象时，开发者是在思考如何给业务建模、如何将真实世界映射为类或者对象，能更聚焦到业务本身，而不是思考如何和机器打交道。</p>
-<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><ul>
-<li>Unix/Linux这些复杂系统，也是基于C语言这种面向过程的编程语言开发的，怎么看待这种现象？<ul>
-<li>操作系统是业务无关的，它更接近于底层计算机，因此更适合用面向过程的语言编写。并且和硬件打交道需要考虑到语言本身翻译成机器语言的成本和执行效率。</li>
-<li>不过操作系统虽然是面向过程的C语言实现，但是其设计逻辑是面向对象的。它用结构体同样实现了信息的封装，内核源码中也不乏继承和多态思想的体现。面向对象思想并不局限于具体语言。</li>
-</ul>
-</li>
-</ul>
-<h2 id="理论四：-哪些代码设计看似面向对象，实际是面向过程的？"><a href="#理论四：-哪些代码设计看似面向对象，实际是面向过程的？" class="headerlink" title="理论四： 哪些代码设计看似面向对象，实际是面向过程的？"></a>理论四： 哪些代码设计看似面向对象，实际是面向过程的？</h2><h3 id="滥用getter、setter方法"><a href="#滥用getter、setter方法" class="headerlink" title="滥用getter、setter方法"></a>滥用getter、setter方法</h3><p>在项目开发中，有时定义完类的属性之后，就顺手将属性的getter、setter方法都定义上。IDE或者Lombok插件会自动生成所有属性的getter、setter方法。</p>
-<p>这种方法是不推荐的，因为其违反了面向对象的封装特性，相当于将面向对象编程风格退化成了面向过程编程风格。 例如下面这段代码</p>
-<pre><code>public class ShoppingCart {
-    private int itemsCount;
-    private double totalPrice;
-    private List&lt;ShoppingCartItem&gt; items = new ArrayList&lt;&gt;();
-
-    public int getItemsCount() {
-        return this.itemsCount;
-    }
-
-    public void setItemCount(int itemsCount) {
-        this.itemsCount = itemsCount;
-    }
-
-    public double getTotalPrice() {
-        return this.totalPrice;
-    }
-
-    public void setTotalPrice(double totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    public List&lt;ShoppingCartItem&gt; getItems() {
-        return this.items;
-    }
-
-    public void addItems(ShoppingCartItem item) {
-        items.add(item);
-        itemCount++;
-        totalPrice += item.getPrice();
-    }
-    ...
-}
-</code></pre><p>在这个代码中虽然我们将itemsCount和totalPrice定义为private，但是外部可以通过setter方法随意修改这两个属性的值。可能会导致和items属性的值不一致。暴露不该暴露的setter方法明显违反了面向对象的封装特性。数据没有任何访问权限，任何代码都可以随意修改，代码就退化成了面向过程编程风格了。</p>
-<p>对于items我们没有设置setter方法，这样的设计看起来没有任何问题，而实际上并不是。items属性的getter方法返回的是一个List容器。外部调用者在拿到这个容器后，是可以操作容器内部数据的。比如obj.getItems().clear()会清空购物车，这样也会导致类属性中三个数据不一致。</p>
-<p>正确的方法是应该专门在类中提供clear方法，并且修改getItems返回类型为Collections.undermidifiableList()。此时外部调用要修改就会抛出UnsupportedOperationException异常，避免容器中的数据被修改。（这里还存在一个问题，虽然items容器中数据不会被修改，但是容器中每个对象ShoppingCartItem的数据仍然可以修改）</p>
-<h3 id="滥用全局变量和全局方法"><a href="#滥用全局变量和全局方法" class="headerlink" title="滥用全局变量和全局方法"></a>滥用全局变量和全局方法</h3><p>面向对象编程中，常见的全局变量有单例类对象、静态成员变量、常量等，常见的全局方法有静态方法。</p>
-<ul>
-<li>单例类对象在全局代码中只有一份，相当于全局变量</li>
-<li>静态成员变量归属类上的数据，被所有实例化对象共享，也相当于一定程度上的全局变量</li>
-<li>常量是非常常见的全局变量，放到一个Constant类中</li>
-<li>静态方法一般用来操作静态变量或者外部数据。如各种Utils类，里面的方法一般都会定义成静态方法。静态方法将方法和数据分离，破坏了封装特性，是典型的面向过程风格。</li>
-</ul>
-<p>如：</p>
-<pre><code>public class Constants {
-    public static final String MYSQL_ADDR_KEY = &quot;mysql_addr&quot;;
-    ...
-}
-</code></pre><p>我们会把程序中所有用到的常量都集中放到这个Constants类中，这并不是一个很好的设计思路。</p>
-<ul>
-<li>首先会影响代码的可维护性。开发同一项目的工程师很多，在开发过程中可能都要涉及修改这个类，查找修改可能比较费时，并且会增加提交代码冲突的概率。</li>
-<li>其次，这样的设计会增加代码的编译时间。 依赖这个类的代码很多，每次修改Constants类都会导致依赖它的类重新编译。</li>
-<li>最后，这样设计会影响代码的复用性。 如果我们在另一个项目中复用本项目的一个类，该类又依赖Constants类，即使只依赖其中的一部分我们仍然需要将整个Constants类也一起并入。引入许多无关的常量到新项目中。</li>
-</ul>
-<p>如何改进呢？</p>
-<ul>
-<li>将Constants类拆解为功能更加单一的多个类</li>
-<li>另一种更好的思路是，并不单独地设计Constants常量类，而是哪个类用到了某个常量，就把这个常量定义到这个类中，提高了类设计的内聚性和代码的复用性</li>
-</ul>
-<p>对于Utils类，它的出现主要是解决了多个类需要用到一块相同的功能逻辑，为了避免代码重复。通常为了复用会通过继承特性，将相同的属性和方法提取出来，定义到父类中，子类复用父类中的属性和方法。但是有时候从业务含义上，这些类并不一定具有继承关系，仅仅为了代码复用生硬地抽象一个父类，会影响代码可读性。所以只包含静态方法Utils类就出现了，它实现了公用的方法但是不需要共享任何数据，因此不需要定义任何属性。同时也要注意不要实现大而全的Utils类，最好细化一下。</p>
-<h3 id="定义数据和方法分离的类"><a href="#定义数据和方法分离的类" class="headerlink" title="定义数据和方法分离的类"></a>定义数据和方法分离的类</h3><p>传统的MVC分为Model层、Controller层、View层，在做前后端分离之后，三层结构在后端开发时会稍微有些调整，被分为Controller层、Service层、Repository层。Controller层负责暴露接口给前端调用，Service层负责核心业务逻辑，Repository层负责数据读写。在每一层中我们又会定义相应的VO（ViewObject）、BO（BusinessObject）、Entity。一般情况下VO、BO、Entity只会定义数据，不会定义方法，所有操作这些数据的业务逻辑都定义在对应的Controller类、Service类、Repository类中。这就是典型的面向过程的编程风格。</p>
-<p>实际上这种开发模式叫做基于贫血模型的开发模式，也就是我们现在非常常用的一种Web项目开发模式。</p>
-<h3 id="面向对象编程中，为什么容易写出面向过程风格的代码？"><a href="#面向对象编程中，为什么容易写出面向过程风格的代码？" class="headerlink" title="面向对象编程中，为什么容易写出面向过程风格的代码？"></a>面向对象编程中，为什么容易写出面向过程风格的代码？</h3><p>主要是面向过程符合人的流程化思维方式。面向对象则是一种自底向上的思考方式，不是先去思考执行流程来分解任务，而是将任务翻译成一个一个的小模块，设计类之间的交互，最后按照流程将类组装起来完成整个任务。这种思考路径比较适合复杂程序开发，不是特别符合人类的思考习惯。</p>
-<p>除此之外，面向对象中类的设计挺需要技巧，需要一定设计经验，要去思考如何封装合适的数据和方法到一个类里，如何设计类之间的关系，类之间的交互等诸多问题。</p>
-<p>不管使用面向过程还是面向对象，最终目的都是写出易维护、易读、易复用、易扩展的高质量代码。只要我们能避免面向过程编程风格的一些弊端，控制好它的副作用，在掌控范围内为我们所用，就大可不用避讳在面向对象编程中写面向过程风格的代码。</p>
-<h2 id="理论五：-接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？"><a href="#理论五：-接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？" class="headerlink" title="理论五： 接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？"></a>理论五： 接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？</h2><h3 id="什么是抽象类和接口？区别在哪里？"><a href="#什么是抽象类和接口？区别在哪里？" class="headerlink" title="什么是抽象类和接口？区别在哪里？"></a>什么是抽象类和接口？区别在哪里？</h3><p>抽象类</p>
-<ul>
-<li>不允许被实例化，只能被继承。</li>
-<li>抽象类可以包含属性和方法。方法既可以包含代码实现，也可以不包含代码实现。不包含代码实现的方法叫做抽象方法。</li>
-<li>子类继承抽象类，必须实现抽象类中的所有抽象方法。</li>
-</ul>
-<p>接口</p>
-<ul>
-<li>接口不能包含属性（即成员变量）</li>
-<li>接口只能声明方法，方法不能包含代码实现</li>
-<li>类实现接口的时候，必须实现接口中声明的所有方法</li>
-</ul>
-<p>抽象类实际上就是类，只不过是一种不能被实例化的特殊类，只能被子类继承，is-a的关系。接口表示has-a的关系，表示具有某些功能。对于接口，有一个更加形象的叫法，就是协议。</p>
-<h3 id="抽象类和接口能解决什么编程问题？"><a href="#抽象类和接口能解决什么编程问题？" class="headerlink" title="抽象类和接口能解决什么编程问题？"></a>抽象类和接口能解决什么编程问题？</h3><p>抽象类是为代码复用而生的，多个子类可以继承抽象类中定义的属性和方法，避免在子类中重复编写相同的代码。普通的类继承虽然也可以解决代码复用问题，但是无法使用多态特性，会增加类被无用的风险。虽然也可以通过设置私有的构造函数的方式来解决，不过显然没有抽象类优雅。</p>
-<p>接口更侧重于解耦，是对行为的一种抽象，相当于一组协议或者契约，可以类比API接口。调用者只需要关注抽象的接口，不需要了解具体的实现，具体的实现代码对调用者透明。接口实现了约定和实现相分离，可以降低代码间的耦合性，提高代码的可扩展性。</p>
-<h3 id="如何模拟抽象类和接口两个语法概念？"><a href="#如何模拟抽象类和接口两个语法概念？" class="headerlink" title="如何模拟抽象类和接口两个语法概念？"></a>如何模拟抽象类和接口两个语法概念？</h3><p>我们可以通过抽象类来模拟接口。首先接口的定义：接口中没有成员变量，只有方法声明，没有方法实现，实现接口的类必须实现接口中的所有方法。</p>
-<pre><code>class Strategy {
-    public:
-        ~Strategy();
-        virtual void algorithm() = 0;
-    protected:
-        Strategy();
-}
-</code></pre><p>上述C++代码中用抽象类模拟了一个接口，类中没有定义任何属性，并且所有方法都是virtual类型。</p>
-<p>除了用抽象类来模拟接口，我们还可以用普通类来模拟接口。类中虽然包含方法不符合接口定义，但是我们可以让类中的方法抛出异常来模拟不包含实现的接口，并且能强迫子类在继承这个父类的时候都去主动实现父类的方法，否则就会在运行时抛出异常。为了避免该类被实例化，我们将类的构造函数声明为protected方法就可以了。</p>
-<pre><code>public class MockInterface {
-    protected MockInterface() {}
-    public void funcA() {
-        throw new MethodUnSupportedException();
-    }
-} 
-</code></pre><h3 id="如何决定该用抽象类还是接口？"><a href="#如何决定该用抽象类还是接口？" class="headerlink" title="如何决定该用抽象类还是接口？"></a>如何决定该用抽象类还是接口？</h3><p>要表示一种is-a的关系，并且是为了解决代码复用的问题，就用抽象类。</p>
-<p>要表示一种has-a的关系，并且是为了解决抽象而非代码复用的问题，就可以使用接口。</p>
-<p>抽象类是一种自下而上的设计思路，现有子类的代码重复，然后再抽象成上层的父类。而接口正好相反，它是一种自上而下的设计思路，在编程的时候一般是先设计接口再去考虑具体的实现。</p>
-<h2 id="理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？"><a href="#理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？" class="headerlink" title="理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？"></a>理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？</h2><p>Program to an interface, not an implematation。这句话最早出自1994年GoF的设计模式这本书，是一种比较抽象泛化的思想。此处的interface不要局限于编程语言中的接口。</p>
-<p>如果落实到具体代码，这条原则中的接口可以理解为编程语言中的接口或者抽象类。</p>
-<p>应用这条原则可以有效地提高代码质量，实现接口和实现相分离，封装不稳定的实现，暴露稳定的接口。当实现发生变化的时候，上游系统的代码基本上不需要做改动，以此来降低耦合性，提高扩展性。</p>
-<ul>
-<li>函数的命名不能暴露任何实现细节</li>
-<li>封装具体的实现细节</li>
-<li>为实现类定义抽象的接口，具体的实现类都依赖统一的接口定义，遵从一致的上传功能协议。使用者依赖接口，而不是具体的实现类来编程。</li>
-</ul>
-<p>总之，我们在做软件开发的时候，一定要有抽象意识、封装意识、接口意识。在定义接口的时候，不要暴露任何实现细节，接口的定义只表明做什么，而不是怎么做。而且在设计接口的时候，我们要多思考一下，这样的接口设计是否足够通用，能否做到在替换具体的接口实现的时候，不需要任何接口定义的改动。</p>
-<h3 id="是否要为每个类定义接口？"><a href="#是否要为每个类定义接口？" class="headerlink" title="是否要为每个类定义接口？"></a>是否要为每个类定义接口？</h3><p>如果业务场景中某个功能只有一种实现方式，未来也不可能被其他实现方式替换，那么我们就没有必要为其设计接口，也没有必要基于接口编程，直接使用实现类就可以。</p>
-<h2 id="理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？"><a href="#理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？" class="headerlink" title="理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？"></a>理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？</h2><h3 id="为什么不推荐用继承？"><a href="#为什么不推荐用继承？" class="headerlink" title="为什么不推荐用继承？"></a>为什么不推荐用继承？</h3><p>比如，我们设计一个关于鸟的类AbstractBird，所有细分的鸟都继承这个抽象类。 大部分鸟都可以飞，我们可不可以在抽象类中定义fly()方法呢？答案是不行，因为还有特例，如果我们对所有不会飞的鸟都重写fly方法并且抛出异常也可行，但是不够优雅。一方面增加了代码量另一方面也违背的Least Knowledge Principle（最小知识原则/迪米特法则），暴露了不该暴露的接口给外部，增加了类使用过程中被误用的概率。</p>
-<p>此时再通过抽象类派生出两个细分的类，AbstractFlyableBird/AbstractUnFlyableBird()，这样继承关系就变成3层。如果此时再关注鸟会不会叫等等特点，继承关系就会越来越复杂，导致代码可读性变差。也破坏了类的封装特性，将父类的实现细节暴露给子类，子类的实现依赖父类的实现，两者高度耦合，一旦父类代码修改就会影响所有子类的逻辑。</p>
-<h3 id="组合相比继承有哪些优势？"><a href="#组合相比继承有哪些优势？" class="headerlink" title="组合相比继承有哪些优势？"></a>组合相比继承有哪些优势？</h3><p>我们可以利用组合Composition、接口、委托delegation三个技术手段，一起解决刚刚继承存在的问题。</p>
-<p>接口表示某种行为特性，针对会飞特性我们可以定义Flyable接口，只让会飞的鸟去实现这个接口，对于会叫、会下蛋这些行为特性，类似定义Tweetable接口、EggLayable接口。不过接口只声明方法，不定义实现，也就是所有会下蛋的类都要实现一遍LayEgg()方法，会导致代码重复的问题。</p>
-<p>我们可以针对三个接口再定义三个实现类，通过组合和委托技术来消除代码重复。</p>
-<pre><code>public interface Flyable() {
-    void fly();
-}
-public class FlyAbility implements Flyable {
-    @Override
-    public void fly() {...}
-}
-...
-
-public class Ostrich implements Tweetable, Egglayable {
-    private TweetAbility tweetAbility = new TweetAbility();
-    private EggLayAbility eggLayAbility = new EggLayAbility();
-
-    @Overide 
-    public void tweet() {
-        tweetAbility.tweet();
-    }
-
-    @Overide
-    public void layEgg() {
-        eggLayAbility.layEgg();
-    }
-}
-</code></pre><h3 id="如何判断该用组合还是继承？"><a href="#如何判断该用组合还是继承？" class="headerlink" title="如何判断该用组合还是继承？"></a>如何判断该用组合还是继承？</h3><p>如果类之间的继承结构稳定，继承层次比较浅（最多两层），继承关系不复杂我们就可以大胆使用继承。反之则尽量使用组合。</p>
-<p>有一些设计模式会固定使用继承或组合：</p>
-<ul>
-<li>装饰者模式decorator pattern、策略模式Strategy pattern、组合模式Composite pattern都使用了组合关系</li>
-<li>模版模式template pattern则使用了继承关系</li>
-</ul>
-<p>还有一些特殊场景必须使用继承。如果不能改变函数的入参类型，而入参又非接口，为了支持多态只能采用继承来实现。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1825,7 +2145,7 @@ public class Ostrich implements Tweetable, Egglayable {
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">40</span>
+              <span class="site-state-item-count">45</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
@@ -1835,7 +2155,7 @@ public class Ostrich implements Tweetable, Egglayable {
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">Tags</span>
               </a>
             </div>
@@ -1872,7 +2192,7 @@ public class Ostrich implements Tweetable, Egglayable {
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2020</span>
+  <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

@@ -1,0 +1,613 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="kubernetes," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="kube-proxy在大规模集群中的性能问题以及解决方法The problem with kube-proxy: enabling IPVS on EKS当集群规模增长到1000+个服务时，传统的iptables模式下的kube-proxy可能会遇到性能问题（calico team测试发现），解决方法是将模式切换为IPVS。在切换时需要跑一下kube-proxy cleanup或者重启worker">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes学习——调基础">
+<meta property="og:url" content="http://xiaozhazi.github.io/2019/09/20/Kubernetes学习--其他/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="kube-proxy在大规模集群中的性能问题以及解决方法The problem with kube-proxy: enabling IPVS on EKS当集群规模增长到1000+个服务时，传统的iptables模式下的kube-proxy可能会遇到性能问题（calico team测试发现），解决方法是将模式切换为IPVS。在切换时需要跑一下kube-proxy cleanup或者重启worker">
+<meta property="og:updated_time" content="2021-06-10T15:21:51.006Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kubernetes学习——调基础">
+<meta name="twitter:description" content="kube-proxy在大规模集群中的性能问题以及解决方法The problem with kube-proxy: enabling IPVS on EKS当集群规模增长到1000+个服务时，传统的iptables模式下的kube-proxy可能会遇到性能问题（calico team测试发现），解决方法是将模式切换为IPVS。在切换时需要跑一下kube-proxy cleanup或者重启worker">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2019/09/20/Kubernetes学习--其他/"/>
+
+  <title> Kubernetes学习——调基础 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Startseite
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archiv
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Kubernetes学习——调基础
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2019-09-20T14:53:00+08:00" content="2019-09-20">
+              2019-09-20
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="kube-proxy在大规模集群中的性能问题以及解决方法"><a href="#kube-proxy在大规模集群中的性能问题以及解决方法" class="headerlink" title="kube-proxy在大规模集群中的性能问题以及解决方法"></a>kube-proxy在大规模集群中的性能问题以及解决方法</h2><p><a href="https://medium.com/@jeremy.i.cowan/the-problem-with-kube-proxy-enabling-ipvs-on-eks-169ac22e237e" target="_blank" rel="external">The problem with kube-proxy: enabling IPVS on EKS</a><br>当集群规模增长到1000+个服务时，传统的iptables模式下的kube-proxy可能会遇到性能问题（calico team测试发现），解决方法是将模式切换为IPVS。在切换时需要跑一下kube-proxy cleanup或者重启worker node才能生效。</p>
+<p>K8S集群中的所有worker node上都会运行一个kube-proxy的服务，用来负责将流量路由到后端pods。每次新服务创建时都会增加一个object存储到ETCD中，触发endpoint控制器，该控制器在ETCD中记录一组endpoints。这些断点传播到每个节点的kube-proxy中来更新本地iptable rules。在大规模集群中会遇到以下问题：</p>
+<p>kube-proxy是用户空间程序，允许用户创建内核级的firewall规则。</p>
+<ul>
+<li>插入、删除entries随着集群服务规模增加而越来越低效；</li>
+<li>每一个收到的包都需要和iptables中的rule进行比对匹配，当iptable很大时会导致延迟增加，最终导致低吞吐量。</li>
+<li>表更新时需要全局锁，竞争会进一步导致延迟问题。如一5000个服务的集群可能需要10min来插入一条rule。</li>
+</ul>
+<p>此时就需要IPVS来解决，它是一个内核模式下，传输层负载均衡直接将流量路由到实际的服务中。基于hash而非列表避免了上述问题。同时支持UDP、TCP和提供不同的负载均衡算法：round robin，least connected，destination hashing，source hashing，shortest expected delay，never queue等。</p>
+<p>To enable IPVS, you need to add the –proxy-mode and –ipvs-scheduler flags to the kube-proxy command. </p>
+<h2 id="ECTD如何实现MVCC？"><a href="#ECTD如何实现MVCC？" class="headerlink" title="ECTD如何实现MVCC？"></a>ECTD如何实现MVCC？</h2><p><a href="https://mp.weixin.qq.com/s/mW4juWcLbkcJ7aoHbXNbQA" target="_blank" rel="external">知道MVCC吗？在ETCD中如何实现的</a><br>数据库面对高并发下数据冲突的问题，常用的解决方案：</p>
+<ul>
+<li>避免冲突。使用悲观锁确保同一时刻只有一人能对数据进行更改，如读写锁，两阶段锁</li>
+<li>允许冲突，但发生时有能力检测到。乐观锁，先天乐观的认为冲突不会发生，除非被检测到。如逻辑时钟，MVCC</li>
+</ul>
+<p>其中MVCC因其出色的性能优势，被越来越多的数据库采用。如Oracle，PostgreSQL，MySQL InnoDB，etcd等。它的基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。</p>
+<p>版本一般选择使用时间戳或者事务ID来标识，在处理一个写请求时，MVCC并不是简单的覆盖旧值，而是为这一项添加一个新版本的数据。在读取数据项时，先确定一个要读取的版本，根据版本找到对应的数据。写操作创建新版本，读操作访问旧版本的方式使得读写隔离，不需要锁协调。MVCC读操作不会被阻塞，因此适合ETCD这种读操作比较多的场景。</p>
+<pre><code>type revision struct {
+  main int64  //对应事务ID，全局递增不重复，在ETCD中被当做一个逻辑时钟来使用
+  sub int64 //代表一次事务中不同的修改操作编号，从0开始递增
+}
+
+//keyIndex用来记录一个key声明周期中所涉及的版本，modified最近一次修改的版本号
+type keyIndex struct {
+  key []byte
+  modified revision
+  generations []generation
+}
+//一个generation代表一个key从创建到被删除的过程
+type generation struct {
+  ver int64
+  created revision // first revision
+  revs []revision
+}
+</code></pre><p>treeIndex是一个树状索引，它通过在内存中维护一个B树来达到加速查询key的功能。树的每一个节点都是keyIndex，它实现了Item接口，其中的比较函数主要是比较key的大小。这里只存储key的信息，value保存在磁盘。</p>
+<p>backend封装了etcd中的存储，按照设计，backend可以对接多种存储，当前使用的是boltdb。纯GO实现的支持事务的KV存储，etcd就是基于boltdb事务实现的。 etcd在boltdb中存储的key是revision，value是etcd自己的KV组合，每次更新时，新的revision记在keyIndex中，同时revision对应的KV组合存储在boltdb中。</p>
+<p>总之，内存btree维护的是key到keyIndex的映射，keyIndex内维护多版本的revision信息，revision可以映射到磁盘bolt中具体的value。</p>
+<ol>
+<li>K8S的服务发现是如何做的？<br><a href="https://blog.fleeto.us/post/demystifying-kubernetes-service-discovery/" target="_blank" rel="external">浅谈K8S中的服务发现</a></li>
+</ol>
+<p>每个Pod都会附着在一个大的扁平的IP网络中，通常是VXLAN叠加网络。每个Pod都有自己的IP，在pod网络中可路由，因此应用之间不需要NAT之类的网络过程，可直接通信。</p>
+<p>Pod动态添加和删除时，都会伴随Pod IP列表的变化，如果每个应用都检测网络管理Pod列表会比较低效。K8S通过Service对象简化该过程。客户端和Service通信，Service负责将流量负载均衡给Pod。</p>
+<p>Service可以分为前后端两部分：前端稳定可靠，名称、IP、端口在Service整个生命周期都不会改变，无需担心客户端DNS缓存超时等问题；后端是高度动态的，包括一组符合标签选择条件的Pod，通过负载均衡的方式访问。4层轮询，工作在连接层面，同一个连接的所有请求都会进入同一个pod。</p>
+<p>服务注册： k8s通过DNS作为服务注册表，集群会在kube-system命名中间中运行一个DNS服务，以pod的形式，成为集群DNS。</p>
+<ul>
+<li>向API server以POST方式提交一个新的service定义；</li>
+<li>请求经过认证、鉴权以及准入策略检查；</li>
+<li>service得到一个clusterIP，并保存到集群数据仓库中；</li>
+<li>在集群范围内广播Service配置；</li>
+<li>集群DNS服务得知该Service的创建，据此创建必要的DNSA记录 （集群DNS使用CoreDNS，实现了一个控制器对apiserver监听，一旦有新service对象就创建一个从service名到clusterIP的映射域名记录）</li>
+</ul>
+<p>K8S自动为每个service创建endpoint对象，保存符合条件的pod列表。</p>
+<p>服务发现： 本地DNS解析缓存没有记录时，向DNS服务器发起对域名your-app-svc的查询，得到服务的clusterIP。然后尝试向这个IP发送流量，service network没有路由所以容器把发现这种地址的流量都发送给缺省网关。这些流量会被转发到pod所在节点的网卡上。节点的网络栈也没有路由能到达service网络，只能发送给自己的缺省网关。每个k8s节点上都有kube-proxy系统服务，会监控apiserver上service的变化，并创建iptables或者IPVS规则。这些规则告知节点捕获service网络的报文，并转发给Pod IP。</p>
+<p>创建新的 Service 对象时，会得到一个虚拟 IP，被称为 ClusterIP。服务名及其 ClusterIP 被自动注册到集群 DNS 中，并且会创建相关的 Endpoints 对象用于保存符合标签条件的健康 Pod 的列表，Service 对象会向列表中的 Pod 转发流量。与此同时集群中所有节点都会配置相应的 iptables/IPVS 规则，监听目标为 ClusterIP 的流量并转发给真实的 Pod IP。</p>
+<p>一个 Pod 需要用 Service 连接其它 Pod。首先向集群 DNS 发出查询，把 Service 名称解析为 ClusterIP，然后把流量发送给位于 Service 网络的 ClusterIP 上。然而没有到 Service 网络的路由，所以 Pod 把流量发送给它的缺省网关。这一行为导致流量被转发给 Pod 所在节点的网卡，然后是节点的缺省网关。这个操作中，节点的内核修改了数据包 Header 中的目标 IP，使其转向健康的 Pod。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/kubernetes/" rel="tag">#kubernetes</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/10/Kubernetes学习--调度/" rel="next" title="Kubernetes学习——调度策略">
+                <i class="fa fa-chevron-left"></i> Kubernetes学习——调度策略
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/" rel="prev" title="《Linux 性能优化实战》第一周--CPU性能篇(上)">
+                《Linux 性能优化实战》第一周--CPU性能篇(上) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">45</span>
+              <span class="site-state-item-name">Artikel</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">Tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#kube-proxy在大规模集群中的性能问题以及解决方法"><span class="nav-number">1.</span> <span class="nav-text">kube-proxy在大规模集群中的性能问题以及解决方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ECTD如何实现MVCC？"><span class="nav-number">2.</span> <span class="nav-text">ECTD如何实现MVCC？</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

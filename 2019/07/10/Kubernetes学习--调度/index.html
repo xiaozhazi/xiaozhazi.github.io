@@ -1,0 +1,675 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="kubernetes," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="In Kubernetes, scheduling refers to making sure that Pods are matched to Nodes so that Kubelet can run them.
+首先学习Linux调度器的演化，然后Go语言调度器实现的发展，最后再看K8S调度器的演进以及如何自定义调度器。
+1. Linux系统调度器演进最初的进程调度仅有sched.h sch">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes学习——调度策略">
+<meta property="og:url" content="http://xiaozhazi.github.io/2019/07/10/Kubernetes学习--调度/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="In Kubernetes, scheduling refers to making sure that Pods are matched to Nodes so that Kubelet can run them.
+首先学习Linux调度器的演化，然后Go语言调度器实现的发展，最后再看K8S调度器的演进以及如何自定义调度器。
+1. Linux系统调度器演进最初的进程调度仅有sched.h sch">
+<meta property="og:updated_time" content="2021-06-10T15:20:45.972Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kubernetes学习——调度策略">
+<meta name="twitter:description" content="In Kubernetes, scheduling refers to making sure that Pods are matched to Nodes so that Kubelet can run them.
+首先学习Linux调度器的演化，然后Go语言调度器实现的发展，最后再看K8S调度器的演进以及如何自定义调度器。
+1. Linux系统调度器演进最初的进程调度仅有sched.h sch">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2019/07/10/Kubernetes学习--调度/"/>
+
+  <title> Kubernetes学习——调度策略 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Startseite
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archiv
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Kubernetes学习——调度策略
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2019-07-10T21:45:00+08:00" content="2019-07-10">
+              2019-07-10
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>In Kubernetes, scheduling refers to making sure that Pods are matched to Nodes so that Kubelet can run them.</p>
+<p>首先学习Linux调度器的演化，然后Go语言调度器实现的发展，最后再看K8S调度器的演进以及如何自定义调度器。</p>
+<h1 id="1-Linux系统调度器演进"><a href="#1-Linux系统调度器演进" class="headerlink" title="1. Linux系统调度器演进"></a>1. Linux系统调度器演进</h1><h2 id="最初的进程调度"><a href="#最初的进程调度" class="headerlink" title="最初的进程调度"></a>最初的进程调度</h2><p>仅有sched.h sched.c两个文件构成，只有几十行代码就负责了操作系统进程的调度。所有的调度进程都存储在上限为64的数组中，调度器能处理的进程上限只有64.</p>
+<p>先唤醒获得信号的可中断进程，从队列倒序查找计数器counter最大的可执行进程，counter是进程能够占用的时间切片数量：</p>
+<ul>
+<li>如果最大的counter &gt; 0，调用汇编实现的switch_to切换进程</li>
+<li>如果最大的counter = 0，所有进程的可执行时间都为0，那么所有进程都会获得新的时间切片</li>
+</ul>
+<p>Linux系统计时器每隔10ms触发一次do_timer将当前运行进程的counter-1，当前进程计数器归0时重新触发调度。</p>
+<h2 id="O-n-调度器"><a href="#O-n-调度器" class="headerlink" title="O(n)调度器"></a>O(n)调度器</h2><p>Linux v2.4-2.6版本使用的，在最坏情况下会遍历所有任务，所以调度时间复杂度为O(n)。调度器将CPU时间分割成不同的时期Epoch，即每个任务能使用的时间切片。</p>
+<p>其实现比最初的复杂很多，在schedule函数中遍历运行队列的所有任务，并调用goodness函数计算它们的权重，获得下一个运行的进程。</p>
+<p>默认情况下每个任务在一个周期内都会分配200ms左右的时间片，当系统包含100个进程时，同一个进程被运行两次的间隔是21s，严重影响了可用性。每轮调度完成后就会陷入没有任务需要调度的情况，对于需要实时交互的场景不适合。</p>
+<h2 id="O-1-调度器"><a href="#O-1-调度器" class="headerlink" title="O(1)调度器"></a>O(1)调度器</h2><p>Linux在v2.6.0-v2.6.22用了4年该调度器，支持在常数时间内完成调度。调度代码从2100行增加到了5000行。</p>
+<ul>
+<li>支持O(1)时间复杂度， 通过运行队列runqueue和优先数组prio_array，每个运行队列都持有两个优先数组，分别存储活跃和过期的进程数组。</li>
+<li>支持对称多处理器SMP扩展性，引入本地队列解决降低多处理器下锁的粒度和冲突的可能性。引入工作窃取保证多个运行队列任务的平衡</li>
+<li>优化了对称多处理器的亲和性</li>
+</ul>
+<h2 id="完全公平调度器"><a href="#完全公平调度器" class="headerlink" title="完全公平调度器"></a>完全公平调度器</h2><p>CFS是在v2.6.23被合并进内核的调度器，目的是最大化CPU利用率和交互性能。</p>
+<ul>
+<li>调度器查找运行队列中受到不公平待遇的进程，并为其分配计算资源，分配的计算资源是与其他资源运行时间的差值+最小能够运行的时间单位；</li>
+<li>进程运行结束后发现队列中又有其他进程受到不公平待遇，调度器又运行新的进程</li>
+<li>…循环往复保证各个进程的运行时间差不会大于最小运行时间单位</li>
+</ul>
+<p>运行队列通过<strong>红黑树</strong>来替代之前的链表，增删改查最坏时间复杂度为O(logN)，树的最左侧节点运行时间最短，也就是下个待运行的进程。<br>调度过程和O(1)类似，只是增加了可选的工作窃取机制并改变了底层数据结构。通过调度类实现不同任务类型的不同调度策略。</p>
+<h1 id="2-Go语言调度器的演进"><a href="#2-Go语言调度器的演进" class="headerlink" title="2. Go语言调度器的演进"></a>2. Go语言调度器的演进</h1><p>Go语言高并发支持依靠的就是运行时的调度器。</p>
+<h2 id="单线程调度器"><a href="#单线程调度器" class="headerlink" title="单线程调度器"></a>单线程调度器</h2><p>0.x版本调度器只包含表示Goroutine的G和表示线程的M两种结构，全局只有一个线程。 此时调度器还是由C语言实现，调度函数只包含40行代码。</p>
+<p>获取调度器的全局锁；调用gosave保存栈寄存器和pc；调用nextgandunlock获取下一个需要运行的goroutine并解锁调度器；修改全局线程m上要执行的G，调用gogo函数运行最新的G。</p>
+<h2 id="多线程调度器"><a href="#多线程调度器" class="headerlink" title="多线程调度器"></a>多线程调度器</h2><p>在1.0版本正式支持了多线程的调度器，实现了从不可用到可用的跨越。调度函数包含70行代码，引入了GOMAXPROCS变量帮助控制程序中的最大处理器数，即活跃线程数。</p>
+<p>多线程调度器的主要问题是调度时锁竞争会严重浪费资源，14%的时间都花费在futex上。因此该调度器有以下问题需要解决：</p>
+<ul>
+<li>调度器和锁是全局资源，所有调度状态中心化存储，竞争严重</li>
+<li>线程需要经常互相传递可运行的G，引入大量延迟</li>
+<li>每个线程都需要处理内存缓存，导致大量的内存占用并影响数据局部性</li>
+<li>系统调用频繁阻塞和解除阻塞正在运行的线程，增加了额外开销</li>
+</ul>
+<h2 id="任务窃取调度器"><a href="#任务窃取调度器" class="headerlink" title="任务窃取调度器"></a>任务窃取调度器</h2><p>在GM模型中引入P，增加中间层；在处理器P的基础上实现基于工作窃取的调度器。</p>
+<ul>
+<li>如果当前运行时在等待垃圾回收，调用gcstopm函数</li>
+<li>调用runqget和findrunnable函数从本地或全局的运行队列中获取待执行的G</li>
+<li>调用execute在当前M上运行该G</li>
+</ul>
+<p>处理器P持有一个由可运行的G组成的运行队列runq，并且反向持有一个线程M。</p>
+<p>存在的问题：1)某些G可以长时间占用线程，造成饥饿问题；2)垃圾回收需要暂停整个程序</p>
+<h2 id="抢占式调度器"><a href="#抢占式调度器" class="headerlink" title="抢占式调度器"></a>抢占式调度器</h2><p>1.1版本的调度器不支持抢占，程序只能依靠G主动让出CPU资源才能触发调度。因此在1.2版本中引入了基于协作的抢占调度，能缓解上述问题。但是存在一些无法被抢占的边缘情况，如for循环或垃圾回收STW，这些问题直到1.14基于信号的抢占式调度才解决。</p>
+<h3 id="基于协作抢占"><a href="#基于协作抢占" class="headerlink" title="基于协作抢占"></a>基于协作抢占</h3><p>编译器会在调用函数前插入morestack；Go语言运行时会在垃圾回收暂停程序、系统监控发现G运行超过10ms时发出抢占请求StackPreempt；当发生函数调用时，可能会执行编译器插入的morestack函数，它调用的newstack会检查G的stackguard0字段是否为StackPreempt；如果是则触发抢占让出该线程；</p>
+<p>这里的抢占是通过编译器插入函数实现，需要函数调用作为入口才能触发，因此是一种协作式的抢占式调度。</p>
+<h3 id="基于信号抢占"><a href="#基于信号抢占" class="headerlink" title="基于信号抢占"></a>基于信号抢占</h3><p>程序启动时，在sighandler函数中注册SIGURG信号的处理函数doSigPreempt；在触发垃圾回收的栈扫描时调动suspendG挂起G，该函数会将_Grunning状态的G标记成可以被抢占，即将preemptStop设置为true，然后调用preemptM触发抢占；preemptM会调用singnalM向线程发送SIGURG信号；系统会中断正在运行的线程并执行doSigPreempt函数；该函数会处理抢占信号，获取当前SP和PC寄存器并调用sigctxt.pushCall；pushCall会修改寄存器并在程序回到用户态时执行asyncPreempt-&gt;asyncPreempt2-&gt;preemptPark；后者会将当前G状态改为_GPreempted并调用schedule函数让当前函数休眠并让出线程，调度器选择其他G执行。</p>
+<p>选择SIGURG的原因：1)信号需要被调试器透传 2)信号不会被内部libc库使用并拦截 3)信号可以随意出现并不触发任何后果 4)需要处理多平台不通信号</p>
+<h2 id="NUMA调度器"><a href="#NUMA调度器" class="headerlink" title="NUMA调度器"></a>NUMA调度器</h2><p>目前只是提案，因为过于复杂且目前调度性能足够优异，因此暂时没有实现。其原理是通过拆分全局资源，让各个处理器能够就近获取，减少锁竞争并增加数据局部性。堆栈、全局运行队列、线程池会按照NUMA节点分区，网络轮询器和计时器由单独处理器持有。</p>
+<h1 id="3-Kubernetes调度器演进"><a href="#3-Kubernetes调度器演进" class="headerlink" title="3. Kubernetes调度器演进"></a>3. Kubernetes调度器演进</h1><h2 id="基于谓词和优先级的调度器"><a href="#基于谓词和优先级的调度器" class="headerlink" title="基于谓词和优先级的调度器"></a>基于谓词和优先级的调度器</h2><p>Predicates和Priorities调度器是从v1.0.0发布时就存在的模式，v1.14.0最后实现和最初设计也没太多区别。不过其中引入了多次改进：</p>
+<ul>
+<li>调度器扩展，v1.2.0，通过外部调度器扩展的方式改变调度器策略</li>
+<li>Map-Reduce优先级算法，v1.5.0，为调度器优先级算法支持MapReduce计算方式，引入可并行的Map阶段优化调度器计算性能</li>
+<li>调度器迁移，v1.10.0,从plugin/pkg/scheduler -&gt; pkg/scheduler，kube-scheduler成为对外直接提供的可执行文件</li>
+</ul>
+<p>谓词算法使用FitPredicate类型，优先级算法使用PriorityMapFunction和PriorityReduceFunction两种类型。</p>
+<ul>
+<li>从NodeLister中获取当前系统中存在的全部节点； </li>
+<li>调用genericScheduler.findNodesThatFit方法执行全部的谓词过滤节点<ul>
+<li>根据传入pod和node对节点进行过滤，过滤掉端口号冲突，资源不足的节点</li>
+<li>调用所有调度器扩展的Filter方法辅助过滤</li>
+</ul>
+</li>
+<li>调用PrioritizeNodes函数为所有节点打分<ul>
+<li>以Pod和Node作为参数并执行同一优先级的PriorityMapFunction</li>
+<li>以Pod和优先级返回的NOde到分数的映射为参数调用PriorityReduceFunction函数</li>
+<li>调用所有调度器扩展的Prioritize方法</li>
+<li>将所有分数按照权重相加后返回从Node到分数的映射</li>
+</ul>
+</li>
+<li>调用genericScheduler.selectHost方法选择得分最高的节点<h2 id="基于调度框架的调度器"><a href="#基于调度框架的调度器" class="headerlink" title="基于调度框架的调度器"></a>基于调度框架的调度器</h2>2018年提出的最新调度器设计，明确了K8S中各个调度阶段，提供设计良好的基于插件的接口。调度框架认为K8S目前存在Scheduling和Binding两个循环：</li>
+<li>调度循环在多个Node中为Pod选取最合适的Node</li>
+<li>绑定循环将调度决策应用到集群中，包括绑定pod和node，绑定持久存储等</li>
+</ul>
+<p>除了两大循环外，调度器还包含QueueSort、PreFilter、Filter、PostFilter、Score、Reserve、Permit、PreBind、Bind、PostBind和Unreserve11个扩展点。</p>
+<p>通过调度器中的Scheduler.schedulerOne方法作为入口分析其实现：</p>
+<ul>
+<li>调度阶段<ul>
+<li>调用内部优先队列的MakeNextPodFunc从队列中获取下一个等待调度的Pod，用于维护等待Pod的队列会执行QueueSort插件</li>
+<li>调用genericScheduler.Schedule函数选择节点，该过程会执行PreFilter，Filter，PostFilter，Score四个扩展点的插件</li>
+<li>调用framework.RunReservePlugins函数运行Reserve插件，用于保留资源并进入绑定阶段。如果运行失败会调用Unreserve插件</li>
+</ul>
+</li>
+</ul>
+<p>因为每一次调度策略都会改变上下文，所以该阶段需要串行执行。</p>
+<ul>
+<li>绑定阶段<ul>
+<li>启动一个G并调用framework.RunPermitPlugin异步运行Permit插件，该阶段可以实现批调度</li>
+<li>调用Scheduler.bindVolume将卷先绑定在Node上</li>
+<li>调用Scheduler.bind函数将Pod绑定到Node上完成调度，绑定过程会执行PreBind、Bind、PostBind三个扩展点的插件</li>
+</ul>
+</li>
+</ul>
+<h2 id="自定义K8S调度器"><a href="#自定义K8S调度器" class="headerlink" title="自定义K8S调度器"></a>自定义K8S调度器</h2><p><a href="https://www.qikqiak.com/post/custom-kube-scheduler/" target="_blank" rel="external">自定义K8S调度器</a><br>默认情况下，kube-scheduler提供的默认调度器能满足绝大多数需求，在实际项目中，因为开发者相比K8S更了解自己的应用，需要定制化调度。</p>
+<p>kube-scheduler是一个独立的二进制程序，启动之后会一直监听API Server，获取到PodSpec.NodeName为空的pod，对每个pod创建一个binding。看起来流程非常简单，但在实际生产环境中，需要考虑：</p>
+<ul>
+<li>如何保证全部的节点调度公平性？并不是所有节点资源配置都相同 </li>
+<li>如何保证每个节点都能被分配资源？</li>
+<li>集群资源如何能够被高效利用？</li>
+<li>集群资源如何能够被最大化利用？</li>
+<li>如何保证Pod调度的性能和效率？</li>
+<li>用户是否可以根据自己的实际需求定制自己的调度策略？</li>
+</ul>
+<p>考虑到实际环境中的复杂情况，K8S调度器采用插件化的形式实现，可以方便用户进行定制或者二次开发。</p>
+<ul>
+<li>直接clone kube-scheduler源码修改重新编译后运行， 不推荐，因为需要花费额外精力来和上游的调度程序保持一致；</li>
+<li>和默认的调度程序一起运行独立的调度程序，默认的调度器和我们自定义的调度器可以通过pod的spec.schedulerName来覆盖各自的pod。但是多个调度器同时存在比较麻烦，比如多个调度器将pod调度到同一节点时，节点资源如果不能同时满足的话会出问题。而且维护一个高质量的自定义调度程序也不容易，需要全面了解默认的调度程序，k8s架构以及各种kubernetes api对象的关系和限制等。</li>
+<li>调度器扩展程序，可以和上游调度程序兼容，本质就是一个可配置的webhook，包含过滤器和优先级两个端点。1.16中废弃</li>
+<li>调度框架，1.15版本之后引入可插拔架构的调度框架，使得定制调度器变得容易。调度框架向现有调度器添加了一组插件化的API，该API在保持调度程序核心简单且易于维护的同时，使得大部分调度功能以插件的形式存在。</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/kubernetes/" rel="tag">#kubernetes</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/16/Kubernetes学习——etcd/" rel="next" title="Kubernetes学习——etcd">
+                <i class="fa fa-chevron-left"></i> Kubernetes学习——etcd
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/20/Kubernetes学习--其他/" rel="prev" title="Kubernetes学习——调基础">
+                Kubernetes学习——调基础 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">45</span>
+              <span class="site-state-item-name">Artikel</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">Tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Linux系统调度器演进"><span class="nav-number">1.</span> <span class="nav-text">1. Linux系统调度器演进</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#最初的进程调度"><span class="nav-number">1.1.</span> <span class="nav-text">最初的进程调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#O-n-调度器"><span class="nav-number">1.2.</span> <span class="nav-text">O(n)调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#O-1-调度器"><span class="nav-number">1.3.</span> <span class="nav-text">O(1)调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#完全公平调度器"><span class="nav-number">1.4.</span> <span class="nav-text">完全公平调度器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Go语言调度器的演进"><span class="nav-number">2.</span> <span class="nav-text">2. Go语言调度器的演进</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#单线程调度器"><span class="nav-number">2.1.</span> <span class="nav-text">单线程调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多线程调度器"><span class="nav-number">2.2.</span> <span class="nav-text">多线程调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#任务窃取调度器"><span class="nav-number">2.3.</span> <span class="nav-text">任务窃取调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抢占式调度器"><span class="nav-number">2.4.</span> <span class="nav-text">抢占式调度器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基于协作抢占"><span class="nav-number">2.4.1.</span> <span class="nav-text">基于协作抢占</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基于信号抢占"><span class="nav-number">2.4.2.</span> <span class="nav-text">基于信号抢占</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NUMA调度器"><span class="nav-number">2.5.</span> <span class="nav-text">NUMA调度器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-Kubernetes调度器演进"><span class="nav-number">3.</span> <span class="nav-text">3. Kubernetes调度器演进</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基于谓词和优先级的调度器"><span class="nav-number">3.1.</span> <span class="nav-text">基于谓词和优先级的调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于调度框架的调度器"><span class="nav-number">3.2.</span> <span class="nav-text">基于调度框架的调度器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#自定义K8S调度器"><span class="nav-number">3.3.</span> <span class="nav-text">自定义K8S调度器</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

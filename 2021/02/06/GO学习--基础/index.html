@@ -1,0 +1,674 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Go," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="context 如何被取消？
+
+context 是什么？有什么作用？
+
+context.value的查找过程是怎样的？
+
+gomaxprocs调高引起调度性能损耗golang gomaxprocs调高引起调度性能损耗golang运行时调度依赖PMG抽象，P为逻辑处理器，M为执行线程，G为协程。P的runq中存放可执行的G结构。golang默认的P数量是cpu的物理核心数目。同一时间一个P只能绑定">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GO学习--基础问题">
+<meta property="og:url" content="http://xiaozhazi.github.io/2021/02/06/GO学习--基础/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="context 如何被取消？
+
+context 是什么？有什么作用？
+
+context.value的查找过程是怎样的？
+
+gomaxprocs调高引起调度性能损耗golang gomaxprocs调高引起调度性能损耗golang运行时调度依赖PMG抽象，P为逻辑处理器，M为执行线程，G为协程。P的runq中存放可执行的G结构。golang默认的P数量是cpu的物理核心数目。同一时间一个P只能绑定">
+<meta property="og:updated_time" content="2021-06-10T15:24:36.349Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GO学习--基础问题">
+<meta name="twitter:description" content="context 如何被取消？
+
+context 是什么？有什么作用？
+
+context.value的查找过程是怎样的？
+
+gomaxprocs调高引起调度性能损耗golang gomaxprocs调高引起调度性能损耗golang运行时调度依赖PMG抽象，P为逻辑处理器，M为执行线程，G为协程。P的runq中存放可执行的G结构。golang默认的P数量是cpu的物理核心数目。同一时间一个P只能绑定">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2021/02/06/GO学习--基础/"/>
+
+  <title> GO学习--基础问题 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Startseite
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archiv
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                GO学习--基础问题
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-02-06T22:00:00+08:00" content="2021-02-06">
+              2021-02-06
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <ol>
+<li><p>context 如何被取消？</p>
+</li>
+<li><p>context 是什么？有什么作用？</p>
+</li>
+<li><p>context.value的查找过程是怎样的？</p>
+</li>
+<li><p>gomaxprocs调高引起调度性能损耗<br><a href="http://xiaorui.cc/archives/6334" target="_blank" rel="external">golang gomaxprocs调高引起调度性能损耗</a><br>golang运行时调度依赖PMG抽象，P为逻辑处理器，M为执行线程，G为协程。P的runq中存放可执行的G结构。golang默认的P数量是cpu的物理核心数目。同一时间一个P只能绑定一个M线程，PM绑定后会寻找合适的G运行。</p>
+</li>
+</ol>
+<p>增加P的数量是够可以加大运行时对于协程的吞吐量呢？</p>
+<p>大多数golang项目都偏重网络IO，network io在netpoll设计下都是非阻塞的，所涉及的syscall不会阻塞。如果是CPU密集的业务，增加多个P也没用，毕竟CPU计算资源有限，增加P会导致额外的切换开销。因此，多数场景下增加P并不能增加吞吐量。如果业务逻辑中有不少的cgo以及阻塞syscall的操作，那么增加P还是有效果的。因为这类操作可能因为过慢引起阻塞，阻塞期间P被该MG绑定，其他M无法获取P的所有权。虽然findrunnable steal机制里其他P的M可以偷取该P任务，但是在解绑P之前终究还是少了并行通道。</p>
+<p>golang在docker中初始化processor是依据/proc/cpuinfo信息的，和宿主机一样都是和物理核数相同。但是容器一般会限定CPU、memory资源，因此最终也只能用到限制的CPU核数。两种方法可以校对：要么在K8S pod中加入限制变量，golang启动时获取CPU信息；要么解析cpu.cfs_period_us cpu.cfs_quota_us配置来计算CPU资源。</p>
+<p>如果运行时processor多了会出现什么问题？</p>
+<p>一个是运行时findrunnable产生损耗，一个是线程引起上下文切换。findrunnable方法是解决m找到可程的函数，当绑定P本地runq上找不到可执行的G时，尝试从全局链表中拿，再拿不到从netpoll和事件池里拿，最后会从别的P里偷任务。</p>
+<p>因此建议gomaxprocs配置为CPU core数量就可以了，默认就是该配置。如果涉及阻塞syscall可以适当调整，但是最好测试用指标验证是否合理。</p>
+<ol>
+<li><p>深入理解WaitGroup</p>
+</li>
+<li><p>go 栈内存的内存和逃逸分析</p>
+</li>
+<li><p>Go指针和unsafe.Pointer有什么区别？</p>
+</li>
+<li><p>如何利用unsafe包修改私有成员？</p>
+</li>
+<li><p>如何利用unsafe包获取slice和map的长度</p>
+</li>
+<li><p>如何实现字符串和btye切片的零拷贝转换？</p>
+</li>
+<li><p>new和make的区别？</p>
+</li>
+<li><p>引用类型有哪些？</p>
+</li>
+<li><p>go的内存模型中，为什么小对象多了会造成gc压力？</p>
+</li>
+</ol>
+<ol>
+<li>go 并发调度器解析<br><a href="https://zhuanlan.zhihu.com/p/37754274" target="_blank" rel="external">GO并发调度器解析之实现一个高性能协程池</a></li>
+</ol>
+<ul>
+<li>Goroutine&amp;Scheduler<br>goroutine并非传统意义上的协程coroutine的golang实现。现在主流线程模型有三种：用户级线程模型、内核级线程模型、两级线程模型。传统的协程基于用户级线程模型，而goroutine个go scheduler在底层实现上其实是属于两级线程模型。</li>
+<li>三种线程模型分析<br>三种线程模型之间最大的差异就在于用户线程与内核调度实体KSE（Kernel Scheduler Entity）之间的对应关系。KSE指可以被操作系统内核调度器调度的对象实体，即内核级线程。<ul>
+<li>用户级线程： 和KSE多对一映射，多个用户线程一般属于单个进程并且多线程调度由用户自己的线程库完成。线程创建、销毁、以及多线程之间的协调操作都是由用户自己的线程库负责。一个进程中所有的线程都只和同一个KSE动态绑定。 <ul>
+<li>调度在用户层面完成，相比于内核调度减少了用户态内核态切换开销，实现比较轻量级。</li>
+<li>不能做到真正意义上的并发，假设某个进程上的一个用户线程因为阻塞调用被CPU中断，那么该进程中上所有线程都被阻塞。因此很多协程库会把自己一些阻塞操作重新封装为完全的非阻塞模式，在之前的阻塞点主动让出自己，并以某种方式通知或唤醒其他待执行的用户线程在该KSE上运行。</li>
+</ul>
+</li>
+<li>内核级线程： 和KSE一对一映射，线程调度完全交给内核完成。<ul>
+<li>实现简单，直接借助操作系统内核的线程和调度器，CPU可以快速切换调度线程，真正做到并发处理</li>
+<li>线程创建、销毁、切换调度开销较大</li>
+</ul>
+</li>
+<li>两级线程： 和KSE多对多映射，一个进程可以和多个内核线程KSE关联，即一个进程内的多个线程可以分别绑定一个自己的KSE。区别与内核级线程模型的是，它的进程里的线程并不与KSE唯一绑定，而是多个用户线程映射同一个KSE，当某个KSE因为其绑定的线程阻塞操作被内核调度出CPU时，其关联进程中其余用户线程可以重新和该KSE绑定。 Go语言的runtime调度器就采用这种实现方案，用户调度器实现用户线程到KSE的调度，内核调度器实现KSE到CPU上的调度。</li>
+</ul>
+</li>
+<li>GPM模型<br>Goroutine栈采用动态扩容方式，初始2KB，随着任务执行按需增长最大可达1GB（32位256M），且完全由golang自己的调度器Go Scheduler来调度。GC会周期性地将不再使用的内存回收，收缩栈空间。因此Go程序可以同时并发成千上万个goroutine得益于它的调度器和高效的内存模型。<ul>
+<li>G：Goroutine，存储Goroutine的运行堆栈、状态以及任务函数，可重用。G需要绑定到P上才能执行</li>
+<li>P：Processor，逻辑处理器，对于G来说其相当于CPU核，G只有绑定到P中才能被调度。对M来说P提供了相关的执行环境Context，如内存分配状态mcache，任务队列等。P的数量决定了系统内最大可并行的G数量，用户配置GMAXPROCS来决定，但无论用户设置其最大值不超过256.</li>
+<li>M：Machine，操作系统线程抽象，代表真正执行计算的资源，在绑定有效P后进入schedule循环；循环从Global队列、P的Local队列、以及等待队列中获取G，切换到G的执行栈上并执行G的函数，调用goexit清理后回到M，如此反复。M并不保留G的状态，因此G可以跨M调度。M数量有Go runtime调整，默认最大为1w个。</li>
+</ul>
+</li>
+<li>GPM模型调度<br>Go调度器工作时会维护两个队列：Global和每个P的Local任务队列。当通过go关键字创建G时，它会被优先放入P的本地队列。为了运行G，M需要持有并绑定一个P，接着M启动系统线程循环从P的本地队列读取G执行。当M执行完本地队列中所有G后，P会尝试从Global队列寻找G来执行，如果Global为空，则随机挑选另外一个P，从其Local队列中拿走一半的G到自己队列。</li>
+</ul>
+<ol>
+<li>go 内存分配<br><a href="https://mp.weixin.qq.com/s/Hm8egXrdFr5c4-v--VFOtg" target="_blank" rel="external">图解Go语言内存分配</a><br>Golang运行时内存分配算法源自Google为C语言开发的TCMalloc算法，ThreadCachingMalloc。把内存多级管理，降低锁的粒度。将可用的堆内存采用二级分配的方式进行管理，每个线程都会自动维护一个独立的内存池，进行内存分配时优先从内存池中分配，不足时再向全局内存池申请。</li>
+</ol>
+<p>Go程序启动时首先会向OS申请一块内存（虚拟内存），切成小块自己进行管理。 申请到的内存分配3个区域：X86上为512M spans，16GB bitmaps，512GB arena。</p>
+<ul>
+<li>arena区域就是我们所谓的堆区，Go动态分配的内存都是在这个区域，它把内存分割成 8KB大小的页，一些页组合起来称为 mspan。</li>
+<li>bitmap区域标识 arena区域哪些地址保存了对象，并用 4bit标志位表示对象是否包含指针、 GC标记信息. 1 byte对应arena中4个指针大小的内存， 512GB/(4*8B)=16G</li>
+<li>spans区域存放mspan的指针，每个指针对应一页。spans的大小为512GB/8KB*8B=512M .创建mspan的时候，按页填充对应的spans区域，在回收object时，根据地址很容易就能找到它所属的 mspan。</li>
+</ul>
+<p>arena起始地址和bitmap起始地址一样，因为bitmap从高地址向低地址增长。</p>
+<p>mspan：Go中内存管理的基本单元，是由一片连续的 8KB的页组成的大块内存。是包含起始地址、mspan规格、页的数量等内容的双端链表。 每个mspan按照它自身的属性SizeClass的大小分割成若干个object，每个object可存储一个对象。 Size_Class= Span_Class/2， 其实每个SizeClass有两个mspan，也就是有两个SpanClass。其中一个分配给含有指针的对象，另一个分配给不含有指针的对象。SizeClass有67种， 对于微小对象（小于16B），分配器会将其进行合并，将几个对象分配到同一个 object中。</p>
+<p>内存分配由内存分配器完成。分配器由3种组件构成： mcache, mcentral, mheap。每个工作线程都会绑定一个mcache，本地缓存可用的mspan资源。</p>
+<ul>
+<li>mcache用 SpanClasses作为索引管理多个用于分配的 mspan，它包含所有规格的 mspan。它是 _NumSizeClasses的2倍，也就是 67*2=134，为什么有一个两倍的关系，前面我们提到过：为了加速之后内存回收的速度，数组里一半的 mspan中分配的对象不包含指针，另一半则包含指针。mcache在初始化的时候是没有任何 mspan资源的，在使用过程中会动态地从mcentral申请，之后会缓存下来。当对象小于等于32KB大小时，使用 mcache的相应规格的 mspan进行分配。</li>
+<li>mcentral：为所有 mcache提供切分好的 mspan资源。每个 central保存一种特定大小的全局 mspan列表，包括已分配出去的和未分配出去的。<ul>
+<li>获取： 加锁；从nonempty中找到一个可用的mspan；将其从nonempty中删除；将取出的mspan加入到empty链表；将mspan返回给线程；解锁。</li>
+<li>归还： 加锁；将mspan从empty中删除；加入到nonempty链表中；解锁</li>
+</ul>
+</li>
+<li>mheap：代表Go程序持有的所有堆空间，Go程序使用一个 mheap的全局对象 _mheap来管理堆内存。当 mcentral没有空闲的 mspan时，会向 mheap申请。而 mheap没有资源时，会向操作系统申请新内存。 mheap主要用于大对象的内存分配，以及管理未切割的 mspan，用于给 mcentral切割成小对象。</li>
+</ul>
+<p>Go的内存分配器在分配对象时，根据对象的大小，分成三类：小对象（小于等于16B）、一般对象（大于16B，小于等于32KB）、大对象（大于32KB）。</p>
+<ul>
+<li><blockquote>
+<p>32KB直接从mheap分配</p>
+</blockquote>
+</li>
+<li>&lt;=16B使用mcache的tiny分配器分配</li>
+<li>（16B，32KB]，首先计算对象规格大小，使用mcache相应规格大小的mspan分配<ul>
+<li>如果mcache没有相应规格大小的mspan，则向mcentral申请</li>
+<li>如果mcentral没有相应规格大小的mspan，则向mheap申请</li>
+<li>如果mheap中也没有合适大小的mspan，则向操作系统申请</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Go/" rel="tag">#Go</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/12/25/学习笔记W2/" rel="next" title="学习笔记W2">
+                <i class="fa fa-chevron-left"></i> 学习笔记W2
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/02/23/GO学习--GC/" rel="prev" title="GO学习--GC">
+                GO学习--GC <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">45</span>
+              <span class="site-state-item-name">Artikel</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">Tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <p class="post-toc-empty">Dieser Artikel hat kein Inhaltsverzeichnis</p>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

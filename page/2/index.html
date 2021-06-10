@@ -235,6 +235,510 @@
             
               
                 
+                <a class="post-title-link" href="/2020/09/27/深入理解计算机系统第2周/" itemprop="url">
+                  《深入理解计算机系统》第2周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-09-27T22:00:00+08:00" content="2020-09-27">
+              2020-09-27
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>本周主要学习第二章信息的表示和处理,数值处理部分相对比较枯燥.第一遍看到后面定理晕头转向的,后面看第二遍的时候将所有练习题都跟着动手完成,效果明显好了很多.</p>
+<p>对于整数运算,表示数字的有限字长限制了可能值的取值范围,结果存在溢出可能.C语言中强制类型转换等一些规定可能会产生非直观的结果,需要注意.</p>
+<p>浮点数计算只有有限的范围和精度,并且不遵守普遍的算数属性.</p>
+<p>重新温顾的知识点:</p>
+<p> <strong>大端/小端法</strong></p>
+<p>最低有效字节在前面的是小端法,最高有效字节在最前面的是大端法. (大多数Intel兼容机都只用小端法)</p>
+<p>假设变量x=0x01234567在地址0x100处</p>
+<pre><code> |0x100 0x101 0x102 0x103|
+大端 |01 | 23 | 45 | 67 |
+小端 |67 | 45 | 23 | 01 |
+</code></pre><ul>
+<li>网络传输二进制数据时通过网络标准转换来避免不同机器字节顺序的影响.</li>
+<li>反汇编代码阅读时需要考虑字节顺序.</li>
+<li>C语言中强制类型转换/Union允许一种数据类型引用一个对象时需要考虑字节顺序.</li>
+</ul>
+<p><strong>有符号数和无符号数之间的转换</strong></p>
+<p>补码转换为无符号数时</p>
+<pre><code>T2U(x)=x (x&gt;=0); T2U(x)=x+2^w(x&lt;0,w位)
+</code></pre><p>无符号数转换为补码时<br>    U2T(u)=u (u&lt;=TMax); U2T(u)=u-2^w(u&gt;=TMax)</p>
+<p>C语言中对同时包含有符号和无符号数的表达式处理时,会隐式的将有符号数强制转换为无符号数,对于标准运算符并无差异,但是遇到关系运算符时会导致问题.</p>
+<pre><code>如 -1 &lt; 0U, 会先将-1转换为4294967295U 导致非直观结果出现.
+</code></pre><p><strong>扩充整数字长时, 补码数符号扩展,无符号数零位扩展.</strong></p>
+<p><strong>无符号整数加法</strong> </p>
+<pre><code>x+y=x+y(正常) x+y=x+y-2^w (溢出时)
+</code></pre><p><strong>补码加法</strong></p>
+<pre><code>x+y=x+y-2^w(正溢出), x+y=x+y(正常), x+y=x+y+2^w(负溢出)
+</code></pre><p><strong>无符号数乘法</strong> </p>
+<pre><code>xy=(xy) mod 2^w
+</code></pre><p><strong>补码乘法</strong></p>
+<pre><code>xy=U2T((xy) mod 2^w)
+</code></pre><p><strong>浮点数</strong></p>
+<p>通过将数字编码为x*2^y的形式来近似地表示实数,最常见的浮点精度都float和double.</p>
+<p>IEEE浮点通过符号s/尾数M/阶码E来表示,32位1+8+23,64位1+11+52,被编码的值有三种不同的情况:</p>
+<ul>
+<li>规格化的值, 阶码不全为0也不全为1</li>
+<li>非规格化的值,阶码域全为0</li>
+<li>特殊值, 阶码域全为1,小数域全为0时(正无穷,负无穷); 阶码域全为1,小数域非零(NaN)</li>
+</ul>
+<p><strong>四种舍入方式</strong>中默认的是Round-to-even,将数字向上或向下舍入使得结果的最低有效数字是偶数.(可以避免统计偏差)</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2020/09/20/深入理解计算机系统第1周/" itemprop="url">
+                  《深入理解计算机系统》第1周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-09-20T22:00:00+08:00" content="2020-09-20">
+              2020-09-20
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>第一章主要是以helloworld程序为切入点对计算机系统整体进行阐述，硬件和软件如何通过协同操作来运行应用程序。对于编译链接的流程和基本概念比较熟悉所以本章主要记录以下两点笔记：</p>
+<p><strong>Amdahl定律：</strong></p>
+<p>当对系统的某个部分进行加速时，整体性能的影响取决于该部分的重要性和加速程序。该定律主要用于并行计算领域预测多个处理器时的理论最大加速比，实际场景中程序往往并不能有效的利用多核，因为系统中不可避免的会存在一些需要串行访问的资源。因此在多核处理器中还要考虑如何降低串行计算部分的比例以及降低交互开销。</p>
+<p><strong>Concurrency和parallelism：</strong></p>
+<p><strong>线程级并发：</strong><br>单处理器系统中并发是通过进程执行切换来模拟出并发的效果，允许多用户同时与系统交互。随着多核处理器的出现减少了执行多个任务时模拟并发的需要，但是要求程序以多线程方式进行编写来高效地并行执行。</p>
+<p>另外，超线程允许一个CPU执行多个控制流的技术，常规的处理器大约需要2w个时钟周期做线程切换，超线程处理器可以在单个周期的基础上决定执行哪个线程（FMT，通过拉长每个线程的平均执行时间来实现随时切换，英伟达和AMD的GPU中用的比较多）。现实中绝大多数程序并不会占用CPU的所有资源，超线程的引入主要就是为了更好得利用空闲资源。</p>
+<p><strong>指令级并行：</strong></p>
+<p>每条指令从开始到结束大约需要20+个时钟周期，但是处理器通过流水线技术，将指令划分为不同的阶段通过并行操作能够达到每个时钟周期2-4个指令的执行速率。</p>
+<p><strong>单指令多标量并行SIMD：</strong></p>
+<p>通过特殊的硬件来支持一条指令产生多个可以并行的操作。</p>
+<p>这些应该都是本科学习过的知识点，重新温习了一遍。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2020/08/15/设计模式之美第二周/" itemprop="url">
+                  设计模式之美第二周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-08-15T23:24:00+08:00" content="2020-08-15">
+              2020-08-15
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？"><a href="#理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？" class="headerlink" title="理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？"></a>理论二：封装、抽象、继承、多态分别可以解决哪些编程问题？</h2><p>本文主要针对四大特性，结合实际代码，帮助我们了解每个特性存在的意义和目的，以及它们能解决哪些编程问题。</p>
+<h3 id="封装-Encapsulation"><a href="#封装-Encapsulation" class="headerlink" title="封装 Encapsulation"></a>封装 Encapsulation</h3><p>封装也叫作信息藏匿或者数据访问保护。类通过暴露有限的访问接口，授权外部仅能通过类提供的方式来访问内部信息或数据。</p>
+<p>对于封装这个特性，我们需要编程语言本身提供一定的语法机制来支持。这个语法机制就是访问权限控制。</p>
+<p>如果对类中属性访问不做限制，那任何代码都可以访问、修改类中的属性，虽然这样看起来更灵活，但是从另一方面来说过度灵活意味着不可控。除此之外，类仅仅通过有限的方法暴露必要的操作，也提高类的易用性。调用者不需要了解太多背后的业务细节，用错的概率也会减少。</p>
+<h3 id="抽象-Abstraction"><a href="#抽象-Abstraction" class="headerlink" title="抽象 Abstraction"></a>抽象 Abstraction</h3><p>封装主要讲的是如何隐藏信息、保护数据，而抽象讲的是如何隐藏方法的具体实现，让调用者之需要关心方法提供了哪些功能，并不需要知道这些功能是如何实现的。</p>
+<p>在面向对象编程中，我们常借助编程语言提供的接口类（Interface）或者抽象类（Abstract）这两种语法机制，来实现抽象。</p>
+<p>抽象的意义，首先作为一种只关注功能不关注实现的设计思路，正好帮我们的大脑过滤掉许多非必要的信息。其次，抽象在代码设计中起到非常重要的指导作用。很多设计原则都体现了抽象这种设计思想，比如基于接口而非实现编程、开闭原则、代码解耦等。</p>
+<p>我们在定义类的方法时，也要有抽象思维，不要在方法定义中暴露太多的实现细节，以保证在某个时间点需要修改方法的实现逻辑时不用去修改其定义。</p>
+<h3 id="继承-Inheritance"><a href="#继承-Inheritance" class="headerlink" title="继承 Inheritance"></a>继承 Inheritance</h3><p>为了实现继承特性，编程语言需要提供特殊的语法机制来支持，如Java中使用extends来实现继承，C++使用冒号，Python使用paraentheses（）等。不过有些语言只支持单继承，如Java、PHP、C#、Ruby等，有些支持多重继承，如C++、python、Perl等。</p>
+<p>继承存在的最大好处就是代码复用。不过过度使用继承层次过深过复杂，会导致代码可读性、可维护性变差。所以继承应该尽量少用，甚至不用。（多用组合少用继承）</p>
+<h3 id="多态-Polymorphism"><a href="#多态-Polymorphism" class="headerlink" title="多态 Polymorphism"></a>多态 Polymorphism</h3><p>多态能提高代码的可扩展性和复用性。除此之外多态也是很多设计模式、设计原则、编程技巧的代码实现基础。比如策略模式、基于接口而非实现编程、依赖倒置原则、里氏替换原则、利用多态去掉冗长的if-else语句等。</p>
+<h3 id="思考题"><a href="#思考题" class="headerlink" title="思考题"></a>思考题</h3><p>Java不支持继承的原因是多重继承存在副作用：钻石问题（菱形继承）</p>
+<p>假设B和C都继承A，且都重写了A中同一方法，类D继承类B和类C，对于B、C重写的A中的方法，类D会继承哪一个会产生歧义。但是Java支持多接口实现，因为接口中的方法是抽象的，在实现接口时需要实现类自己实现，所以不会出现二义性问题。</p>
+<h2 id="理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？"><a href="#理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？" class="headerlink" title="理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？"></a>理论三：面向对象比面向过程有哪些优势？面向过程过时了吗？</h2><h3 id="什么是面向过程编程与面向过程编程语言？"><a href="#什么是面向过程编程与面向过程编程语言？" class="headerlink" title="什么是面向过程编程与面向过程编程语言？"></a>什么是面向过程编程与面向过程编程语言？</h3><p>面向过程编程也是一种编程范式/风格，它以过程作为组织代码的基本单元。以数据与方法相分离为最主要的特点。面向过程风格是一种流程化的编程风格，通过拼接一组顺序执行的方法来操作数据完成一项功能。<br>面向过程编程语言首先是一种编程语言。它最大的特点是不支持类和对象两个语法概念，不支持丰富的面向对象编程特性。</p>
+<h3 id="面向对象编程相比面向过程编程有哪些优势？"><a href="#面向对象编程相比面向过程编程有哪些优势？" class="headerlink" title="面向对象编程相比面向过程编程有哪些优势？"></a>面向对象编程相比面向过程编程有哪些优势？</h3><h4 id="OOP更加能够应对大规模复杂程序的开发"><a href="#OOP更加能够应对大规模复杂程序的开发" class="headerlink" title="OOP更加能够应对大规模复杂程序的开发"></a>OOP更加能够应对大规模复杂程序的开发</h4><p>对于大规模复杂程序开发来说，整个程序的处理流程错综复杂，并非只有一条主线。如果用面向过程编程这种流程化、线性的思维方式，去翻译这个网状结构，去思考如何把程序拆解为一组顺序执行的方法会比较吃力。</p>
+<p>面向对象编程以类为思考对象。在进行面向对象编程的时候，我们并不是一上来就去思考如何讲复杂的流程拆解为一个一个方法，而是采用曲线救国的策略。先去思考如何给业务建模，如何将需求翻译为类，如何给类之间建立交互关系，完成这些工作完全不需要考虑错综复杂的处理流程。</p>
+<p>除此之外，面向对象编程还提供了一种更加清晰、更加模块化的代码组织方式。</p>
+<p>实际上利用面向过程的编程语言那样，也可以写出面向对象风格的代码。只不过可能会比用面向对象编程语言付出的代价更高一些。两种编程风格并不是完全对立的。</p>
+<h4 id="OOP代码更易复用、易扩展、易维护"><a href="#OOP代码更易复用、易扩展、易维护" class="headerlink" title="OOP代码更易复用、易扩展、易维护"></a>OOP代码更易复用、易扩展、易维护</h4><p>封装特性是两种编程风格最基本的区别，面向对象将数据和方法绑定在一起，通过访问权限控制，只允许外部调用者通过类暴露的有限方法访问数据，而不会像面向过程那样，数据可以被任意方法修改。因此面向对象提供的封装特性更有利于提高代码的易维护性。</p>
+<p>函数本身就是一种抽象，它隐藏了具体实现。我们在使用函数时之需要了解函数具有什么功能，而不需要了解它是怎么实现的。从这一点上两种编程风格都支持抽象特性。只是面向对象还提供了其他抽象特性的实现方式，如基于接口实现的抽象。基于接口的抽象可以让我们在不改变原有实现的情况下，轻松替换新的实现逻辑，提高了代码的可扩展性。</p>
+<p>继承特性是面向对象特有的，能避免代码重复写很多遍，提高了代码的复用性。</p>
+<p>多态特性也是面向对象特有，在需要修改一个功能实现的时候，可以通过实现一个新的子类的方式，在子类重写原来的逻辑功能。用子类替换父类遵从了“对修改关闭，对扩展开放”的原则，提高代码的扩展性。除此之外，多态特性使得不同类对象可以传递相同的方法，执行不同的逻辑，提高代码复用性。</p>
+<h4 id="OOP语言更加人性化、更高级智能"><a href="#OOP语言更加人性化、更高级智能" class="headerlink" title="OOP语言更加人性化、更高级智能"></a>OOP语言更加人性化、更高级智能</h4><p>面向对象时，开发者是在思考如何给业务建模、如何将真实世界映射为类或者对象，能更聚焦到业务本身，而不是思考如何和机器打交道。</p>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><ul>
+<li>Unix/Linux这些复杂系统，也是基于C语言这种面向过程的编程语言开发的，怎么看待这种现象？<ul>
+<li>操作系统是业务无关的，它更接近于底层计算机，因此更适合用面向过程的语言编写。并且和硬件打交道需要考虑到语言本身翻译成机器语言的成本和执行效率。</li>
+<li>不过操作系统虽然是面向过程的C语言实现，但是其设计逻辑是面向对象的。它用结构体同样实现了信息的封装，内核源码中也不乏继承和多态思想的体现。面向对象思想并不局限于具体语言。</li>
+</ul>
+</li>
+</ul>
+<h2 id="理论四：-哪些代码设计看似面向对象，实际是面向过程的？"><a href="#理论四：-哪些代码设计看似面向对象，实际是面向过程的？" class="headerlink" title="理论四： 哪些代码设计看似面向对象，实际是面向过程的？"></a>理论四： 哪些代码设计看似面向对象，实际是面向过程的？</h2><h3 id="滥用getter、setter方法"><a href="#滥用getter、setter方法" class="headerlink" title="滥用getter、setter方法"></a>滥用getter、setter方法</h3><p>在项目开发中，有时定义完类的属性之后，就顺手将属性的getter、setter方法都定义上。IDE或者Lombok插件会自动生成所有属性的getter、setter方法。</p>
+<p>这种方法是不推荐的，因为其违反了面向对象的封装特性，相当于将面向对象编程风格退化成了面向过程编程风格。 例如下面这段代码</p>
+<pre><code>public class ShoppingCart {
+    private int itemsCount;
+    private double totalPrice;
+    private List&lt;ShoppingCartItem&gt; items = new ArrayList&lt;&gt;();
+
+    public int getItemsCount() {
+        return this.itemsCount;
+    }
+
+    public void setItemCount(int itemsCount) {
+        this.itemsCount = itemsCount;
+    }
+
+    public double getTotalPrice() {
+        return this.totalPrice;
+    }
+
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public List&lt;ShoppingCartItem&gt; getItems() {
+        return this.items;
+    }
+
+    public void addItems(ShoppingCartItem item) {
+        items.add(item);
+        itemCount++;
+        totalPrice += item.getPrice();
+    }
+    ...
+}
+</code></pre><p>在这个代码中虽然我们将itemsCount和totalPrice定义为private，但是外部可以通过setter方法随意修改这两个属性的值。可能会导致和items属性的值不一致。暴露不该暴露的setter方法明显违反了面向对象的封装特性。数据没有任何访问权限，任何代码都可以随意修改，代码就退化成了面向过程编程风格了。</p>
+<p>对于items我们没有设置setter方法，这样的设计看起来没有任何问题，而实际上并不是。items属性的getter方法返回的是一个List容器。外部调用者在拿到这个容器后，是可以操作容器内部数据的。比如obj.getItems().clear()会清空购物车，这样也会导致类属性中三个数据不一致。</p>
+<p>正确的方法是应该专门在类中提供clear方法，并且修改getItems返回类型为Collections.undermidifiableList()。此时外部调用要修改就会抛出UnsupportedOperationException异常，避免容器中的数据被修改。（这里还存在一个问题，虽然items容器中数据不会被修改，但是容器中每个对象ShoppingCartItem的数据仍然可以修改）</p>
+<h3 id="滥用全局变量和全局方法"><a href="#滥用全局变量和全局方法" class="headerlink" title="滥用全局变量和全局方法"></a>滥用全局变量和全局方法</h3><p>面向对象编程中，常见的全局变量有单例类对象、静态成员变量、常量等，常见的全局方法有静态方法。</p>
+<ul>
+<li>单例类对象在全局代码中只有一份，相当于全局变量</li>
+<li>静态成员变量归属类上的数据，被所有实例化对象共享，也相当于一定程度上的全局变量</li>
+<li>常量是非常常见的全局变量，放到一个Constant类中</li>
+<li>静态方法一般用来操作静态变量或者外部数据。如各种Utils类，里面的方法一般都会定义成静态方法。静态方法将方法和数据分离，破坏了封装特性，是典型的面向过程风格。</li>
+</ul>
+<p>如：</p>
+<pre><code>public class Constants {
+    public static final String MYSQL_ADDR_KEY = &quot;mysql_addr&quot;;
+    ...
+}
+</code></pre><p>我们会把程序中所有用到的常量都集中放到这个Constants类中，这并不是一个很好的设计思路。</p>
+<ul>
+<li>首先会影响代码的可维护性。开发同一项目的工程师很多，在开发过程中可能都要涉及修改这个类，查找修改可能比较费时，并且会增加提交代码冲突的概率。</li>
+<li>其次，这样的设计会增加代码的编译时间。 依赖这个类的代码很多，每次修改Constants类都会导致依赖它的类重新编译。</li>
+<li>最后，这样设计会影响代码的复用性。 如果我们在另一个项目中复用本项目的一个类，该类又依赖Constants类，即使只依赖其中的一部分我们仍然需要将整个Constants类也一起并入。引入许多无关的常量到新项目中。</li>
+</ul>
+<p>如何改进呢？</p>
+<ul>
+<li>将Constants类拆解为功能更加单一的多个类</li>
+<li>另一种更好的思路是，并不单独地设计Constants常量类，而是哪个类用到了某个常量，就把这个常量定义到这个类中，提高了类设计的内聚性和代码的复用性</li>
+</ul>
+<p>对于Utils类，它的出现主要是解决了多个类需要用到一块相同的功能逻辑，为了避免代码重复。通常为了复用会通过继承特性，将相同的属性和方法提取出来，定义到父类中，子类复用父类中的属性和方法。但是有时候从业务含义上，这些类并不一定具有继承关系，仅仅为了代码复用生硬地抽象一个父类，会影响代码可读性。所以只包含静态方法Utils类就出现了，它实现了公用的方法但是不需要共享任何数据，因此不需要定义任何属性。同时也要注意不要实现大而全的Utils类，最好细化一下。</p>
+<h3 id="定义数据和方法分离的类"><a href="#定义数据和方法分离的类" class="headerlink" title="定义数据和方法分离的类"></a>定义数据和方法分离的类</h3><p>传统的MVC分为Model层、Controller层、View层，在做前后端分离之后，三层结构在后端开发时会稍微有些调整，被分为Controller层、Service层、Repository层。Controller层负责暴露接口给前端调用，Service层负责核心业务逻辑，Repository层负责数据读写。在每一层中我们又会定义相应的VO（ViewObject）、BO（BusinessObject）、Entity。一般情况下VO、BO、Entity只会定义数据，不会定义方法，所有操作这些数据的业务逻辑都定义在对应的Controller类、Service类、Repository类中。这就是典型的面向过程的编程风格。</p>
+<p>实际上这种开发模式叫做基于贫血模型的开发模式，也就是我们现在非常常用的一种Web项目开发模式。</p>
+<h3 id="面向对象编程中，为什么容易写出面向过程风格的代码？"><a href="#面向对象编程中，为什么容易写出面向过程风格的代码？" class="headerlink" title="面向对象编程中，为什么容易写出面向过程风格的代码？"></a>面向对象编程中，为什么容易写出面向过程风格的代码？</h3><p>主要是面向过程符合人的流程化思维方式。面向对象则是一种自底向上的思考方式，不是先去思考执行流程来分解任务，而是将任务翻译成一个一个的小模块，设计类之间的交互，最后按照流程将类组装起来完成整个任务。这种思考路径比较适合复杂程序开发，不是特别符合人类的思考习惯。</p>
+<p>除此之外，面向对象中类的设计挺需要技巧，需要一定设计经验，要去思考如何封装合适的数据和方法到一个类里，如何设计类之间的关系，类之间的交互等诸多问题。</p>
+<p>不管使用面向过程还是面向对象，最终目的都是写出易维护、易读、易复用、易扩展的高质量代码。只要我们能避免面向过程编程风格的一些弊端，控制好它的副作用，在掌控范围内为我们所用，就大可不用避讳在面向对象编程中写面向过程风格的代码。</p>
+<h2 id="理论五：-接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？"><a href="#理论五：-接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？" class="headerlink" title="理论五： 接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？"></a>理论五： 接口VS抽象类的区别？如何用普通的类模拟抽象类和接口？</h2><h3 id="什么是抽象类和接口？区别在哪里？"><a href="#什么是抽象类和接口？区别在哪里？" class="headerlink" title="什么是抽象类和接口？区别在哪里？"></a>什么是抽象类和接口？区别在哪里？</h3><p>抽象类</p>
+<ul>
+<li>不允许被实例化，只能被继承。</li>
+<li>抽象类可以包含属性和方法。方法既可以包含代码实现，也可以不包含代码实现。不包含代码实现的方法叫做抽象方法。</li>
+<li>子类继承抽象类，必须实现抽象类中的所有抽象方法。</li>
+</ul>
+<p>接口</p>
+<ul>
+<li>接口不能包含属性（即成员变量）</li>
+<li>接口只能声明方法，方法不能包含代码实现</li>
+<li>类实现接口的时候，必须实现接口中声明的所有方法</li>
+</ul>
+<p>抽象类实际上就是类，只不过是一种不能被实例化的特殊类，只能被子类继承，is-a的关系。接口表示has-a的关系，表示具有某些功能。对于接口，有一个更加形象的叫法，就是协议。</p>
+<h3 id="抽象类和接口能解决什么编程问题？"><a href="#抽象类和接口能解决什么编程问题？" class="headerlink" title="抽象类和接口能解决什么编程问题？"></a>抽象类和接口能解决什么编程问题？</h3><p>抽象类是为代码复用而生的，多个子类可以继承抽象类中定义的属性和方法，避免在子类中重复编写相同的代码。普通的类继承虽然也可以解决代码复用问题，但是无法使用多态特性，会增加类被无用的风险。虽然也可以通过设置私有的构造函数的方式来解决，不过显然没有抽象类优雅。</p>
+<p>接口更侧重于解耦，是对行为的一种抽象，相当于一组协议或者契约，可以类比API接口。调用者只需要关注抽象的接口，不需要了解具体的实现，具体的实现代码对调用者透明。接口实现了约定和实现相分离，可以降低代码间的耦合性，提高代码的可扩展性。</p>
+<h3 id="如何模拟抽象类和接口两个语法概念？"><a href="#如何模拟抽象类和接口两个语法概念？" class="headerlink" title="如何模拟抽象类和接口两个语法概念？"></a>如何模拟抽象类和接口两个语法概念？</h3><p>我们可以通过抽象类来模拟接口。首先接口的定义：接口中没有成员变量，只有方法声明，没有方法实现，实现接口的类必须实现接口中的所有方法。</p>
+<pre><code>class Strategy {
+    public:
+        ~Strategy();
+        virtual void algorithm() = 0;
+    protected:
+        Strategy();
+}
+</code></pre><p>上述C++代码中用抽象类模拟了一个接口，类中没有定义任何属性，并且所有方法都是virtual类型。</p>
+<p>除了用抽象类来模拟接口，我们还可以用普通类来模拟接口。类中虽然包含方法不符合接口定义，但是我们可以让类中的方法抛出异常来模拟不包含实现的接口，并且能强迫子类在继承这个父类的时候都去主动实现父类的方法，否则就会在运行时抛出异常。为了避免该类被实例化，我们将类的构造函数声明为protected方法就可以了。</p>
+<pre><code>public class MockInterface {
+    protected MockInterface() {}
+    public void funcA() {
+        throw new MethodUnSupportedException();
+    }
+} 
+</code></pre><h3 id="如何决定该用抽象类还是接口？"><a href="#如何决定该用抽象类还是接口？" class="headerlink" title="如何决定该用抽象类还是接口？"></a>如何决定该用抽象类还是接口？</h3><p>要表示一种is-a的关系，并且是为了解决代码复用的问题，就用抽象类。</p>
+<p>要表示一种has-a的关系，并且是为了解决抽象而非代码复用的问题，就可以使用接口。</p>
+<p>抽象类是一种自下而上的设计思路，现有子类的代码重复，然后再抽象成上层的父类。而接口正好相反，它是一种自上而下的设计思路，在编程的时候一般是先设计接口再去考虑具体的实现。</p>
+<h2 id="理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？"><a href="#理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？" class="headerlink" title="理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？"></a>理论六：为什么基于接口而非实现编程？有必要为每个类都定义接口吗？</h2><p>Program to an interface, not an implematation。这句话最早出自1994年GoF的设计模式这本书，是一种比较抽象泛化的思想。此处的interface不要局限于编程语言中的接口。</p>
+<p>如果落实到具体代码，这条原则中的接口可以理解为编程语言中的接口或者抽象类。</p>
+<p>应用这条原则可以有效地提高代码质量，实现接口和实现相分离，封装不稳定的实现，暴露稳定的接口。当实现发生变化的时候，上游系统的代码基本上不需要做改动，以此来降低耦合性，提高扩展性。</p>
+<ul>
+<li>函数的命名不能暴露任何实现细节</li>
+<li>封装具体的实现细节</li>
+<li>为实现类定义抽象的接口，具体的实现类都依赖统一的接口定义，遵从一致的上传功能协议。使用者依赖接口，而不是具体的实现类来编程。</li>
+</ul>
+<p>总之，我们在做软件开发的时候，一定要有抽象意识、封装意识、接口意识。在定义接口的时候，不要暴露任何实现细节，接口的定义只表明做什么，而不是怎么做。而且在设计接口的时候，我们要多思考一下，这样的接口设计是否足够通用，能否做到在替换具体的接口实现的时候，不需要任何接口定义的改动。</p>
+<h3 id="是否要为每个类定义接口？"><a href="#是否要为每个类定义接口？" class="headerlink" title="是否要为每个类定义接口？"></a>是否要为每个类定义接口？</h3><p>如果业务场景中某个功能只有一种实现方式，未来也不可能被其他实现方式替换，那么我们就没有必要为其设计接口，也没有必要基于接口编程，直接使用实现类就可以。</p>
+<h2 id="理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？"><a href="#理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？" class="headerlink" title="理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？"></a>理论七：为什么要多用组合少用继承？如何决定该用组合还是继承？</h2><h3 id="为什么不推荐用继承？"><a href="#为什么不推荐用继承？" class="headerlink" title="为什么不推荐用继承？"></a>为什么不推荐用继承？</h3><p>比如，我们设计一个关于鸟的类AbstractBird，所有细分的鸟都继承这个抽象类。 大部分鸟都可以飞，我们可不可以在抽象类中定义fly()方法呢？答案是不行，因为还有特例，如果我们对所有不会飞的鸟都重写fly方法并且抛出异常也可行，但是不够优雅。一方面增加了代码量另一方面也违背的Least Knowledge Principle（最小知识原则/迪米特法则），暴露了不该暴露的接口给外部，增加了类使用过程中被误用的概率。</p>
+<p>此时再通过抽象类派生出两个细分的类，AbstractFlyableBird/AbstractUnFlyableBird()，这样继承关系就变成3层。如果此时再关注鸟会不会叫等等特点，继承关系就会越来越复杂，导致代码可读性变差。也破坏了类的封装特性，将父类的实现细节暴露给子类，子类的实现依赖父类的实现，两者高度耦合，一旦父类代码修改就会影响所有子类的逻辑。</p>
+<h3 id="组合相比继承有哪些优势？"><a href="#组合相比继承有哪些优势？" class="headerlink" title="组合相比继承有哪些优势？"></a>组合相比继承有哪些优势？</h3><p>我们可以利用组合Composition、接口、委托delegation三个技术手段，一起解决刚刚继承存在的问题。</p>
+<p>接口表示某种行为特性，针对会飞特性我们可以定义Flyable接口，只让会飞的鸟去实现这个接口，对于会叫、会下蛋这些行为特性，类似定义Tweetable接口、EggLayable接口。不过接口只声明方法，不定义实现，也就是所有会下蛋的类都要实现一遍LayEgg()方法，会导致代码重复的问题。</p>
+<p>我们可以针对三个接口再定义三个实现类，通过组合和委托技术来消除代码重复。</p>
+<pre><code>public interface Flyable() {
+    void fly();
+}
+public class FlyAbility implements Flyable {
+    @Override
+    public void fly() {...}
+}
+...
+
+public class Ostrich implements Tweetable, Egglayable {
+    private TweetAbility tweetAbility = new TweetAbility();
+    private EggLayAbility eggLayAbility = new EggLayAbility();
+
+    @Overide 
+    public void tweet() {
+        tweetAbility.tweet();
+    }
+
+    @Overide
+    public void layEgg() {
+        eggLayAbility.layEgg();
+    }
+}
+</code></pre><h3 id="如何判断该用组合还是继承？"><a href="#如何判断该用组合还是继承？" class="headerlink" title="如何判断该用组合还是继承？"></a>如何判断该用组合还是继承？</h3><p>如果类之间的继承结构稳定，继承层次比较浅（最多两层），继承关系不复杂我们就可以大胆使用继承。反之则尽量使用组合。</p>
+<p>有一些设计模式会固定使用继承或组合：</p>
+<ul>
+<li>装饰者模式decorator pattern、策略模式Strategy pattern、组合模式Composite pattern都使用了组合关系</li>
+<li>模版模式template pattern则使用了继承关系</li>
+</ul>
+<p>还有一些特殊场景必须使用继承。如果不能改变函数的入参类型，而入参又非接口，为了支持多态只能采用继承来实现。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/08/10/ES-tech_md/" itemprop="url">
                   ES相关知识
                 </a>
@@ -1990,1146 +2494,11 @@ webbench
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/06/21/Linux性能优化实战第四周--IO性能篇/" itemprop="url">
-                  《Linux 性能优化实战》第四周--IO性能篇
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-06-21T10:57:55+08:00" content="2020-06-21">
-              2020-06-21
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周主要学习Linux I/O相关的基础知识以及遇到I/O异常问题如何分析解决。<strong>Linux一切皆文件</strong>。为了支持不同的文件系统，首先Linux在用户进程和文件系统之间实现了一层虚拟文件系统。用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互。其次，为了降低慢速磁盘对性能的影响，文件系统又通过页缓存、目录项缓存以及索引节点缓存来减少对应用程序性能的影响。</p>
-<p>文件系统层、通用块层和块设备层组成了Linux存储系统I/O栈。其中通用块层是磁盘I/O的核心，向上为文件系统和应用程序提供访问块设备的标准接口，向下把各种异构磁盘抽象为统一的块设备，并对文件系统和应用程序发来的I/O请求进行重新排序、请求合并等。</p>
-<p>通过实验学习了遇到IO瓶颈进一步导致CPU使用率高的问题如何分析和解决。一般通过iostat确认是否存在I/O性能瓶颈，再用strace和lsof定位应用程序以及它正在写入的日志文件路径。最后通过调整日志打印级别来解决。如果strace无法跟踪到write系统调用时，可以用filetop和opensnoop来定位具体的线程和读写文件目录；也可以加-p选项开启线程跟踪。</p>
-<p>MYSQL的MyISAM引擎主要依赖系统缓存加速磁盘IO的访问。如果系统中还有其他应用同时运行，MyISAM引擎很难充分利用系统缓存。缓存可能会被其他应用程序占用，甚至被清理掉。因此最好不要将应用程序的性能优化完全建立在系统缓存上，最好能在应用程序内部分配内存，构建完全自主的缓存；或者利用第三方缓存应用，如Memcached，redis等。</p>
-<p>对于磁盘IO瓶颈可以通过在内存充足时将数据放在更快的内存中来进行优化。也可以进一步利用Trie树等各种算法来进一步优化处理效率。</p>
-<h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><p>查看目录项和各种文件系统索引节点的缓存情况： </p>
-<pre><code>cat /proc/slabinfo | slabtop
-</code></pre><p>磁盘IO观察</p>
-<pre><code>iostat -d -x 1      # -d -x 表示显示所有磁盘I/O的指标
-</code></pre><p>进程IO观察</p>
-<pre><code>pidstat -d 1
-
-iotop #可以按照I/O大小对进程排序找到I/O较大的进程
-</code></pre><p>当strace无法跟踪到文件IO痕迹时</p>
-<pre><code>filetop 查看文件名以及使用情况
-opensnoop 查看具体的文件目录
-</code></pre><p>TCP网络连接可以用过nsenter工具来查看详细信息</p>
-<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><pre><code>find / -name XXX 会不会导致系统的缓存升高？
-会，导致inode_cache/dentry/proc_inode_cache/xfs_inode缓存升高
-</code></pre><p>可以通过实验进行验证，先清除系统缓存，然后执行命令观察缓存使用情况。</p>
-<pre><code>iostat/pidstat已经证明了IO瓶颈是由哪个进程导致，为什么strace跟踪没有发现痕迹？
-</code></pre><p>写文件是由子线程来进行处理的，默认strace是不开启线程跟踪的。在strace命令加上-fp选项既可以跟踪进程也可以跟踪线程。</p>
-<hr>
-<p>接下来是本周读书笔记</p>
-<hr>
-<h2 id="Lesson-23-Linux文件系统是怎么工作的"><a href="#Lesson-23-Linux文件系统是怎么工作的" class="headerlink" title="Lesson 23 Linux文件系统是怎么工作的"></a>Lesson 23 Linux文件系统是怎么工作的</h2><ul>
-<li>磁盘为文件系统提供了最基本的持久化存储</li>
-<li>文件系统在磁盘的基础上，提供了一个用来管理文件的树状结构</li>
-</ul>
-<h3 id="索引节点和目录项"><a href="#索引节点和目录项" class="headerlink" title="索引节点和目录项"></a>索引节点和目录项</h3><p>Linux中一切皆文件。为了方便管理，Linux文件系统为每个文件都分配两个数据结构：</p>
-<ul>
-<li>索引节点： index node，记录文件的元数据(如inode编号，文件大小，访问权限，修改日期，数据位置等)。索引节点会持久化存储到磁盘中，同样占用磁盘空间。</li>
-<li>目录项： directory entry，记录文件的名字，索引节点指针以及与其他目录项的关联关系。目录项是由内核维护的一个内存数据结构，也叫目录项缓存。</li>
-</ul>
-<p>索引节点是每个文件唯一标志，目录项维护文件系统的树状结构。目录项和索引节点关系是多对一。</p>
-<p>磁盘在执行文件系统格式化时，会被分成三个存储区域：</p>
-<ul>
-<li>超级块，存储整个文件系统的状态</li>
-<li>索引节点区，用来存储索引节点</li>
-<li>数据块区，用来存储文件数据</li>
-</ul>
-<h3 id="虚拟文件系统"><a href="#虚拟文件系统" class="headerlink" title="虚拟文件系统"></a>虚拟文件系统</h3><p>目录项、虚拟节点、逻辑块以及超级块构成了Linux文件系统的四大基本要素，为了支持各种不同的文件系统，内核在用户进程和文件系统之间引入了一个虚拟文件系统VFS抽象层。</p>
-<p>VFS定义了一组所有文件系统都支持的数据结构和标准接口。这样用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互即可。</p>
-<h3 id="文件系统I-O"><a href="#文件系统I-O" class="headerlink" title="文件系统I/O"></a>文件系统I/O</h3><p>根据是否利用标准库缓存，可以分为：</p>
-<ul>
-<li>缓冲I/O，利用标准库缓存来加速文件的访问，标准库内部再通过系统调度访问文件</li>
-<li>非缓冲I/O，直接通过系统调用来访问文件，不再经过标准库缓存</li>
-</ul>
-<p>根据是否利用系统的页缓存，分为：</p>
-<ul>
-<li>直接I/O，跳过操作系统的页缓存，直接跟文件系统交互来访问文件  （O_DIRECT）</li>
-<li>非直接I/O，文件读写时，先要经过系统的页缓存然后再由内核或额外的系统调用，真正写入磁盘</li>
-</ul>
-<p>根据应用程序是否阻塞自身运行，分为：</p>
-<ul>
-<li>阻塞I/O，应用程序执行I/O操作后如果没有获得响应，就会阻塞当前线程</li>
-<li>非阻塞I/O，应用程序执行I/O操作后，不会阻塞当前的线程，可以继续执行其他的任务。然后再通过轮询或者事件通知的形式获取调用结果                   （O_NONBLOCK）</li>
-</ul>
-<p>根据是否响应结果，分为：</p>
-<ul>
-<li>所谓同步I/O，应用程序执行I/O操作后，要一直等到整个I/O完成后才能获得I/O响应 （O_SYNC/O_DSYNC）</li>
-<li>所谓异步I/O，应用程序执行I/O操作后，不用等待完成和完成后的响应，而是继续执行就可以。等这次I/O完成后，响应会用事件通知的方式告诉应用程序 （O_ASYNC）</li>
-</ul>
-<h3 id="性能观测"><a href="#性能观测" class="headerlink" title="性能观测"></a>性能观测</h3><pre><code>cat /proc/slabinfo | grep -E &apos;^#|dentry|inode&apos;
-
-slabtop
-</code></pre><hr>
-<h2 id="Lesson-24-25-Linux磁盘I-O时怎么工作的？"><a href="#Lesson-24-25-Linux磁盘I-O时怎么工作的？" class="headerlink" title="Lesson 24/25 Linux磁盘I/O时怎么工作的？"></a>Lesson 24/25 Linux磁盘I/O时怎么工作的？</h2><p>###磁盘<br>磁盘是可以持久化的设备，根据存储介质不同，分为：</p>
-<ul>
-<li>机械磁盘(Hard Disk Driver)，主要由盘片和读写磁头组成，数据存储在盘片的环状磁道中。读写数据时移动磁头，定位到数据所在的磁道中，然后才能访问。最小读写单位是扇区，一般512byte</li>
-<li>固态磁盘(Solid State Disk)，由固态电子元器件组成，不需要磁道寻址。无论连续I/O还是随机I/O都比前者要好。最小读写单位是页，一般4KB，8KB等</li>
-</ul>
-<p>两种磁盘随机I/O都要比连续I/O慢得多：</p>
-<ul>
-<li>机械磁盘随机I/O需要更多的磁头寻道和盘片旋转</li>
-<li>固态磁盘同样存在“先擦除再写入的限制”，随机读写会导致大量的垃圾回收</li>
-<li>连续I/O可以通过预读的方式来减少I/O请求的次数</li>
-</ul>
-<p>###通用块层</p>
-<p>通用块层，是处在文件系统和磁盘驱动中间的一个块设备抽象层。主要有以下功能：</p>
-<ul>
-<li>与VFS类似，向上为文件系统和应用程序提供块设备的标准接口；向下，把各种异构的磁盘设备抽象为统一的块设备，并提供统一框架来管理这些设备的驱动程序。</li>
-<li>给文件系统和应用程序发来的I/O请求排队，并通过重新排序、请求合并等来提升磁盘读写的能力。</li>
-</ul>
-<p><strong>I/O调度算法</strong>：</p>
-<ul>
-<li><strong>NONE</strong>，不使用任何I/O调度，常用在虚拟机中</li>
-<li><strong>NOOP</strong>，先入先出队列，只进行最基本的请求合并，常用与SSD磁盘</li>
-<li><strong>CFQ（Completely Fair Schedule）</strong>，完全公平调度器，为每个进程维护一个I/O调度队列，并按照时间片来均匀分布每个进程的I/O请求。 类似进程CPU调度，CFQ还支持进程I/O的优先级调度，适用于大量进程的系统</li>
-<li><strong>Deadline</strong>，分别为读写请求创建不同的I/O队列，提高机械磁盘的吞吐量，并确保达到最终期限的请求被优先处理。多用于IO压力较重的场景，如数据库等</li>
-</ul>
-<h3 id="IO栈"><a href="#IO栈" class="headerlink" title="IO栈"></a>IO栈</h3><p>Linux存储系统的I/O栈由上到下分为 <strong>文件系统层、通用块层、设备层</strong>。存储系统的IO通常是整个系统最慢的一环，所以Linux系统通过多种缓存机制来优化I/O效率。</p>
-<ul>
-<li>优化文件访问性能： 页缓存、索引节点缓存、目录项缓存等减少对下层设备的直接调用</li>
-<li>优化块设备访问性能：使用缓冲区来缓存块设备的数据</li>
-</ul>
-<h3 id="磁盘性能指标"><a href="#磁盘性能指标" class="headerlink" title="磁盘性能指标"></a>磁盘性能指标</h3><ul>
-<li>使用率， 磁盘处理I/O的时间百分比</li>
-<li>饱和度， 磁盘处理I/O的繁忙程度</li>
-<li>IOPS， 每秒的I/O请求数</li>
-<li>吞吐量， 每秒I/O请求大小</li>
-<li>响应时间， I/O请求从发出到收到响应的间隔时间</li>
-</ul>
-<h3 id="磁盘I-O观测"><a href="#磁盘I-O观测" class="headerlink" title="磁盘I/O观测"></a>磁盘I/O观测</h3><pre><code>iostat -d -x 1      # -d -x 表示显示所有磁盘I/O的指标
-</code></pre><h3 id="进程I-O观测"><a href="#进程I-O观测" class="headerlink" title="进程I/O观测"></a>进程I/O观测</h3><pre><code>pidstat -d 1
-
-iotop #可以按照I/O大小对进程排序找到I/O较大的进程
-</code></pre><hr>
-<h2 id="Lesson-26-案例篇：如何找出狂打日志的内鬼"><a href="#Lesson-26-案例篇：如何找出狂打日志的内鬼" class="headerlink" title="Lesson 26 案例篇：如何找出狂打日志的内鬼"></a>Lesson 26 案例篇：如何找出狂打日志的内鬼</h2><h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><p>首先运行目标应用</p>
-<pre><code>sudo docker run -v /tmp:/tmp --name=app -itd feisky/logapp
-ps -ef | grep /app.py #确保程序启动
-</code></pre><p>我们先用top来观察CPU和内存的使用情况，然后再用iostat来观察磁盘使用情况</p>
-<pre><code>top 
-#观察发现CPU0使用率高且iowait超过了90%，说明cpu0上正在运行IO密集型程序
-#进程方面pythonCPU使用率较高，记录其pid号
-#内存使用方面，总内存8G剩余700+M，Buffer/Cache占用较高
-</code></pre><p>基本可以判断出CPU使用率中的iowait是一个潜在瓶颈，而内存中的缓存占比较大。<br>再用iostat查看I/O使用情况</p>
-<pre><code>iostat -x -d 1 
-#发现sda的I/O使用率很高，很可能已经接近饱和
-#查看前面指标，每秒写磁盘请求数是64，写大小是32MB，写请求响应时间7s，而请求队列长度则达到了1000+
-#超慢的响应时间和请求队列过长，进一步验证了IO已经饱和
-</code></pre><p>接下来分析I/O性能瓶颈的根源</p>
-<pre><code>pidstat -d 1 
-#此时python进程的写比较大，且每秒数据超过了45M，说明python进程导致了IO瓶颈
-
-strace -p XXXX 
-#在write()系统调用上，可以看出进程向文件描述符编号为3的文件中写入了300M数据
-#再观察后面的stat调用，可以看到它正在获取/tmp/logtest.txt.1的状态，这种格式的文件在日志回滚中常见
-
-losf -p XXXX
-#查看进程打开了哪些文件，/tmp/logtest.txt
-</code></pre><p>综上说明进程以每次300MB的速度在疯狂的写日志，其中日志文件目录为/tmp/logtest.txt。此时查看案例源码发现其默认记录INFO级别以上的所有日志。此时将默认级别调高到WARNING级别，日志问题即可解决。</p>
-<hr>
-<h2 id="Lesson-27-案例篇：为什么我的磁盘IO延迟很高？"><a href="#Lesson-27-案例篇：为什么我的磁盘IO延迟很高？" class="headerlink" title="Lesson 27 案例篇：为什么我的磁盘IO延迟很高？"></a>Lesson 27 案例篇：为什么我的磁盘IO延迟很高？</h2><h3 id="实验-1"><a href="#实验-1" class="headerlink" title="实验"></a>实验</h3><p>本实验需要两台虚拟机，一台案例分析的目标机器运行Flask应用，另一台作为客户端请求单词的热度。</p>
-<pre><code>sudo docker run --name=app -p 10000:80 -itd feisky/word-app
-</code></pre><p>然后在第二天机器 curl */popularity/word 发现一直没响应</p>
-<p>回第一台机器来分析，首先执行df命令查看文件系统使用情况，发现也要等好久才输出。此时df显示系统还有足够多的磁盘空间。此时同样可以先用top来观察CPU和内存使用情况，再用iostat来观察磁盘的IO情况。</p>
-<p>为了避免curl请求结束，在终端2循环执行curl，并用time观察每次执行时间。</p>
-<pre><code>while true； do 
-    time curl */popularity/word
-    sleep 1
-done
-</code></pre><p>top输出发现两个CPU的iowait都非常高，进程部分python进程的CPU使用率稍高，可能和iowait相关。 记录其pid</p>
-<pre><code>ps -aux | grep app.py #正好CPU使用率高的进程是我们的案例应用
-
-iostat -x -d 1 #发现磁盘sda的I/O使用率已经达到98%，写响应时间18s，每秒32MB显然已经达到了IO瓶颈
-
-pidstat -d 1 #再次看到了案例应用pid导致的io瓶颈
-
-strace -p XXX
-</code></pre><p>类似上节的套路，此时strace中可以看到大量的stat系统调用，却没有任何write调用。文件写明明应该有响应的write系统调用，现有工具却找不到痕迹。此时就该考虑换工具了，filetop基于eBPF机制，主要跟踪内核中文件的读写情况，并输出线程ID、读写大小、读写类型以及文件名称。</p>
-<pre><code>filetop -C #发现每隔一段时间线程号为XXX的python应用会写入大量的txt文件，再大量读。
-ps -efT | grep XXX #该线程确实属于我们的应用进程
-</code></pre><p>filetop只给出文件名，并没有给出文件路径。此时opensnoop工具登场</p>
-<pre><code>opensnoop #可以看到这些txt文件位于/tmp目录下，文件从0.txt到1000.txt
-</code></pre><p>结合filetop和opensnoop我们可以猜测案例应用应该是写入1000个txt文件后，又将这些文件内容读取到内存中进行处理。在打断ls检查路径中文件时发现内容为空。此时再次运行opensnoop发现目录变化了，说明这些目录都是应用程序动态生成的，用后就删除了。</p>
-<p>接下来查看程序源码发现该案例应用，在每个请求的处理过程中都会生成一批临时文件，然后读入内存处理，最后再删除整个目录。这是一种常见的利用磁盘空间处理大量数据的技巧，不过本次案例中的IO请求太重导致磁盘I/O利用率过高。</p>
-<p>通过算法优化，在内存充足时将所有数据放到内存中处理，这样就能避免IO性能问题。</p>
-<hr>
-<h2 id="Lesson-28-案例篇：一个SQL查询要15s是怎么回事？"><a href="#Lesson-28-案例篇：一个SQL查询要15s是怎么回事？" class="headerlink" title="Lesson 28 案例篇：一个SQL查询要15s是怎么回事？"></a>Lesson 28 案例篇：一个SQL查询要15s是怎么回事？</h2><h3 id="实验-2"><a href="#实验-2" class="headerlink" title="实验"></a>实验</h3><p>案例由3个容器组成，一个mysql数据库应用，一个商品搜索应用，一个数据处理的应用。在执行搜索命令时遇到了返回数据为空且处理时间超过15s的问题。同样通过循环持续发送请求来进行问题问题，为了避免系统压力过大sleep 5s再开始新请求。</p>
-<p>同样的套路，top iostat pidstat定位IO瓶颈问题以及mysqld进程。慢查询现象大多是CPU使用率高，但这里看到的却是IO问题，说明这并不是单纯的慢查询问题。</p>
-<p>接下来通过strace发现线程XXX正在读取大量数据，且读取文件的描述符编号为38。再用lsof尝试查找对应的文件，此时发现lsof没有任何输出。</p>
-<pre><code>echo $? #查找上一条指令退出时返回值，结果为1说明lsof命令执行失败。
-</code></pre><p>因为-p需要指定进程号，而我们传入线程号所以执行失败。<br>切换回进程号重新执行lsof命令，从输出可以看出确实mysqld进程打开了大量的文件，根据文件描述符找到对应的文件路径为/var/lib/mysql/test/products.MYD文件。</p>
-<p>MYSQL中MYD文件时MyISAM引擎用来存储表数据的文件，文件名就是数据表的名字，父目录即为数据库的名字。 即改文件告诉我们mysqld正在读取test数据库中的products表。</p>
-<p>如何确定这些文件是不是mysqld正在使用的数据库文件呢？有没有可能是不再使用的旧数据？我们通过查看mysqld配置的数据路径即可。</p>
-<pre><code>sudo docker exec -ti mysql mysql -e &apos;show global variable like &quot;%datadir%&quot;;&apos;
-</code></pre><p>可以看到/var/lib/mysql确实是mysqld正在使用的数据存储目录。<br>即然找出了数据库和表，下一步就是弄清楚数据库中正在执行什么样的SQL。</p>
-<p>在SQL命令界面执行</p>
-<pre><code>show full processlist #可以看到select * from products where productName=‘geektime’这条执行时间比较长
-</code></pre><p>一般SQL慢查询问题，很可能是没有利用好索引导致，如何判断这条是不是这样？</p>
-<pre><code>explain  select * from products where productName-‘geektime’
-</code></pre><p>其中pissible_keys和key都为NULL，type为ALL全表查询，这条查询语句根本没有使用索引，所以查询时会扫描整个表。</p>
-<p>因此给productName建立索引即可， 优化后查询时间从15s缩短到了3ms。</p>
-<p>该案例中测试时启动了一个DataService应用，其实停止该应用查询时间也能缩短到0.1s。这种情况下是否还存在IO瓶颈呢？通过vmstat来查看IO变化，发现磁盘读和iowait刚开始挺大，但是没过多久就变成了0，说明IO瓶颈消失。为什么呢？</p>
-<p>通过查看DataService源码可以看到其读取文件前先将 /proc/sys/vm/drop_caches改为1。即释放文件缓存，而mysql读取的数据就是文件缓存，dataService不断释放缓存导致mysql直接访问磁盘。因此产生IO瓶颈。</p>
-<hr>
-<h2 id="Lesson-29-案例篇：Redis响应验证延迟，如何解决？"><a href="#Lesson-29-案例篇：Redis响应验证延迟，如何解决？" class="headerlink" title="Lesson 29 案例篇：Redis响应验证延迟，如何解决？"></a>Lesson 29 案例篇：Redis响应验证延迟，如何解决？</h2><h3 id="实验-3"><a href="#实验-3" class="headerlink" title="实验"></a>实验</h3><p>本实验由python应用和redis两部分组成。Python应用是一个基于Flask的应用，会利用Redis来管理应用程序的缓存。</p>
-<p>实验中在访问应用程序的缓存接口时，发现10s的长响应时间，接下来定位瓶颈。</p>
-<p>同样为了避免分析过程中请求结束，通过loop循环来执行curl命令。</p>
-<p>继续先通过top和iostat先分析是否存在IO瓶颈。 结果发现CPU的iowait比较高，但是磁盘每秒写数据为2.5M，IO使用率为0，没有IO瓶颈。</p>
-<p>但是案例中测试时从Redis缓存中读取数据，对应应该时磁盘的读操作，iostat结果却显示时写操作。所以我们就要知道是什么进程在具体写磁盘。</p>
-<p>运行pidstat -d查看发现是redis-server进程在写磁盘。接下来用strace+lsof查看到底在写什么。从系统调用看epoll_wait、read、write、fdatasync这些系统调用都比较频繁，刚才观察的写操作应该是write和fdatasync导致。lsof找出这些系统调用的操作对象，发现只有7号普通文件会产生磁盘写，其操作路径为/data/appendonly.aof。</p>
-<p>在Redis中这对应着持久化配置中的appendonly和appendfsync选项，可能是由于它们配置不合理导致磁盘写较多。为了验证这个猜测，通过redis命令行查这两个选项的配置。</p>
-<pre><code>sudo docker exec -ti redis redis-cli config get &apos;append*&apos;
-</code></pre><p>发现appendfsync配置为always，appendonly配置为yes。</p>
-<p>Redis提供了两种数据持久化方式：</p>
-<ul>
-<li><strong>快照方式</strong>，按照指定的时间间隔生成数据的快照，并且保存在磁盘文件中。为避免阻塞主进程，Redis会fork一个子进程来进行快照的保存。 无论备份恢复都比追加文件性能好，缺点是在数据量大时fork子进程会用到比较大的内存，保存数据比较耗时。</li>
-<li><strong>追加文件</strong>，在文件末尾追加记录的方式对redis写入数据进行持久化。提供appendfsync选项设置fsync策略：<ul>
-<li>always， 每个操作都会执行一次fsync，最安全</li>
-<li>everysec，每秒钟调用一次fsync，即使最坏情况也只会丢失1s数据</li>
-<li>no， 交给操作系统来处理</li>
-</ul>
-</li>
-</ul>
-<p>回头看上述测试，因为配置为always导致每次写数据都会调用一次fsync，从而造成比较大的磁盘IO压力。</p>
-<p>但是为什么查询会有磁盘写呢，我们再次审视strace和lsof的输出，发现编号为8的TCP socket正好对应TCP读写，是一个标准的“请求-相应”格式。从socket中GET uuid：X后响应good，再从socket中读取SADD good X后响应1。对Redis来说SADD是一个写操作，所以Redis会将其持久化到appendonly.aof文件中。因此产生大量的磁盘读写。</p>
-<p>接下来我们确认8号TCPsocket对应的Redis客户端是否为我们的案例应用。 通过lsof -i 找出TCP socket对应的TCP连接信息，进入容器网络命名空间内部看到完成的TCP连接。</p>
-<pre><code>PID=$(sudo docker inspect --format {{.State.Pid}} app)
-nsenter --target $PID --net -- lsof -i
-</code></pre><p>综合分析可知，首先redis配置always不太合理，本案例不需要这么高频的同步写，改为1s时间间隔足够；其次python应用在查询接口中会调用Redis的SADD命令，这很可能是不合理使用缓存导致。</p>
-<p>修改配置后请求时间降低到0.9s，接着通过分析源码解决第二个问题。代码中Python应用将Redis当成临时空间，用来存储查询过程中找到的数据。优化将其放在内存中，再次查看响应时间已经降低到了0.2s。</p>
-<hr>
-<h2 id="Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><a href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈" class="headerlink" title="Lesson 30 套路篇：如何迅速分析出系统IO瓶颈"></a>Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</h2><h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><h4 id="文件系统IO性能指标"><a href="#文件系统IO性能指标" class="headerlink" title="文件系统IO性能指标"></a>文件系统IO性能指标</h4><ul>
-<li>存储空间的使用情况，容量、使用量以及剩余空间等<ul>
-<li>文件系统向外展示的空间使用，而非磁盘空间的真实用量</li>
-<li>索引节点的使用情况，包括容量、使用量以及剩余量 （如果文件系统中存储过多的小文件，就能碰到索引节点容量已满的问题）</li>
-</ul>
-</li>
-<li>缓存使用情况，页缓存、目录项缓存、索引节点缓存以及各个具体文件系统的缓存</li>
-<li>文件系统IO， IOPS、响应延迟时间、以及吞吐量</li>
-</ul>
-<p>Linux文件系统并没有提供直接查看这些指标的方法，只能通过系统调用、动态跟踪或者基准测试的方法来间接观察评估。</p>
-<h4 id="磁盘IO性能指标"><a href="#磁盘IO性能指标" class="headerlink" title="磁盘IO性能指标"></a>磁盘IO性能指标</h4><ul>
-<li>使用率</li>
-<li>IOPS</li>
-<li>吞吐量</li>
-<li>响应时间</li>
-<li>Buffer也常出现在内存和磁盘问题的分析中</li>
-</ul>
-<h3 id="性能工具"><a href="#性能工具" class="headerlink" title="性能工具"></a>性能工具</h3><ul>
-<li><strong>df</strong>，既可以查看文件系统数据的空间容量，也可以查看索引节点的容量</li>
-<li><strong>/proc/meminfo，/proc/slabinfo及slaptop</strong>，观察页缓存、目录项缓存、索引节点缓存以及具体的文件系统的缓存</li>
-<li><strong>iostat，pidstat</strong>观察磁盘和进程的IO情况<ul>
-<li><strong>iostat</strong>查看磁盘的IO使用率、吞吐量、响应时间以及IOPS性能指标</li>
-<li><strong>pidstat</strong>查看进程的IO吞吐量以及块设备的IO延迟     </li>
-</ul>
-</li>
-<li><strong>strace+lsof</strong>定位问题进程正在读写的文件</li>
-<li><strong>filetop+opensnoop</strong>，从内核中跟踪系统调用，最终找出瓶颈来源</li>
-</ul>
-<h3 id="性能指标和工具的联系"><a href="#性能指标和工具的联系" class="headerlink" title="性能指标和工具的联系"></a>性能指标和工具的联系</h3><h4 id="根据指标找工具"><a href="#根据指标找工具" class="headerlink" title="根据指标找工具"></a>根据指标找工具</h4><p><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/metrictool.png" alt>  </p>
-<h4 id="根据工具查指标"><a href="#根据工具查指标" class="headerlink" title="根据工具查指标"></a>根据工具查指标</h4><p><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/toolmetric.png" alt>  </p>
-<h3 id="如何迅速分析I-O的性能瓶颈"><a href="#如何迅速分析I-O的性能瓶颈" class="headerlink" title="如何迅速分析I/O的性能瓶颈"></a>如何迅速分析I/O的性能瓶颈</h3><ul>
-<li>先用iostat发现磁盘IO性能瓶颈</li>
-<li>再借助pidstat定位出导致瓶颈的进程</li>
-<li>随后分析进程的IO行为</li>
-<li>最后结合应用程序的原理，分析这些IO的来源</li>
-</ul>
-<p>为了缩小排查范围，通常先运行几个支持指标较多的工具，如iostat、vmstat、pidstat等，然后再根据观察到的现象，结合系统和应用程序的原理，寻找下一步的分析方向。</p>
-<p>例如MYSQL和Redis案例中，通过iostat确认磁盘出现IO性能瓶颈，然后用pidstat找出I/O最大的进程，接着借助strace找出该进程正在读写的文件，最后结合应用程序的原理找出大量IO的原因。</p>
-<p>当用iostat发现磁盘IO性能瓶颈后，再用pidstat和vmstat检查，可能会发现IO来自内核线程。如Swap使用大量升高。这种情况下，就得进行内存分析，先找出占用大量内存的进程，再设法减少内存的使用。</p>
-<p><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/analysis.png" alt>  </p>
-<hr>
-<h2 id="Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><a href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路" class="headerlink" title="Lesson 31 套路篇： 磁盘I/O性能优化的几个思路"></a>Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</h2><h3 id="IO基准测试"><a href="#IO基准测试" class="headerlink" title="IO基准测试"></a>IO基准测试</h3><p>为了更客观的评估优化效果，首先应该对磁盘和文件系统进行基准测试，得到文件系统或磁盘IO的极限性能。<br>fio（Flexible I/O Tester）是最常用的基准测试工具</p>
-<pre><code># 随机读
-fio -name=randread -direct=1 -iodepth=64 -rw=randread -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
-# 随机写
-fio -name=randwrite -direct=1 -iodepth=64 -rw=randwrite -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
-#顺序读
-fio -name=read -direct=1 -iodepth=64 -rw=read -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
-#顺序写
-fio -name=write -direct=1 -iodepth=64 -rw=write -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
-</code></pre><ul>
-<li>direct表示是否跳过系统缓存，1表示跳过</li>
-<li>iodepth表示使用异步I/O（asynchronous I/O）时同时发出的IO请求上限</li>
-<li>rw表示I/O模式</li>
-<li>ioengine表示I/O引擎，支持同步sync，异步libaio，内存映射mmap，网络net等</li>
-<li>bs表示I/O的大小</li>
-</ul>
-<p>结果报告中</p>
-<ul>
-<li>slat表示从I/O提交到实际执行I/O的时长。 submission latency</li>
-<li>clat表示从I/O提交到I/O完成的时长。 completion latency</li>
-<li>lat表示从fio创建IO到IO完成的总时长</li>
-</ul>
-<p>fio支持I/O的重放，先用blktrace记录磁盘设备的I/O访问情况，然后使用fio重放blktrace的记录。</p>
-<pre><code>blktrace /dev/sdb #跟踪磁盘IO
-ls #查看blktrace记录的结果
-blkparse sdb -d sdb.bin #将结果转化为二进制文件
-fio --name=reply --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin #使用fio重放日志
-</code></pre><h3 id="I-O性能优化"><a href="#I-O性能优化" class="headerlink" title="I/O性能优化"></a>I/O性能优化</h3><h4 id="应用程序优化"><a href="#应用程序优化" class="headerlink" title="应用程序优化"></a>应用程序优化</h4><ul>
-<li>可以用追加写代替随机写，减少寻址开销，加快I/O写的速度</li>
-<li>可以借助缓存I/O，充分利用系统缓存，降低实际I/O的次数 </li>
-<li>在应用程序内部构建自己的缓存，或者用Redis等外部缓存。一方面能在应用程序内部控制缓存的数据和生命周期，另一方面可以降低其他应用程序使用缓存对自身的影响</li>
-<li>需要频繁读写同一块磁盘空间时，可以用mmap代替read/write，减少内存的拷贝次数</li>
-<li>在需要写同步的场景中，尽量将写请求合并，即可以用fsync()取代O_SYNC</li>
-<li>在多个应用程序共享磁盘时，为了保证I/O不被某个应用完全占用，推荐使用cgroups的I/O子系统来限制进程/进程组的IOPS以及吞吐量</li>
-<li>在使用CFQ调度器时，可以用ionice来调整进程的调度优先级，提高核心应用的I/O优先级。</li>
-</ul>
-<h4 id="文件系统优化"><a href="#文件系统优化" class="headerlink" title="文件系统优化"></a>文件系统优化</h4><ul>
-<li>根据实际负载场景不同选择最适合的文件系统</li>
-<li>选好文件系统后进一步优化文件系统的配置选项，包括文件系统的特性、日志模式、挂载选项等</li>
-<li>优化文件系统的缓存</li>
-<li>不需要持久化时可以用内存文件系统tmpfs来获取更好的IO性能。</li>
-</ul>
-<h4 id="磁盘优化"><a href="#磁盘优化" class="headerlink" title="磁盘优化"></a>磁盘优化</h4><ul>
-<li>换用性能更好的磁盘， 如SSD替换HDD</li>
-<li>使用RAID将多块磁盘组合成一个逻辑磁盘，构成冗余独立磁盘阵列。既可以提高数据的可靠性，又可以提升数据的访问性能</li>
-<li>针对磁盘和应用程序IO模式特征，选择最合适的IO调度算法<ul>
-<li>SSD和虚拟机中的磁盘，用noop调度算法</li>
-<li>数据库应用，用deadline算法</li>
-</ul>
-</li>
-<li>对应用程序的数据进行磁盘级别的隔离。 为日志、数据库等I/O压力大的应用配置单独的磁盘</li>
-<li>顺序读多的场景增大磁盘的预读数据<ul>
-<li>调整内核选项/sys/block/sdb/queue/read_ahead_kb， 默认为128KB</li>
-<li>blockdev工具设置， blockdev –setra 8192 /dev/sdb， 这里单位为512B</li>
-</ul>
-</li>
-<li>优化块设备的I/O选项<ul>
-<li>调整磁盘队列的长度，/sys/block/sdb/queue/nr_requests</li>
-</ul>
-</li>
-</ul>
-<p>最后要注意磁盘本身是否存在硬件错误。 可以查看dmesg中是否有硬件I/O故障的日志。还可以用badblocks、smartctl等工具检测磁盘的硬件问题，或者用e2fsck来检测文件系统的错误。 如果发现问题可以用fsck来修复。</p>
-<hr>
-<h2 id="Lesson-32-答疑-（略）"><a href="#Lesson-32-答疑-（略）" class="headerlink" title="Lesson 32 答疑 （略）"></a>Lesson 32 答疑 （略）</h2><p>捞评论学习：</p>
-<ol>
-<li>数据写ES，运行一段时间后发现写入很慢，查IO时发现读IO很高写IO很少。用iotop定位es一些写的线程，将线程id转成16进制，用jstack打印出ES的堆栈信息，查处16进程的线程号的堆栈。发现原来时ES会根据doc id查数据，然后选择更新或新插入。ES数据量大时，会占用很多的读IO。 解决方法：写ES时不传入id，让es自动生成来解决。</li>
-</ol>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/06/14/Linux性能优化实战第三周--内存性能篇/" itemprop="url">
-                  《Linux 性能优化实战》第三周--内存性能篇
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-06-14T10:57:55+08:00" content="2020-06-14">
-              2020-06-14
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周主要学习内存性能方面的检测与优化。首先在概念上更加系统的了解了Linux内存的工作原理。进程看到的内存是内核提供的虚拟内存，通过页表映射到实际的物理内存。进程通过malloc申请内存根据页面大小有两种不同的方式，并且内存并不是立即分配而是在首次访问时通过缺页异常在内核态进行分配并更新页表。</p>
-<p>通过阅读文档以及实验了解了Buffer和Cache的区别。前者是对磁盘数据的缓存，后者是对文件数据的缓存，且<strong>两者均作用于读写操作</strong>。并掌握cachestat/cachetop/pcstat等工具如何检测系统缓存命中指标，在实验中掌握如何处理缓存异常的场景。</p>
-<p>在内存资源紧张时，Linux通过直接回收和定期扫描的方式来释放文件页和匿名页。其中资源是否紧张可以通过内存的三个阈值来判断。另外我们可以手动调整内存资源配置，例如修改 /proc/sys/vm/min_free_kbytes来调整内存阈值，/proc/sys/vm/swappiness来调整文件页和匿名页回收倾向。在NUMA架构下还可以设置/proc/sys/vm/zone_reclaim_node来调整本地内存的回收策略。</p>
-<p>当Swap变高时，可以用sar，/proc/zoneinfo，/proc/pid/status等方法查看系统or进程的内存使用情况，进而找到Swap升高的根源和受影响的进程。不过通常我们禁止Swap的使用来提升系统的整体性能：</p>
-<ul>
-<li>内存足够大时，禁用Swap</li>
-<li>实在需要Swap时，可以尝试降低swapiness的值，减少回收时Swap的使用倾向</li>
-<li>响应延迟敏感的应用，可以用mlock/mlockall来锁定内存，禁止内存换出</li>
-</ul>
-<p>之前在搭建组内K8S环境时按照教程都是先关闭Swap，不明所以。现在通过这周的学习才真正了解到缘由。</p>
-<p>本周对内存使用情况监测所用的主要工具有：</p>
-<ul>
-<li>常用性能工具： free/top/ps，vmstat观察内存变化情况</li>
-<li>查看缓存命中情况： bcc包中的cachestat和cachetop，基于Linux内核的eBPF(extend Berkeley Packet Filters)来跟踪内核中管理的缓存<ul>
-<li>cachestat 查看整个操作系统缓存的读写命中情况</li>
-<li>cachetop 提供了每个进程的缓存命中情况 </li>
-</ul>
-</li>
-<li>跟踪内存分配/释放： memleak    </li>
-<li>查看内存各个指标变化： sar</li>
-</ul>
-<p>对于系统内存问题的分析与定位，通常先运行几个覆盖面比较大的性能工具，如free，top，vmstat，pidstat等</p>
-<ul>
-<li>先用free和top查看系统整体内存使用情况</li>
-<li>再用vmstat和pidstat，查看一段时间的趋势，从而判断内存问题的类型</li>
-<li>最后进行详细分析，比如内存分配分析，缓存/缓冲区分析，具体进程的内存使用分析等 </li>
-</ul>
-<p><img src="/2020/06/14/Linux性能优化实战第三周--内存性能篇/analysis.png" alt> </p>
-<p>以及一些常见的优化思路：</p>
-<ul>
-<li>最好禁止Swap，若必须开启则尽量降低swappiness的值</li>
-<li>减少内存的动态分配，如可以用内存池，HugePage等</li>
-<li>尽量使用缓存和缓冲区来访问数据。如用堆栈明确声明内存空间来存储需要缓存的数据，或者用Redis外部缓存组件来优化数据的访问</li>
-<li>cgroups等方式来限制进程的内存使用情况，确保系统内存不被异常进程耗尽</li>
-<li>/proc/pid/oom_adj调整核心应用的oom_score，保证即使内存紧张核心应用也不会被OOM杀死 </li>
-</ul>
-<p>另外，在探索问题的过程中由于性能指标较多，我们不可能记住所有指标的详细含义，网上搜索有时并不能得到真正准确的答案，因此养成查文档的爱好非常重要。</p>
-<hr>
-<p>接下来是本周读书笔记</p>
-<hr>
-<h2 id="Lesson-15-Linux内存是怎么工作的"><a href="#Lesson-15-Linux内存是怎么工作的" class="headerlink" title="Lesson 15 Linux内存是怎么工作的"></a>Lesson 15 Linux内存是怎么工作的</h2><h3 id="内存映射"><a href="#内存映射" class="headerlink" title="内存映射"></a>内存映射</h3><p>大多数计算机用的主存都是动态随机访问内存(DRAM)，只有内核才可以直接访问物理内存。Linux内核给每个进程提供了一个独立的虚拟地址空间，并且这个地址空间是连续的。这样进程就可以很方便的访问内存(虚拟内存)。</p>
-<p>虚拟地址空间的内部分为内核空间和用户空间两部分，不同字长的处理器地址空间的范围不同。32位系统内核空间占用1G，用户空间占3G。 64位系统内核空间和用户空间都是128T，分别占内存空间的最高和最低处，中间部分为未定义。</p>
-<p>并不是所有的虚拟内存都会分配物理内存，只有实际使用的才会。分配后的物理内存通过内存映射管理。为了完成内存映射，内核为每个进程都维护了一个页表，记录虚拟地址和物理地址的映射关系。页表实际存储在CPU的内存管理单元MMU中，处理器可以直接通过硬件找出要访问的内存。</p>
-<p>当进程访问的虚拟地址在页表中查不到时，系统会产生一个缺页异常，进入内核空间分配物理内存，更新进程页表，再返回用户空间恢复进程的运行。</p>
-<p>MMU以页为单位管理内存，页大小4KB。为了解决页表项过多问题Linux提供了<strong>多级页表</strong>和<strong>HugePage</strong>的机制。</p>
-<h3 id="虚拟内存空间分布"><a href="#虚拟内存空间分布" class="headerlink" title="虚拟内存空间分布"></a>虚拟内存空间分布</h3><p>从图中可以看出用户空间内存从低到高是五种不同的内存段：</p>
-<ul>
-<li><strong>只读段</strong> 代码和常量等</li>
-<li><strong>数据段</strong> 全局变量等</li>
-<li><strong>堆</strong> 动态分配的内存，从低地址开始向上增长</li>
-<li><strong>文件映射</strong> 动态库、共享内存等，从高地址开始向下增长</li>
-<li><strong>栈</strong> 包括局部变量和函数调用的上下文等，栈的大小是固定的。一般8MB</li>
-</ul>
-<h3 id="内存分配与回收"><a href="#内存分配与回收" class="headerlink" title="内存分配与回收"></a>内存分配与回收</h3><h4 id="分配"><a href="#分配" class="headerlink" title="分配"></a>分配</h4><p>malloc对应到系统调用上有两种实现方式：</p>
-<ul>
-<li><strong>brk()</strong> 针对小块内存(&lt;128K)，通过移动堆顶位置来分配。内存释放后不立即归还内存，而是被缓存起来。</li>
-<li><strong>mmap()</strong>针对大块内存(&gt;128K)，直接用内存映射来分配，即在文件映射段找一块空闲内存分配。</li>
-</ul>
-<p>前者的缓存可以减少缺页异常的发生，提高内存访问效率。但是由于内存没有归还系统，在内存工作繁忙时，频繁的内存分配/释放会造成内存碎片。</p>
-<p>后者在释放时直接归还系统，所以每次mmap都会发生缺页异常。在内存工作繁忙时，频繁内存分配会导致大量缺页异常，使内核管理负担增加。</p>
-<p>上述两种调用并没有真正分配内存，这些内存只有在首次访问时，才通过缺页异常进入内核中，由内核来分配。</p>
-<h4 id="回收"><a href="#回收" class="headerlink" title="回收"></a>回收</h4><p>内存紧张时，系统通过以下方式来回收内存：</p>
-<ul>
-<li>回收缓存： LRU算法回收最近最少使用的内存页面；</li>
-<li>回收不常访问内存： 把不常用的内存通过交换分区写入磁盘</li>
-<li><p>杀死进程： OOM内核保护机制 （进程消耗内存越大oom_score越大，占用CPU越多oom_score越小，可以通过/proc手动调整oom_adj） </p>
-<pre><code>echo -16 &gt; /proc/$(pidof XXX)/oom_adj
-</code></pre></li>
-</ul>
-<h3 id="如何查看内存使用情况"><a href="#如何查看内存使用情况" class="headerlink" title="如何查看内存使用情况"></a>如何查看内存使用情况</h3><p>free来查看整个系统的内存使用情况</p>
-<p>top/ps来查看某个进程的内存使用情况</p>
-<ul>
-<li><strong>VIRT</strong> 进程的虚拟内存大小</li>
-<li><strong>RES</strong> 常驻内存的大小，即进程实际使用的物理内存大小，不包括swap和共享内存</li>
-<li><strong>SHR</strong> 共享内存大小，与其他进程共享的内存，加载的动态链接库以及程序代码段</li>
-<li><strong>%MEM</strong> 进程使用物理内存占系统总内存的百分比 </li>
-</ul>
-<hr>
-<h2 id="Lesson-16-怎样理解内存中的Buffer和Cache？"><a href="#Lesson-16-怎样理解内存中的Buffer和Cache？" class="headerlink" title="Lesson 16 怎样理解内存中的Buffer和Cache？"></a>Lesson 16 怎样理解内存中的Buffer和Cache？</h2><h3 id="free数据来源"><a href="#free数据来源" class="headerlink" title="free数据来源"></a>free数据来源</h3><p>在free手册中可以看到buffer和cache的定义，但是并不能直观帮助我们理解</p>
-<pre><code>buffers： Memory used by kernel buffers (Buffers in /proc/meminfo)
-cache: Memory used by the page cache and slabs (Cache and Sreclaimable in /proc/meminfo)
-</code></pre><h3 id="proc文件系统"><a href="#proc文件系统" class="headerlink" title="proc文件系统"></a>proc文件系统</h3><p>接着看proc文件系统中的文档可以看到： Buffers是对原始磁盘块的临时存储，也就是用来缓存磁盘的数据(通常不会特别大)。Cached是从磁盘读取文件的页缓存，用来缓存从文件中读取的数据。Slab包括可回收和不可回收两部分。</p>
-<pre><code>Buffers %lu: Relatively temporary storage for raw disk blocks that shouldn&apos;t get tremendously large (20MB or so)    
-
-Cached %lu: In-memory cache for files read from the disk(the page cache). Doesn&apos;t include SwapCached.
-
-SReclaimable %lu: Part of Slab, that might be reclaimed, such as ceches.
-
-Sunreclaim %lu: Part of Slab, that cannot bt reclaimed on memory pressure.
-</code></pre><h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><p><strong>该实验对环境要求较高，需要系用配置多块磁盘，并且分区/dev/sdb1处于未使用状态。如果不满足千万不要尝试，否则会对磁盘分区造成损坏</strong></p>
-<p>首先安装sysstat包，然后清理系统缓存</p>
-<pre><code>echo 3 &gt; /proc/sys/vm/drop_caches
-</code></pre><h4 id="场景1-磁盘和文件写案例"><a href="#场景1-磁盘和文件写案例" class="headerlink" title="场景1 磁盘和文件写案例"></a>场景1 磁盘和文件写案例</h4><pre><code>vmstat 1 #空闲情况下查看系统内存使用情况
-dd if=/dev/urandom of=/tmp/file bs=1M count=500 #通过读取随机设备，生产一个500MB大小的文件
-#此时观察vmstat，发现cache在不断增长，但是Buffer基本保持不变
-#Cache开始增长时，块设备IO很少，dd命令结束后cache不再增长，但块设备写还会持续一段时间
-
-echo 3 &gt;/proc/sys/vm/drop_caches
-dd if=/dev/urandom of=/dev/sdb1 bs=1M count=2048 #清理缓存后向磁盘分区写入2GB的随机数据
-#此时观察vmstat输出，发现写磁盘会时buffer和cache都在增长，但是buffer增长快得多
-</code></pre><p>通过该案例可以看出写文件时会用到cache缓存数据，写磁盘时会用到buffer来缓存数据。</p>
-<h4 id="场景2-磁盘和文件读案例"><a href="#场景2-磁盘和文件读案例" class="headerlink" title="场景2 磁盘和文件读案例"></a>场景2 磁盘和文件读案例</h4><pre><code>echo 3 &gt; /proc/sys/vm/drop_caches
-dd if=/tmp/file of=/dev/null
-#观察vmstat输出，发现读取文件时buffer保持不变，cache不停增长
-
-echo 3 &gt;/proc/sys/vm/drop_caches
-dd if=/dev/sda1 of=/dev/null bs=1M count=1024
-#观察vmstat发现读磁盘时，buffer和cache都在增长，但是buffer增长快得多
-</code></pre><p><strong>通过上述实验可以看出buffer是对磁盘数据的缓存，cache是对文件数据的缓存，它们既会用在读请求也会用在写请求中。</strong></p>
-<hr>
-<h2 id="Lesson-17-如何利用系统缓存优化程序的运行效率"><a href="#Lesson-17-如何利用系统缓存优化程序的运行效率" class="headerlink" title="Lesson 17 如何利用系统缓存优化程序的运行效率"></a>Lesson 17 如何利用系统缓存优化程序的运行效率</h2><h3 id="缓存命中率"><a href="#缓存命中率" class="headerlink" title="缓存命中率"></a>缓存命中率</h3><p><strong>缓存命中率</strong>是指直接通过缓存获取数据的请求次数，占所有请求次数的百分比。<strong>命中率越高说明缓存带来的收益越高，应用程序的性能也就越好。</strong></p>
-<p>安装bcc包后可以通过cachestat和cachetop来监测缓存的读写命中情况。</p>
-<p>安装pcstat后可以查看文件在内存中的缓存大小以及缓存比例。</p>
-<pre><code>#首先安装Go
-export GOPATH=~/go
-export PATH=~/go/bin:$PATH
-go get golang.org/x/sys/unix
-go ge github.com/tobert/pcstat/pcstat
-</code></pre><h3 id="实验案例一-dd缓存加速"><a href="#实验案例一-dd缓存加速" class="headerlink" title="实验案例一 dd缓存加速"></a>实验案例一 dd缓存加速</h3><pre><code>dd if=/dev/sda1 of=file bs=1M count=512 #生产一个512MB的临时文件
-echo 3 &gt; /proc/sys/vm/drop_caches #清理缓存
-pcstat file #确定刚才生成文件不在系统缓存中，此时cached和percent都是0
-cachetop 5
-dd if=file of=/dev/null bs=1M #测试文件读取速度
-#此时文件读取性能为30+MB/s，查看cachetop结果发现并不是所有的读都落在磁盘上，读缓存命中率只有50%。
-dd if=file of=/dev/null bs=1M #重复上述读文件测试
-#此时文件读取性能为4+GB/s，读缓存命中率为100%
-pcstat file #查看文件file的缓存情况，100%全部缓存
-</code></pre><p>实验表明系统缓存对第二次dd命令有明显的加速效果，大大提高了文件读取的性能。同时要注意如果我们把dd作为性能测试工具时，由于缓存存在会导致测试结果严重失真。</p>
-<h3 id="实验案例二-O-DIRECT选项绕过系统缓存"><a href="#实验案例二-O-DIRECT选项绕过系统缓存" class="headerlink" title="实验案例二 O_DIRECT选项绕过系统缓存"></a>实验案例二 O_DIRECT选项绕过系统缓存</h3><pre><code>cachetop 5
-sudo docker run --privileged --name=app -itd feisky/app:io-direct
-sudo docker logs app #确认案例启动成功
-#实验结果表明每读32MB数据都要花0.9s，且cachetop输出中显示1024次缓存全部命中
-</code></pre><p>但是凭感觉可知如果缓存命中读速度不应如此慢，读次数时1024，页大小为4K，五秒的时间内读取了1024*4KB数据，即每秒0.8MB，和结果中32MB相差较大。说明该案例没有充分利用缓存，怀疑系统调用设置了直接I/O标志绕过系统缓存。因此接下来观察系统调用</p>
-<pre><code>strace -p $(pgrep app)
-#strace 结果可以看到openat打开磁盘分区/dev/sdb1，传入参数为O_RDONLY|O_DIRECT
-</code></pre><p>这就解释了为什么读32MB数据那么慢，直接从磁盘读写肯定远远慢于缓存。找出问题后我们再看案例的源代码发现flags中指定了直接IO标志。删除该选项后重跑，验证性能变化。</p>
-<hr>
-<h2 id="Lesson-18-内存泄漏，如何定位和处理？"><a href="#Lesson-18-内存泄漏，如何定位和处理？" class="headerlink" title="Lesson 18 内存泄漏，如何定位和处理？"></a>Lesson 18 内存泄漏，如何定位和处理？</h2><p>对应用程序来说，动态内存的分配和回收是核心又复杂的一个逻辑功能模块。管理内存的过程中会发生各种各样的“事故”：</p>
-<ul>
-<li>没正确回收分配的内存，导致了泄漏</li>
-<li>访问的是已分配内存边界外的地址，导致程序异常退出</li>
-<li>…</li>
-</ul>
-<h3 id="内存的分配与回收"><a href="#内存的分配与回收" class="headerlink" title="内存的分配与回收"></a>内存的分配与回收</h3><p>在Lesson15中我们了解到了虚拟内存分布从低到高分别是<strong>只读段，数据段，堆，内存映射段，栈</strong>五部分。其中会导致内存泄漏的是：</p>
-<ul>
-<li>堆： 由应用程序自己来分配和管理，除非程序退出这些堆内存不会被系统自动释放。</li>
-<li>内存映射段：包括动态链接库和共享内存，其中共享内存由程序自动分配和管理</li>
-</ul>
-<p><strong>内存泄漏的危害比较大，这些忘记释放的内存，不仅应用程序自己不能访问，系统也不能把它们再次分配给其他应用。</strong> 内存泄漏不断累积甚至会耗尽系统内存。</p>
-<h3 id="实验-如何检测内存泄漏"><a href="#实验-如何检测内存泄漏" class="headerlink" title="实验 如何检测内存泄漏"></a>实验 如何检测内存泄漏</h3><p>预先安装systat，docker，bcc</p>
-<pre><code>sudo docker run --name=app -itd feisky/app:mem-leak
-sudo docker logs app
-vmstat 3
-</code></pre><p>可以看到free在不断下降，buffer和cache基本保持不变。说明系统的内存一致在升高。但并不能说明存在内存泄漏。此时可以通过memleak工具来跟踪系统或进程的内存分配/释放请求。</p>
-<pre><code>/usr/share/bcc/tools/memleak -a -p $(pidof app)
-</code></pre><p>从memleak输出可以看到，应用在不停地分配内存，并且这些分配的地址并没有被回收。通过调用栈看到是fibonacci函数分配的内存没有释放。定位到源码后查看源码来修复增加内存释放函数即可。</p>
-<p>另外，在该实验中也可以通过将动态分配的内存改为数组来避免内存泄漏的问题，数据放在栈中由系统自动分配与回收。</p>
-<hr>
-<h2 id="Lesson-19-20-为什么系统的Swap变高"><a href="#Lesson-19-20-为什么系统的Swap变高" class="headerlink" title="Lesson 19/20 为什么系统的Swap变高"></a>Lesson 19/20 为什么系统的Swap变高</h2><p>系统内存资源紧张时通过内存回收和OOM杀死进程来解决。其中可回收内存包括：</p>
-<ul>
-<li>缓存/缓冲区，属于可回收资源，在文件管理中通常叫做文件页<ul>
-<li>被应用程序修改过暂时没写入磁盘的数据(脏页)，要先写入磁盘然后才能内存释放<ul>
-<li>在应用程序中通过fsync将脏页同步到磁盘</li>
-<li>交给系统，内核线程pdflush负责这些脏页的刷新</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>内存映射获取的文件映射页，也可以被释放掉，下次访问时从文件重新读取</li>
-</ul>
-<p>对于程序自动分配的堆内存，也就是我们在内存管理中的匿名页，虽然这些内存不能直接释放，但是Linux提供了Swap机制将不常访问的内存写入到磁盘来释放内存，再次访问时从磁盘读取到内存即可。</p>
-<h3 id="Swap原理"><a href="#Swap原理" class="headerlink" title="Swap原理"></a>Swap原理</h3><p>Swap本质就是把一块磁盘空间或者一个本地文件当作内存来使用，包括换入和换出两个过程：</p>
-<ul>
-<li>换出： 将进程暂时不用的内存数据存储到磁盘中，并释放这些内存</li>
-<li>换入： 进程再次访问内存时，将它们从磁盘读到内存中</li>
-</ul>
-<p>Linux如何衡量内存资源是否紧张？</p>
-<ul>
-<li><strong>直接内存回收</strong> 新的大块内存分配请求，但剩余内存不足。此时系统会回收一部分内存；</li>
-<li><p><strong>kswapd0</strong> 内核线程定期回收内存。为了衡量内存使用情况，定义了pages_min,pages_low,pages_high三个阈值，并根据其来进行内存的回收操作。</p>
-<ul>
-<li>剩余内存 &lt; pages_min，进程可用内存耗尽了，只有内核才可以分配内存</li>
-<li>pages_min &lt; 剩余内存 &lt; pages_low,内存压力较大，kswapd0执行内存回收，直到剩余内存 &gt; pages_high</li>
-<li>pages_low &lt; 剩余内存 &lt; pages_high，内存有一定压力，但可以满足新内存请求</li>
-<li><p>剩余内存 &gt; pages_high，说明剩余内存较多，无内存压力</p>
-<p>pages_low = pages_min <em> 5 / 4<br>pages_high = pages_min </em> 3 / 2</p>
-</li>
-</ul>
-</li>
-</ul>
-<h3 id="NUMA-与-SWAP"><a href="#NUMA-与-SWAP" class="headerlink" title="NUMA 与 SWAP"></a>NUMA 与 SWAP</h3><p>很多情况下系统剩余内存较多，但SWAP依旧升高，这是由于处理器的NUMA架构。</p>
-<p>在NUMA架构下多个处理器划分到不同的Node，每个Node都拥有自己的本地内存空间。在分析内存的使用时应该针对每个Node单独分析。</p>
-<pre><code>numactl --hardware #查看处理器在Node的分布情况，以及每个Node的内存使用情况
-</code></pre><p>内存三个阈值可以通过/proc/zoneinfo来查看，该文件中还包括活跃和非活跃的匿名页/文件页数。</p>
-<p>当某个Node内存不足时，系统可以从其他Node寻找空闲资源，也可以从本地内存中回收内存。 通过/proc/sys/vm/zone_raclaim_mode来调整。</p>
-<ul>
-<li>0表示既可以从其他Node寻找空闲资源，也可以从本地回收内存</li>
-<li>1，2，4表示只回收本地内存，2表示可以会回脏数据回收内存，4表示可以用Swap方式回收内存。</li>
-</ul>
-<h3 id="swappiness"><a href="#swappiness" class="headerlink" title="swappiness"></a>swappiness</h3><p>在实际回收过程中Linux根据/proc/sys/vm/swapiness选项来调整使用Swap的积极程度，从0-100，数值越大越积极使用Swap，即更倾向于回收匿名页；数值越小越消极使用Swap，即更倾向于回收文件页。</p>
-<p><strong>注意：这只是调整Swap积极程度的权重，即使设置为0，当剩余内存+文件页小于页高阈值时，还是会发生Swap。</strong></p>
-<h3 id="实验-Swap升高时如何定位分析"><a href="#实验-Swap升高时如何定位分析" class="headerlink" title="实验 Swap升高时如何定位分析"></a>实验 Swap升高时如何定位分析</h3><pre><code>free #首先通过free查看swap使用情况，若swap=0表示未配置Swap
-#先创建并开启swap
-fallocate -l 8G /mnt/swapfile
-chmod 600 /mnt/swapfile
-mkswap /mnt/swapfile
-swapon /mnt/swapfile
-
-free #再次执行free确保Swap配置成功
-
-dd if=/dev/sda1 of=/dev/null bs=1G count=2048 #模拟大文件读取
-sar -r -S 1  #查看内存各个指标变化 -r内存 -S swap
-#根据结果可以看出，%memused在不断增长，剩余内存kbmemfress不断减少，缓冲区kbbuffers不断增大，由此可知剩余内存不断分配给了缓冲区
-#一段时间之后，剩余内存很小，而缓冲区占用了大部分内存。此时Swap使用之间增大，缓冲区和剩余内存只在小范围波动
-
-停下sar命令
-cachetop5 #观察缓存
-#可以看到dd进程读写只有50%的命中率，未命中数为4w+页，说明正式dd进程导致缓冲区使用升高
-watch -d grep -A 15 ‘Normal’ /proc/zoneinfo #观察内存指标变化
-#发现升级内存在一个小范围不停的波动，低于页低阈值时会突然增大到一个大于页高阈值的值
-</code></pre><p>说明剩余内存和缓冲区的波动变化正是由于内存回收和缓存再次分配的循环往复。有时候Swap用的多，有时候缓冲区波动更多。此时查看swappiness值为60，是一个相对中和的配置，系统会根据实际运行情况来选去合适的回收类型。</p>
-<hr>
-<h2 id="Lesson-21-套路篇：如何“快准狠”找到系统内存存在的问题"><a href="#Lesson-21-套路篇：如何“快准狠”找到系统内存存在的问题" class="headerlink" title="Lesson 21 套路篇：如何“快准狠”找到系统内存存在的问题"></a>Lesson 21 套路篇：如何“快准狠”找到系统内存存在的问题</h2><h3 id="内存性能指标"><a href="#内存性能指标" class="headerlink" title="内存性能指标"></a>内存性能指标</h3><p><strong>系统内存指标</strong></p>
-<ul>
-<li>已用内存/剩余内存</li>
-<li>共享内存 （tmpfs实现）</li>
-<li>可用内存： 包括剩余内存和可回收内存</li>
-<li>缓存：磁盘读取文件的页缓存，slab分配器中的可回收部分</li>
-<li>缓冲区： 原始磁盘块的临时存储，缓存将要写入磁盘的数据</li>
-</ul>
-<p><strong>进程内存指标</strong></p>
-<ul>
-<li>虚拟内存： 5大部分</li>
-<li>常驻内存： 进程实际使用的物理内存，不包括Swap和共享内存</li>
-<li>共享内存： 与其他进程共享的内存，以及动态链接库和程序的代码段</li>
-<li>Swap内存： 通过Swap换出到磁盘的内存</li>
-</ul>
-<p><strong>缺页异常</strong></p>
-<ul>
-<li>可以直接从物理内存中分配，次缺页异常</li>
-<li>需要磁盘IO介入(如Swap)，主缺页异常。 此时内存访问会慢很多</li>
-</ul>
-<h3 id="内存性能工具"><a href="#内存性能工具" class="headerlink" title="内存性能工具"></a>内存性能工具</h3><p>根据不同的性能指标来找合适的工具:<br><img src="/2020/06/14/Linux性能优化实战第三周--内存性能篇/metric_tool.png" alt> </p>
-<p>内存分析工具包含的性能指标:<br><img src="/2020/06/14/Linux性能优化实战第三周--内存性能篇/tool_metric.png" alt> </p>
-<h3 id="如何迅速分析内存的性能瓶颈"><a href="#如何迅速分析内存的性能瓶颈" class="headerlink" title="如何迅速分析内存的性能瓶颈"></a>如何迅速分析内存的性能瓶颈</h3><p>通常先运行几个覆盖面比较大的性能工具，如free，top，vmstat，pidstat等</p>
-<ul>
-<li>先用free和top查看系统整体内存使用情况</li>
-<li>再用vmstat和pidstat，查看一段时间的趋势，从而判断内存问题的类型</li>
-<li>最后进行详细分析，比如内存分配分析，缓存/缓冲区分析，具体进程的内存使用分析等</li>
-</ul>
-<p>常见的优化思路：</p>
-<ul>
-<li>最好禁止Swap，若必须开启则尽量降低swappiness的值</li>
-<li>减少内存的动态分配，如可以用内存池，HugePage等</li>
-<li>尽量使用缓存和缓冲区来访问数据。如用堆栈明确声明内存空间来存储需要缓存的数据，或者用Redis外部缓存组件来优化数据的访问</li>
-<li>cgroups等方式来限制进程的内存使用情况，确保系统内存不被异常进程耗尽</li>
-<li>/proc/pid/oom_adj调整核心应用的oom_score，保证即使内存紧张核心应用也不会被OOM杀死 </li>
-</ul>
-<h2 id="Lesson-22-答疑-（略）"><a href="#Lesson-22-答疑-（略）" class="headerlink" title="Lesson 22 答疑 （略）"></a>Lesson 22 答疑 （略）</h2>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" itemprop="url">
-                  《Linux 性能优化实战》第二周--CPU性能篇(下)
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-06-03T22:57:55+08:00" content="2020-06-03">
-              2020-06-03
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>这两周主要围绕CPU性能优化相关基础知识进行学习。对于CPU性能问题的处理，首先我们要了解CPU相关性能指标。</p>
-<h3 id="CPU性能指标"><a href="#CPU性能指标" class="headerlink" title="CPU性能指标"></a>CPU性能指标</h3><p><strong>平均负载,上下文切换,CPU使用率,CPU缓存命中率</strong>等.</p>
-<p><strong>平均负载</strong>是指系统处于可运行状态和不可中断状态的平均进程数（一般平均负载高于CPU数量70%的时候需要注意排查）。 平均负载升高可能是<strong>CPU密集进程</strong>导致,也可能是<strong>I/O</strong>或<strong>进程过多超负载</strong>导致. 可以用<strong>mpstat</strong>和<strong>pidstat</strong>辅助分析.</p>
-<pre><code>uptime #查看最近1/5/15分钟平均负载
-watch -d uptime #实时查看变化情况
-mpstat -P ALL 5 #查看CPU使用率,间隔5秒输出
-pidstat -u 5 1  #查看进程CPU使用率/IOwait
-</code></pre><p><strong>上下文切换</strong>,主要分为进程上下文切换,线程上下文切换以及中断上下文切换（可以利用多线程替代多进程来提升性能）。可以通过vmstat查看系统总体上下文切换和中断次数. pidstat -w 查看每个进程上下文切换次数, -wt输出线程指标.</p>
-<pre><code>watch -d cat /proc/interrupts #查看中断变化具体来源
-</code></pre><ul>
-<li>系统调用涉及内核态和用户态的切换因此实际发生两次CPU上下文切换,不过不涉及虚拟内存等资源也不切换进程. </li>
-<li>进程的切换都在内核态,保存内核状态和CPU寄存器之前,先保存进程的虚拟内存,栈等 </li>
-<li>同一进程内的线程切换只需要保存线程的私有数据,寄存器等.</li>
-<li>中断上下文切换并不涉及进程的用户态,比进程优先级高</li>
-</ul>
-<p><strong>CPU使用率</strong>过高时一般都是结合top/pidstat/perf来进行分析定位. 如果定位不到CPU使用率高的进程,可以跟踪top查看是否存在短时进程. 调用pstree分析父进程. </p>
-<pre><code>perf record -g
-perf report #查看性能报告找到瓶颈
-
-execsnoop #监控短时进程
-</code></pre><p><strong>iowait</strong>升高时,可以用dstat观察CPU和I/O的使用情况. </p>
-<pre><code>pidstat -d -p XXX n m  #-d输出I/O情况,指定线程号间隔n秒输出m组数据
-strace -p XXX #跟踪系统调用
-如果定位进程状态为Z,通过perf report查看调用栈
-</code></pre><p><strong>僵尸进程</strong>, 通过pstree查看父进程,在父进程中进行解决(子进程创建和清理的地方)</p>
-<pre><code>pstree -aps XXX
-</code></pre><p><strong>中断处理</strong></p>
-<pre><code>/proc/softirqs #查看软中断
-/proc/interrupts #查看硬中断
-</code></pre><p><strong>网络监测工具</strong></p>
-<pre><code>sar -n DEV 1 #网络收发报告, 间隔1秒输出一组数据
-tcpdump -i eth0 -n tcp port 80 #指定网卡eth0,tcp协议,端口号80
-</code></pre><h3 id="CPU性能分析套路"><a href="#CPU性能分析套路" class="headerlink" title="CPU性能分析套路"></a>CPU性能分析套路</h3><p>通过几组实验分析我们发现对于CPU性能，常用的瓶颈问题有一些套路可以定位问题所在。虽然CPU性能指标很多，但是都不是孤立存在的，很多指标间都存在一定的关联。 再遇到CPU性能问题时我们可以先运行几个支持指标较多的工具(top/vmstat/pidstat)来缩小排查范围，查看是否是因为某个进程导致，找出导致性能问题的进程之后，再用进程分析工具来分析进程的行为。比如strace分析系统调用情况，或者perf分析调用链中各级函数的执行情况。 </p>
-<h3 id="CPU性能优化方案"><a href="#CPU性能优化方案" class="headerlink" title="CPU性能优化方案"></a>CPU性能优化方案</h3><p>定位到问题所在之后并不是要立即着手进行优化。在需要优化之前,要先考虑优化到底能提升多少性能(应用程序和系统资源多维度评估),选取哪些性能问题进行优化以及优化方案的取舍. 优化往往会带来复杂度的提升,所以要做好性能和复杂度的平衡.</p>
-<p><strong>CPU优化的一些常用方法</strong></p>
-<ul>
-<li>应用程序优化<ul>
-<li>编译器优化</li>
-<li>算法优化</li>
-<li>异步处理</li>
-<li>多线程代替多进程</li>
-<li>善用缓存</li>
-</ul>
-</li>
-<li>系统优化<ul>
-<li>CPU绑定</li>
-<li>CPU独占</li>
-<li>优先级调整</li>
-<li>为进程设置资源限制</li>
-<li>NUMA优化</li>
-<li>中断负载均衡</li>
-</ul>
-</li>
-</ul>
-<hr>
-<p>接下来是本周读书笔记</p>
-<hr>
-<h2 id="Lesson-9-怎么理解Linux软中断"><a href="#Lesson-9-怎么理解Linux软中断" class="headerlink" title="Lesson 9 怎么理解Linux软中断"></a>Lesson 9 怎么理解Linux软中断</h2><p>本周继续学习CPU性能相关知识点,<a href="http://xiaozhazi.github.io/2020/05/31/Linux性能优化实战第一周--CPU性能篇%28上%29">Linux 性能优化实战第一周</a>第8课提到不可中断状态一般都是短时进程,主要是系统的一种保护机制,保证硬件的交互过程不被意外打断. 但是如果进程长时间处于不可中断状态就需要注意是否存在磁盘I/O问题.</p>
-<p>除了iowait,软中断softirq导致CPU使用率增加的场景也比较常见.</p>
-<p>为了解决中断处理程序执行时间过长和中断丢失的问题,Linux将中断过程分为两阶段:</p>
-<ul>
-<li><strong>快速处理中断</strong> (硬中断, 会打断CPU正在执行的任务)</li>
-<li><strong>延迟处理上半部未完成的工作, 通常以内核线程的方式运行</strong> (软中断,内核线程执行)</li>
-</ul>
-<p>以网卡接收数据包为例: 网卡接收到数据包之后,先通过硬中断通知内核新数据到达.此时内核调用中断处理程序来响应. 第一步快速处理中断,将网卡数据读到内存中,然后更新硬件寄存器的状态(表示数据已经读完); 第二步发送软中断信号,内核线程从内存中找到网络数据,按照网络协议栈对数据逐层解析和处理,直到将其发送给应用程序.</p>
-<p>软中断不仅包括上述硬件设备中断处理程序的第二阶段,还包含一些内核自定义的事件. 如内核调度,RCU锁等.</p>
-<pre><code>~ cat /proc/softirqs   #查看软中断的运行情况　10种不同软中断类型
-                CPU0       CPU1       CPU2       CPU3       
-      HI:     940848    8695970     929219     958387
-   TIMER:    6032528    8523080    6185804    7882723
-  NET_TX:         13         18         10      21655
-  NET_RX:      81303      81483      74123    5497701
-   BLOCK:        112        109    1961852         73
-IRQ_POLL:          0          0          0          0
- TASKLET:         40        152      69233      41556
-   SCHED:    5262219    6279886    5054733    5849054
- HRTIMER:          0          0          0          0
-     RCU:    4615615    5897520    4693046    5749548
-
-➜  ~ ps -aux | grep softirq #一个CPU对应一个软中断内核线程
-  root         7  0.0  0.0      0     0 ?        S    Jun01   0:00 [ksoftirqd/0]
-  root        16  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/1]
-  root        22  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/2]
-  root        28  0.0  0.0      0     0 ?        S    Jun01   0:02 [ksoftirqd/3]
-</code></pre><hr>
-<h2 id="Lesson-10-系统的软中断CPU使用率高，怎么解决"><a href="#Lesson-10-系统的软中断CPU使用率高，怎么解决" class="headerlink" title="Lesson 10 系统的软中断CPU使用率高，怎么解决"></a>Lesson 10 系统的软中断CPU使用率高，怎么解决</h2><h3 id="所需工具"><a href="#所需工具" class="headerlink" title="所需工具"></a>所需工具</h3><table>
-<thead>
-<tr>
-<th>工具</th>
-<th>用途</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>sar</td>
-<td>系统报告工具,实时查看当前系统活动,配置保存和报告历史统计</td>
-</tr>
-<tr>
-<td>hping3</td>
-<td>构造TCP/IP包, 对系统进行安全审计,防火墙测试等</td>
-</tr>
-<tr>
-<td>tcpdump</td>
-<td>网络抓包工具, 用来分析各种网络问题</td>
-</tr>
-</tbody>
-</table>
-<h3 id="实验与分析"><a href="#实验与分析" class="headerlink" title="实验与分析"></a>实验与分析</h3><pre><code>sudo docker run -itd --name=nginx -p 81:80 nginx  #启动nginx服务
-curl http://localhost:81  #检查nginx服务是否正常运行
-
-hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
-</code></pre><p>本机测试中并没有监测到系统响应变慢,改为1微秒时数据包全丢, 10微秒时丢包率为80%.</p>
-<p>top查看ksoftirqd软中断进程CPU使用率也不高.</p>
-<p>继续执行后续指令</p>
-<pre><code>watch -d cat /proc/softirqs #观察高亮变化
-</code></pre><p>此时发现TIMER/NET_RX/SCHED/RCU都在不停变化,且NET_RX变化速率较快,几K级别的在增加. 其它几种类型的软中断是保证linux调度,时钟,临界区保护等正常工作必须,有变化是正常的. </p>
-<p>因此我们着手分析网络接收的软中断,选取sar工具查看网络收发情况</p>
-<pre><code>sar -n DEV 1  #每隔1秒输出网络收发报告
-
-07:01:11 PM     IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s rxcmp/s   txcmp/s  rxmcst/s   %ifutil
-07:01:12 PM veth3a2b4de      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
-07:01:12 PM        lo  20895.00  20895.00    843.42    843.42      0.00      0.00      0.00      0.00
-07:01:12 PM   docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
-07:01:12 PM enp0s31f6      6.00      0.00      0.85      0.00      0.00      0.00      0.00      0.00
-07:01:12 PM vethedb691a      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
-07:01:12 PM br-1665f3682889      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
-</code></pre><ul>
-<li>rxpck/s txpck/s　表示每秒接收/发送的网络帧数　　PPS</li>
-<li>rxkB/s  txkB/s　　表示每秒接收/发送的千字节数　BPS　</li>
-</ul>
-<p>看到网卡lo每秒接收的数据明显较多，　843*1024/20895 =41　说明每个网络帧只有41字节，小包问题．</p>
-<p>进一步通过tcpdump分析这是什么样的网络帧</p>
-<pre><code>tcpdump -i lo -n tcp port 81
-
-18:20:43.273056 IP 127.0.0.1.12537 &gt; 127.0.0.1.81: Flags [R], seq 393134060, win 0, length 0
-18:20:43.273184 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [S], seq 1240632262, win 512, length 0
-18:20:43.273193 IP 127.0.0.1.81 &gt; 127.0.0.1.12538: Flags [S.], seq 3698133257, ack 1240632263, win 65495, options [mss 65495], length 0
-18:20:43.273198 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [R], seq 1240632263, win 0, length 0
-</code></pre><p>可以看出网络帧是发送到nginx端口，Flags [S]表示这是一个ＳＹＮ包，　可以锁定是SYN FLOOD问题，最简单的解决方法就是防火墙中封锁该来源ＩＰ．</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>如果碰到软中断线程CPU使用率高的情况下, 可以借助sar和tcpdump等工具进一步分析来源.</p>
-<hr>
-<h2 id="Lesson-11-套路-如何迅速分析出系统CPU的瓶颈在哪里"><a href="#Lesson-11-套路-如何迅速分析出系统CPU的瓶颈在哪里" class="headerlink" title="Lesson 11 [套路] 如何迅速分析出系统CPU的瓶颈在哪里?"></a>Lesson 11 [套路] 如何迅速分析出系统CPU的瓶颈在哪里?</h2><p>要想分析处理CPU性能问题, 首先我们需要了解CPU性能指标.</p>
-<h3 id="CPU性能指标-1"><a href="#CPU性能指标-1" class="headerlink" title="CPU性能指标"></a>CPU性能指标</h3><p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_metric.png" alt> </p>
-<ul>
-<li>CPU使用率<ul>
-<li>用户CPU使用率, 包括用户态(user)和低优先级用户态(nice). 该指标过高说明应用程序比较繁忙.</li>
-<li>系统CPU使用率, CPU在内核态运行的时间百分比(不含中断). 该指标高说明内核比较繁忙.</li>
-<li>等待I/O的CPU使用率, iowait, 该指标高说明系统与硬件设备I/O交互时间比较长.</li>
-<li>软/硬中断CPU使用率, 该指标高说明系统中发生大量中断.</li>
-<li>steal CPU / guest CPU, 表示虚拟机占用的CPU百分比.</li>
-</ul>
-</li>
-<li><p>平均负载</p>
-<p>  理想情况下平均负载等于逻辑CPU个数,表示每个CPU都被充分利用. 若大于则说明系统负载较重.</p>
-</li>
-<li><p>进程上下文切换</p>
-<p>  包括无法获取资源的自愿切换和系统强制调度时的非自愿切换. 上下文切换本身是保证Linux正常运行的一项核心功能. 过多的切换则会将原本运行进程的CPU时间消耗在寄存器,内核占及虚拟内存等数据保存和恢复上.</p>
-</li>
-<li><p>CPU缓存命中率</p>
-<p>  CPU缓存的复用情况,命中率越高性能越好. 其中L1/L2常用在单核,L3则用在多核中.</p>
-</li>
-</ul>
-<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/cache.png" alt>  </p>
-<h3 id="性能工具"><a href="#性能工具" class="headerlink" title="性能工具"></a>性能工具</h3><p>回顾之前的几个CPU性能测试场景:</p>
-<ul>
-<li>平均负载案例<ul>
-<li>先用uptime查看系统平均负载</li>
-<li>判断负载在升高后再用mpstat和pidstat分别查看每个CPU和每个进程CPU使用情况.找出导致平均负载较高的进程. </li>
-</ul>
-</li>
-<li>上下文切换案例<ul>
-<li>先用vmstat查看系统上下文切换和中断次数</li>
-<li>再用pidstat观察进程的自愿和非自愿上下文切换情况</li>
-<li>最后通过pidstat观察线程的上下文切换情况</li>
-</ul>
-</li>
-<li>进程CPU使用率高案例<ul>
-<li>先用top查看系统和进程的CPU使用情况,定位到进程</li>
-<li>再用perf top观察进程调用链,定位到具体函数</li>
-</ul>
-</li>
-<li>系统CPU使用率高案例<ul>
-<li>先用top查看系统和进程的CPU使用情况,top/pidstat都无法找到CPU使用率高的进程</li>
-<li>重新审视top输出</li>
-<li>从CPU使用率不高,但是处于Running状态的进程入手</li>
-<li>perf record/report发现短时进程导致 (execsnoop工具)</li>
-</ul>
-</li>
-<li>不可中断和僵尸进程案例<ul>
-<li>先用top观察iowait升高,发现大量不可中断和僵尸进程</li>
-<li>strace无法跟踪进程系统调用</li>
-<li>perf分析调用链发现根源来自磁盘直接I/O</li>
-</ul>
-</li>
-<li>软中断案例<ul>
-<li>top观察系统软中断CPU使用率高</li>
-<li>查看/proc/softirqs找到变化速率较快的几种软中断</li>
-<li>sar命令发现是网络小包问题</li>
-<li>tcpdump找出网络帧的类型和来源, 确定SYN FLOOD攻击导致</li>
-</ul>
-</li>
-</ul>
-<p>根据不同的性能指标来找合适的工具:<br><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_tool.png" alt> </p>
-<p>在生产环境中往往开发者没有权限安装新的工具包,只能最大化利用好系统中已经安装好的工具. 因此要了解一些主流工具能够提供哪些指标分析.</p>
-<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_tool_1.png" alt> </p>
-<p>作者给了一个直观的套路, 先运行几个支持指标较多的工具, 如top/vmstat/pidstat,根据它们的输出可以得出是哪种类型的性能问题. 定位到进程后再用strace/perf分析调用情况进一步分析. 如果是软中断导致用/proc/softirqs</p>
-<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/normal_tool.png" alt> </p>
-<hr>
-<h2 id="Lesson-12-CPU性能优化的几个思考"><a href="#Lesson-12-CPU性能优化的几个思考" class="headerlink" title="Lesson 12 CPU性能优化的几个思考"></a>Lesson 12 CPU性能优化的几个思考</h2><h3 id="性能优化方法论"><a href="#性能优化方法论" class="headerlink" title="性能优化方法论"></a>性能优化方法论</h3><p>遇到性能问题,优化前首先思考三个问题:</p>
-<ul>
-<li>首先判断优化是否有效,能提升多少性能?</li>
-<li>多种性能问题同时存在情况下,先优化哪一个?</li>
-<li>提升性能的方法往往不唯一,如何选取? 是否总选最大程度提升的那一种?</li>
-</ul>
-<h3 id="怎样评估性能优化效果"><a href="#怎样评估性能优化效果" class="headerlink" title="怎样评估性能优化效果"></a>怎样评估性能优化效果</h3><ul>
-<li>确定性能的量化指标<ul>
-<li>不要局限在单一维度,至少从应用程序和系统资源两个维度,分别选择不同的指标<ul>
-<li>应用程序: 吞吐量和请求延迟</li>
-<li>系统资源: CPU使用率</li>
-</ul>
-</li>
-<li>好的应用程序是性能优化的最终目的和结果,系统资源的使用情况是影响应用程序性能的根源.</li>
-<li>例如, web程序可以用ab等工具测试并发请求数和响应延迟,同时可以用vmstat/pidstat观察系统和进程的CPU使用率 </li>
-</ul>
-</li>
-<li>测试优化前的性能指标</li>
-<li>测试优化后的性能指标<ul>
-<li>要避免性能测试工具的干扰</li>
-<li>避免外部环境的变化</li>
-</ul>
-</li>
-</ul>
-<h3 id="多个性能问题同时存在-如何选择"><a href="#多个性能问题同时存在-如何选择" class="headerlink" title="多个性能问题同时存在,如何选择?"></a>多个性能问题同时存在,如何选择?</h3><p><strong>并不是所有性能问题都值得优化,性能测试也存在二八法则</strong></p>
-<ul>
-<li>如果是系统资源达到的瓶颈,首先优化系统资源的使用问题.</li>
-<li>针对不同类型的指标,首先优化那些由瓶颈导致,性能指标变化幅度较大的问题.</li>
-</ul>
-<h3 id="多个优化方法-如何选择"><a href="#多个优化方法-如何选择" class="headerlink" title="多个优化方法, 如何选择?"></a>多个优化方法, 如何选择?</h3><p>在提升性能的同时也要考虑优化成本.性能优化通常会带来复杂度的提升,降低程序的可维护性. (balance)</p>
-<p>例如DPDK(Data Plane Development Kit)是一种优化网络处理速度的方法,通过绕开内核网络协议栈的方法,提升网络的处理能力. 但是它要求独占一个CPU以及一定数量的内存大页,并且以100%CPU使用率运行. 在CPU核数较少的情况下不适合.</p>
-<h3 id="CPU-优化"><a href="#CPU-优化" class="headerlink" title="CPU 优化"></a>CPU 优化</h3><ul>
-<li>应用程序优化<ul>
-<li>编译器优化: 编译阶段开启优化选项, 如gcc -O2</li>
-<li>算法优化</li>
-<li>异步处理: 避免程序因为等待某个资源而一直阻塞,提升程序的并发处理能力. (将轮询替换为事件通知)</li>
-<li>多线程代替多进程: 减少上下文切换成本</li>
-<li>善用缓存: 加快程序处理速度</li>
-</ul>
-</li>
-<li>系统优化<ul>
-<li>CPU绑定: 将进程绑定要1个/多个CPU上,提高CPU缓存命中率,减少CPU调度带来的上下文切换</li>
-<li>CPU独占: CPU亲和性机制来分配进程</li>
-<li>优先级调整:使用nice适当降低非核心应用的优先级</li>
-<li>为进程设置资源显示: cgroups设置使用上限,防止由某个应用自身问题耗尽系统资源</li>
-<li>NUMA优化: CPU尽可能访问本地内存</li>
-<li>中断负载均衡: irpbalance,将中断处理过程自动负载均衡到各个CPU上</li>
-</ul>
-</li>
-</ul>
-<h3 id="避免过早优化"><a href="#避免过早优化" class="headerlink" title="避免过早优化"></a>避免过早优化</h3><p>优化可能会带来复杂性的提升,降低可维护性.针对当前情况进行的优化可能不适应快递迭代的新需求. </p>
-<p>因此性能优化最好逐步完善,根据性能评估的结果选择最重要的性能问题进行优化.</p>
-<h2 id="Lesson-13-14-答疑-略"><a href="#Lesson-13-14-答疑-略" class="headerlink" title="Lesson 13/14 答疑 (略)"></a>Lesson 13/14 答疑 (略)</h2><h2 id="读书群内分享"><a href="#读书群内分享" class="headerlink" title="读书群内分享"></a>读书群内分享</h2><ul>
-<li><p><a href="https://blog.csdn.net/u010889616/article/details/83245695" target="_blank" rel="external">TPS QPS 系统吞吐量的区别和理解</a></p>
-<ul>
-<li>QPS (Queries Per Second)每秒查询率,一台服务器每秒能够响应的查询次数.</li>
-<li><p>TPS (Transactions Per Second)每秒事务数,软件测试的结果.</p>
-<ul>
-<li>用户请求服务器</li>
-<li>服务器内部处理</li>
-<li><p>服务器返回给客户</p>
-<p>QPS类似TPS,但是对于一个页面的访问形成一个TPS,但是一次页面请求可能包含多次对服务器的请求,可能计入多次QPS</p>
-</li>
-</ul>
-</li>
-<li><p>系统吞吐量, 包括几个重要参数:</p>
-<ul>
-<li>QPS(TPS)</li>
-<li>并发数</li>
-<li><p>响应时间</p>
-<p>QPS(TPS)=并发数/平均相应时间</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="https://www.cnblogs.com/cute/archive/2011/04/20/2022280.html" target="_blank" rel="external">深入理解Linux系统下proc文件系统内容</a></li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -3170,7 +2539,7 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">40</span>
+              <span class="site-state-item-count">45</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
@@ -3180,7 +2549,7 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">Tags</span>
               </a>
             </div>
@@ -3217,7 +2586,7 @@ hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2020</span>
+  <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

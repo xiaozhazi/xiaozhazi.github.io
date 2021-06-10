@@ -235,6 +235,1141 @@
             
               
                 
+                <a class="post-title-link" href="/2020/06/21/Linux性能优化实战第四周--IO性能篇/" itemprop="url">
+                  《Linux 性能优化实战》第四周--IO性能篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-06-21T10:57:55+08:00" content="2020-06-21">
+              2020-06-21
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周主要学习Linux I/O相关的基础知识以及遇到I/O异常问题如何分析解决。<strong>Linux一切皆文件</strong>。为了支持不同的文件系统，首先Linux在用户进程和文件系统之间实现了一层虚拟文件系统。用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互。其次，为了降低慢速磁盘对性能的影响，文件系统又通过页缓存、目录项缓存以及索引节点缓存来减少对应用程序性能的影响。</p>
+<p>文件系统层、通用块层和块设备层组成了Linux存储系统I/O栈。其中通用块层是磁盘I/O的核心，向上为文件系统和应用程序提供访问块设备的标准接口，向下把各种异构磁盘抽象为统一的块设备，并对文件系统和应用程序发来的I/O请求进行重新排序、请求合并等。</p>
+<p>通过实验学习了遇到IO瓶颈进一步导致CPU使用率高的问题如何分析和解决。一般通过iostat确认是否存在I/O性能瓶颈，再用strace和lsof定位应用程序以及它正在写入的日志文件路径。最后通过调整日志打印级别来解决。如果strace无法跟踪到write系统调用时，可以用filetop和opensnoop来定位具体的线程和读写文件目录；也可以加-p选项开启线程跟踪。</p>
+<p>MYSQL的MyISAM引擎主要依赖系统缓存加速磁盘IO的访问。如果系统中还有其他应用同时运行，MyISAM引擎很难充分利用系统缓存。缓存可能会被其他应用程序占用，甚至被清理掉。因此最好不要将应用程序的性能优化完全建立在系统缓存上，最好能在应用程序内部分配内存，构建完全自主的缓存；或者利用第三方缓存应用，如Memcached，redis等。</p>
+<p>对于磁盘IO瓶颈可以通过在内存充足时将数据放在更快的内存中来进行优化。也可以进一步利用Trie树等各种算法来进一步优化处理效率。</p>
+<h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><p>查看目录项和各种文件系统索引节点的缓存情况： </p>
+<pre><code>cat /proc/slabinfo | slabtop
+</code></pre><p>磁盘IO观察</p>
+<pre><code>iostat -d -x 1      # -d -x 表示显示所有磁盘I/O的指标
+</code></pre><p>进程IO观察</p>
+<pre><code>pidstat -d 1
+
+iotop #可以按照I/O大小对进程排序找到I/O较大的进程
+</code></pre><p>当strace无法跟踪到文件IO痕迹时</p>
+<pre><code>filetop 查看文件名以及使用情况
+opensnoop 查看具体的文件目录
+</code></pre><p>TCP网络连接可以用过nsenter工具来查看详细信息</p>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><pre><code>find / -name XXX 会不会导致系统的缓存升高？
+会，导致inode_cache/dentry/proc_inode_cache/xfs_inode缓存升高
+</code></pre><p>可以通过实验进行验证，先清除系统缓存，然后执行命令观察缓存使用情况。</p>
+<pre><code>iostat/pidstat已经证明了IO瓶颈是由哪个进程导致，为什么strace跟踪没有发现痕迹？
+</code></pre><p>写文件是由子线程来进行处理的，默认strace是不开启线程跟踪的。在strace命令加上-fp选项既可以跟踪进程也可以跟踪线程。</p>
+<hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-23-Linux文件系统是怎么工作的"><a href="#Lesson-23-Linux文件系统是怎么工作的" class="headerlink" title="Lesson 23 Linux文件系统是怎么工作的"></a>Lesson 23 Linux文件系统是怎么工作的</h2><ul>
+<li>磁盘为文件系统提供了最基本的持久化存储</li>
+<li>文件系统在磁盘的基础上，提供了一个用来管理文件的树状结构</li>
+</ul>
+<h3 id="索引节点和目录项"><a href="#索引节点和目录项" class="headerlink" title="索引节点和目录项"></a>索引节点和目录项</h3><p>Linux中一切皆文件。为了方便管理，Linux文件系统为每个文件都分配两个数据结构：</p>
+<ul>
+<li>索引节点： index node，记录文件的元数据(如inode编号，文件大小，访问权限，修改日期，数据位置等)。索引节点会持久化存储到磁盘中，同样占用磁盘空间。</li>
+<li>目录项： directory entry，记录文件的名字，索引节点指针以及与其他目录项的关联关系。目录项是由内核维护的一个内存数据结构，也叫目录项缓存。</li>
+</ul>
+<p>索引节点是每个文件唯一标志，目录项维护文件系统的树状结构。目录项和索引节点关系是多对一。</p>
+<p>磁盘在执行文件系统格式化时，会被分成三个存储区域：</p>
+<ul>
+<li>超级块，存储整个文件系统的状态</li>
+<li>索引节点区，用来存储索引节点</li>
+<li>数据块区，用来存储文件数据</li>
+</ul>
+<h3 id="虚拟文件系统"><a href="#虚拟文件系统" class="headerlink" title="虚拟文件系统"></a>虚拟文件系统</h3><p>目录项、虚拟节点、逻辑块以及超级块构成了Linux文件系统的四大基本要素，为了支持各种不同的文件系统，内核在用户进程和文件系统之间引入了一个虚拟文件系统VFS抽象层。</p>
+<p>VFS定义了一组所有文件系统都支持的数据结构和标准接口。这样用户进程和内核中的其他子系统只需要跟VFS提供的统一接口进行交互即可。</p>
+<h3 id="文件系统I-O"><a href="#文件系统I-O" class="headerlink" title="文件系统I/O"></a>文件系统I/O</h3><p>根据是否利用标准库缓存，可以分为：</p>
+<ul>
+<li>缓冲I/O，利用标准库缓存来加速文件的访问，标准库内部再通过系统调度访问文件</li>
+<li>非缓冲I/O，直接通过系统调用来访问文件，不再经过标准库缓存</li>
+</ul>
+<p>根据是否利用系统的页缓存，分为：</p>
+<ul>
+<li>直接I/O，跳过操作系统的页缓存，直接跟文件系统交互来访问文件  （O_DIRECT）</li>
+<li>非直接I/O，文件读写时，先要经过系统的页缓存然后再由内核或额外的系统调用，真正写入磁盘</li>
+</ul>
+<p>根据应用程序是否阻塞自身运行，分为：</p>
+<ul>
+<li>阻塞I/O，应用程序执行I/O操作后如果没有获得响应，就会阻塞当前线程</li>
+<li>非阻塞I/O，应用程序执行I/O操作后，不会阻塞当前的线程，可以继续执行其他的任务。然后再通过轮询或者事件通知的形式获取调用结果                   （O_NONBLOCK）</li>
+</ul>
+<p>根据是否响应结果，分为：</p>
+<ul>
+<li>所谓同步I/O，应用程序执行I/O操作后，要一直等到整个I/O完成后才能获得I/O响应 （O_SYNC/O_DSYNC）</li>
+<li>所谓异步I/O，应用程序执行I/O操作后，不用等待完成和完成后的响应，而是继续执行就可以。等这次I/O完成后，响应会用事件通知的方式告诉应用程序 （O_ASYNC）</li>
+</ul>
+<h3 id="性能观测"><a href="#性能观测" class="headerlink" title="性能观测"></a>性能观测</h3><pre><code>cat /proc/slabinfo | grep -E &apos;^#|dentry|inode&apos;
+
+slabtop
+</code></pre><hr>
+<h2 id="Lesson-24-25-Linux磁盘I-O时怎么工作的？"><a href="#Lesson-24-25-Linux磁盘I-O时怎么工作的？" class="headerlink" title="Lesson 24/25 Linux磁盘I/O时怎么工作的？"></a>Lesson 24/25 Linux磁盘I/O时怎么工作的？</h2><p>###磁盘<br>磁盘是可以持久化的设备，根据存储介质不同，分为：</p>
+<ul>
+<li>机械磁盘(Hard Disk Driver)，主要由盘片和读写磁头组成，数据存储在盘片的环状磁道中。读写数据时移动磁头，定位到数据所在的磁道中，然后才能访问。最小读写单位是扇区，一般512byte</li>
+<li>固态磁盘(Solid State Disk)，由固态电子元器件组成，不需要磁道寻址。无论连续I/O还是随机I/O都比前者要好。最小读写单位是页，一般4KB，8KB等</li>
+</ul>
+<p>两种磁盘随机I/O都要比连续I/O慢得多：</p>
+<ul>
+<li>机械磁盘随机I/O需要更多的磁头寻道和盘片旋转</li>
+<li>固态磁盘同样存在“先擦除再写入的限制”，随机读写会导致大量的垃圾回收</li>
+<li>连续I/O可以通过预读的方式来减少I/O请求的次数</li>
+</ul>
+<p>###通用块层</p>
+<p>通用块层，是处在文件系统和磁盘驱动中间的一个块设备抽象层。主要有以下功能：</p>
+<ul>
+<li>与VFS类似，向上为文件系统和应用程序提供块设备的标准接口；向下，把各种异构的磁盘设备抽象为统一的块设备，并提供统一框架来管理这些设备的驱动程序。</li>
+<li>给文件系统和应用程序发来的I/O请求排队，并通过重新排序、请求合并等来提升磁盘读写的能力。</li>
+</ul>
+<p><strong>I/O调度算法</strong>：</p>
+<ul>
+<li><strong>NONE</strong>，不使用任何I/O调度，常用在虚拟机中</li>
+<li><strong>NOOP</strong>，先入先出队列，只进行最基本的请求合并，常用与SSD磁盘</li>
+<li><strong>CFQ（Completely Fair Schedule）</strong>，完全公平调度器，为每个进程维护一个I/O调度队列，并按照时间片来均匀分布每个进程的I/O请求。 类似进程CPU调度，CFQ还支持进程I/O的优先级调度，适用于大量进程的系统</li>
+<li><strong>Deadline</strong>，分别为读写请求创建不同的I/O队列，提高机械磁盘的吞吐量，并确保达到最终期限的请求被优先处理。多用于IO压力较重的场景，如数据库等</li>
+</ul>
+<h3 id="IO栈"><a href="#IO栈" class="headerlink" title="IO栈"></a>IO栈</h3><p>Linux存储系统的I/O栈由上到下分为 <strong>文件系统层、通用块层、设备层</strong>。存储系统的IO通常是整个系统最慢的一环，所以Linux系统通过多种缓存机制来优化I/O效率。</p>
+<ul>
+<li>优化文件访问性能： 页缓存、索引节点缓存、目录项缓存等减少对下层设备的直接调用</li>
+<li>优化块设备访问性能：使用缓冲区来缓存块设备的数据</li>
+</ul>
+<h3 id="磁盘性能指标"><a href="#磁盘性能指标" class="headerlink" title="磁盘性能指标"></a>磁盘性能指标</h3><ul>
+<li>使用率， 磁盘处理I/O的时间百分比</li>
+<li>饱和度， 磁盘处理I/O的繁忙程度</li>
+<li>IOPS， 每秒的I/O请求数</li>
+<li>吞吐量， 每秒I/O请求大小</li>
+<li>响应时间， I/O请求从发出到收到响应的间隔时间</li>
+</ul>
+<h3 id="磁盘I-O观测"><a href="#磁盘I-O观测" class="headerlink" title="磁盘I/O观测"></a>磁盘I/O观测</h3><pre><code>iostat -d -x 1      # -d -x 表示显示所有磁盘I/O的指标
+</code></pre><h3 id="进程I-O观测"><a href="#进程I-O观测" class="headerlink" title="进程I/O观测"></a>进程I/O观测</h3><pre><code>pidstat -d 1
+
+iotop #可以按照I/O大小对进程排序找到I/O较大的进程
+</code></pre><hr>
+<h2 id="Lesson-26-案例篇：如何找出狂打日志的内鬼"><a href="#Lesson-26-案例篇：如何找出狂打日志的内鬼" class="headerlink" title="Lesson 26 案例篇：如何找出狂打日志的内鬼"></a>Lesson 26 案例篇：如何找出狂打日志的内鬼</h2><h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><p>首先运行目标应用</p>
+<pre><code>sudo docker run -v /tmp:/tmp --name=app -itd feisky/logapp
+ps -ef | grep /app.py #确保程序启动
+</code></pre><p>我们先用top来观察CPU和内存的使用情况，然后再用iostat来观察磁盘使用情况</p>
+<pre><code>top 
+#观察发现CPU0使用率高且iowait超过了90%，说明cpu0上正在运行IO密集型程序
+#进程方面pythonCPU使用率较高，记录其pid号
+#内存使用方面，总内存8G剩余700+M，Buffer/Cache占用较高
+</code></pre><p>基本可以判断出CPU使用率中的iowait是一个潜在瓶颈，而内存中的缓存占比较大。<br>再用iostat查看I/O使用情况</p>
+<pre><code>iostat -x -d 1 
+#发现sda的I/O使用率很高，很可能已经接近饱和
+#查看前面指标，每秒写磁盘请求数是64，写大小是32MB，写请求响应时间7s，而请求队列长度则达到了1000+
+#超慢的响应时间和请求队列过长，进一步验证了IO已经饱和
+</code></pre><p>接下来分析I/O性能瓶颈的根源</p>
+<pre><code>pidstat -d 1 
+#此时python进程的写比较大，且每秒数据超过了45M，说明python进程导致了IO瓶颈
+
+strace -p XXXX 
+#在write()系统调用上，可以看出进程向文件描述符编号为3的文件中写入了300M数据
+#再观察后面的stat调用，可以看到它正在获取/tmp/logtest.txt.1的状态，这种格式的文件在日志回滚中常见
+
+losf -p XXXX
+#查看进程打开了哪些文件，/tmp/logtest.txt
+</code></pre><p>综上说明进程以每次300MB的速度在疯狂的写日志，其中日志文件目录为/tmp/logtest.txt。此时查看案例源码发现其默认记录INFO级别以上的所有日志。此时将默认级别调高到WARNING级别，日志问题即可解决。</p>
+<hr>
+<h2 id="Lesson-27-案例篇：为什么我的磁盘IO延迟很高？"><a href="#Lesson-27-案例篇：为什么我的磁盘IO延迟很高？" class="headerlink" title="Lesson 27 案例篇：为什么我的磁盘IO延迟很高？"></a>Lesson 27 案例篇：为什么我的磁盘IO延迟很高？</h2><h3 id="实验-1"><a href="#实验-1" class="headerlink" title="实验"></a>实验</h3><p>本实验需要两台虚拟机，一台案例分析的目标机器运行Flask应用，另一台作为客户端请求单词的热度。</p>
+<pre><code>sudo docker run --name=app -p 10000:80 -itd feisky/word-app
+</code></pre><p>然后在第二天机器 curl */popularity/word 发现一直没响应</p>
+<p>回第一台机器来分析，首先执行df命令查看文件系统使用情况，发现也要等好久才输出。此时df显示系统还有足够多的磁盘空间。此时同样可以先用top来观察CPU和内存使用情况，再用iostat来观察磁盘的IO情况。</p>
+<p>为了避免curl请求结束，在终端2循环执行curl，并用time观察每次执行时间。</p>
+<pre><code>while true； do 
+    time curl */popularity/word
+    sleep 1
+done
+</code></pre><p>top输出发现两个CPU的iowait都非常高，进程部分python进程的CPU使用率稍高，可能和iowait相关。 记录其pid</p>
+<pre><code>ps -aux | grep app.py #正好CPU使用率高的进程是我们的案例应用
+
+iostat -x -d 1 #发现磁盘sda的I/O使用率已经达到98%，写响应时间18s，每秒32MB显然已经达到了IO瓶颈
+
+pidstat -d 1 #再次看到了案例应用pid导致的io瓶颈
+
+strace -p XXX
+</code></pre><p>类似上节的套路，此时strace中可以看到大量的stat系统调用，却没有任何write调用。文件写明明应该有响应的write系统调用，现有工具却找不到痕迹。此时就该考虑换工具了，filetop基于eBPF机制，主要跟踪内核中文件的读写情况，并输出线程ID、读写大小、读写类型以及文件名称。</p>
+<pre><code>filetop -C #发现每隔一段时间线程号为XXX的python应用会写入大量的txt文件，再大量读。
+ps -efT | grep XXX #该线程确实属于我们的应用进程
+</code></pre><p>filetop只给出文件名，并没有给出文件路径。此时opensnoop工具登场</p>
+<pre><code>opensnoop #可以看到这些txt文件位于/tmp目录下，文件从0.txt到1000.txt
+</code></pre><p>结合filetop和opensnoop我们可以猜测案例应用应该是写入1000个txt文件后，又将这些文件内容读取到内存中进行处理。在打断ls检查路径中文件时发现内容为空。此时再次运行opensnoop发现目录变化了，说明这些目录都是应用程序动态生成的，用后就删除了。</p>
+<p>接下来查看程序源码发现该案例应用，在每个请求的处理过程中都会生成一批临时文件，然后读入内存处理，最后再删除整个目录。这是一种常见的利用磁盘空间处理大量数据的技巧，不过本次案例中的IO请求太重导致磁盘I/O利用率过高。</p>
+<p>通过算法优化，在内存充足时将所有数据放到内存中处理，这样就能避免IO性能问题。</p>
+<hr>
+<h2 id="Lesson-28-案例篇：一个SQL查询要15s是怎么回事？"><a href="#Lesson-28-案例篇：一个SQL查询要15s是怎么回事？" class="headerlink" title="Lesson 28 案例篇：一个SQL查询要15s是怎么回事？"></a>Lesson 28 案例篇：一个SQL查询要15s是怎么回事？</h2><h3 id="实验-2"><a href="#实验-2" class="headerlink" title="实验"></a>实验</h3><p>案例由3个容器组成，一个mysql数据库应用，一个商品搜索应用，一个数据处理的应用。在执行搜索命令时遇到了返回数据为空且处理时间超过15s的问题。同样通过循环持续发送请求来进行问题问题，为了避免系统压力过大sleep 5s再开始新请求。</p>
+<p>同样的套路，top iostat pidstat定位IO瓶颈问题以及mysqld进程。慢查询现象大多是CPU使用率高，但这里看到的却是IO问题，说明这并不是单纯的慢查询问题。</p>
+<p>接下来通过strace发现线程XXX正在读取大量数据，且读取文件的描述符编号为38。再用lsof尝试查找对应的文件，此时发现lsof没有任何输出。</p>
+<pre><code>echo $? #查找上一条指令退出时返回值，结果为1说明lsof命令执行失败。
+</code></pre><p>因为-p需要指定进程号，而我们传入线程号所以执行失败。<br>切换回进程号重新执行lsof命令，从输出可以看出确实mysqld进程打开了大量的文件，根据文件描述符找到对应的文件路径为/var/lib/mysql/test/products.MYD文件。</p>
+<p>MYSQL中MYD文件时MyISAM引擎用来存储表数据的文件，文件名就是数据表的名字，父目录即为数据库的名字。 即改文件告诉我们mysqld正在读取test数据库中的products表。</p>
+<p>如何确定这些文件是不是mysqld正在使用的数据库文件呢？有没有可能是不再使用的旧数据？我们通过查看mysqld配置的数据路径即可。</p>
+<pre><code>sudo docker exec -ti mysql mysql -e &apos;show global variable like &quot;%datadir%&quot;;&apos;
+</code></pre><p>可以看到/var/lib/mysql确实是mysqld正在使用的数据存储目录。<br>即然找出了数据库和表，下一步就是弄清楚数据库中正在执行什么样的SQL。</p>
+<p>在SQL命令界面执行</p>
+<pre><code>show full processlist #可以看到select * from products where productName=‘geektime’这条执行时间比较长
+</code></pre><p>一般SQL慢查询问题，很可能是没有利用好索引导致，如何判断这条是不是这样？</p>
+<pre><code>explain  select * from products where productName-‘geektime’
+</code></pre><p>其中pissible_keys和key都为NULL，type为ALL全表查询，这条查询语句根本没有使用索引，所以查询时会扫描整个表。</p>
+<p>因此给productName建立索引即可， 优化后查询时间从15s缩短到了3ms。</p>
+<p>该案例中测试时启动了一个DataService应用，其实停止该应用查询时间也能缩短到0.1s。这种情况下是否还存在IO瓶颈呢？通过vmstat来查看IO变化，发现磁盘读和iowait刚开始挺大，但是没过多久就变成了0，说明IO瓶颈消失。为什么呢？</p>
+<p>通过查看DataService源码可以看到其读取文件前先将 /proc/sys/vm/drop_caches改为1。即释放文件缓存，而mysql读取的数据就是文件缓存，dataService不断释放缓存导致mysql直接访问磁盘。因此产生IO瓶颈。</p>
+<hr>
+<h2 id="Lesson-29-案例篇：Redis响应验证延迟，如何解决？"><a href="#Lesson-29-案例篇：Redis响应验证延迟，如何解决？" class="headerlink" title="Lesson 29 案例篇：Redis响应验证延迟，如何解决？"></a>Lesson 29 案例篇：Redis响应验证延迟，如何解决？</h2><h3 id="实验-3"><a href="#实验-3" class="headerlink" title="实验"></a>实验</h3><p>本实验由python应用和redis两部分组成。Python应用是一个基于Flask的应用，会利用Redis来管理应用程序的缓存。</p>
+<p>实验中在访问应用程序的缓存接口时，发现10s的长响应时间，接下来定位瓶颈。</p>
+<p>同样为了避免分析过程中请求结束，通过loop循环来执行curl命令。</p>
+<p>继续先通过top和iostat先分析是否存在IO瓶颈。 结果发现CPU的iowait比较高，但是磁盘每秒写数据为2.5M，IO使用率为0，没有IO瓶颈。</p>
+<p>但是案例中测试时从Redis缓存中读取数据，对应应该时磁盘的读操作，iostat结果却显示时写操作。所以我们就要知道是什么进程在具体写磁盘。</p>
+<p>运行pidstat -d查看发现是redis-server进程在写磁盘。接下来用strace+lsof查看到底在写什么。从系统调用看epoll_wait、read、write、fdatasync这些系统调用都比较频繁，刚才观察的写操作应该是write和fdatasync导致。lsof找出这些系统调用的操作对象，发现只有7号普通文件会产生磁盘写，其操作路径为/data/appendonly.aof。</p>
+<p>在Redis中这对应着持久化配置中的appendonly和appendfsync选项，可能是由于它们配置不合理导致磁盘写较多。为了验证这个猜测，通过redis命令行查这两个选项的配置。</p>
+<pre><code>sudo docker exec -ti redis redis-cli config get &apos;append*&apos;
+</code></pre><p>发现appendfsync配置为always，appendonly配置为yes。</p>
+<p>Redis提供了两种数据持久化方式：</p>
+<ul>
+<li><strong>快照方式</strong>，按照指定的时间间隔生成数据的快照，并且保存在磁盘文件中。为避免阻塞主进程，Redis会fork一个子进程来进行快照的保存。 无论备份恢复都比追加文件性能好，缺点是在数据量大时fork子进程会用到比较大的内存，保存数据比较耗时。</li>
+<li><strong>追加文件</strong>，在文件末尾追加记录的方式对redis写入数据进行持久化。提供appendfsync选项设置fsync策略：<ul>
+<li>always， 每个操作都会执行一次fsync，最安全</li>
+<li>everysec，每秒钟调用一次fsync，即使最坏情况也只会丢失1s数据</li>
+<li>no， 交给操作系统来处理</li>
+</ul>
+</li>
+</ul>
+<p>回头看上述测试，因为配置为always导致每次写数据都会调用一次fsync，从而造成比较大的磁盘IO压力。</p>
+<p>但是为什么查询会有磁盘写呢，我们再次审视strace和lsof的输出，发现编号为8的TCP socket正好对应TCP读写，是一个标准的“请求-相应”格式。从socket中GET uuid：X后响应good，再从socket中读取SADD good X后响应1。对Redis来说SADD是一个写操作，所以Redis会将其持久化到appendonly.aof文件中。因此产生大量的磁盘读写。</p>
+<p>接下来我们确认8号TCPsocket对应的Redis客户端是否为我们的案例应用。 通过lsof -i 找出TCP socket对应的TCP连接信息，进入容器网络命名空间内部看到完成的TCP连接。</p>
+<pre><code>PID=$(sudo docker inspect --format {{.State.Pid}} app)
+nsenter --target $PID --net -- lsof -i
+</code></pre><p>综合分析可知，首先redis配置always不太合理，本案例不需要这么高频的同步写，改为1s时间间隔足够；其次python应用在查询接口中会调用Redis的SADD命令，这很可能是不合理使用缓存导致。</p>
+<p>修改配置后请求时间降低到0.9s，接着通过分析源码解决第二个问题。代码中Python应用将Redis当成临时空间，用来存储查询过程中找到的数据。优化将其放在内存中，再次查看响应时间已经降低到了0.2s。</p>
+<hr>
+<h2 id="Lesson-30-套路篇：如何迅速分析出系统IO瓶颈"><a href="#Lesson-30-套路篇：如何迅速分析出系统IO瓶颈" class="headerlink" title="Lesson 30 套路篇：如何迅速分析出系统IO瓶颈"></a>Lesson 30 套路篇：如何迅速分析出系统IO瓶颈</h2><h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><h4 id="文件系统IO性能指标"><a href="#文件系统IO性能指标" class="headerlink" title="文件系统IO性能指标"></a>文件系统IO性能指标</h4><ul>
+<li>存储空间的使用情况，容量、使用量以及剩余空间等<ul>
+<li>文件系统向外展示的空间使用，而非磁盘空间的真实用量</li>
+<li>索引节点的使用情况，包括容量、使用量以及剩余量 （如果文件系统中存储过多的小文件，就能碰到索引节点容量已满的问题）</li>
+</ul>
+</li>
+<li>缓存使用情况，页缓存、目录项缓存、索引节点缓存以及各个具体文件系统的缓存</li>
+<li>文件系统IO， IOPS、响应延迟时间、以及吞吐量</li>
+</ul>
+<p>Linux文件系统并没有提供直接查看这些指标的方法，只能通过系统调用、动态跟踪或者基准测试的方法来间接观察评估。</p>
+<h4 id="磁盘IO性能指标"><a href="#磁盘IO性能指标" class="headerlink" title="磁盘IO性能指标"></a>磁盘IO性能指标</h4><ul>
+<li>使用率</li>
+<li>IOPS</li>
+<li>吞吐量</li>
+<li>响应时间</li>
+<li>Buffer也常出现在内存和磁盘问题的分析中</li>
+</ul>
+<h3 id="性能工具"><a href="#性能工具" class="headerlink" title="性能工具"></a>性能工具</h3><ul>
+<li><strong>df</strong>，既可以查看文件系统数据的空间容量，也可以查看索引节点的容量</li>
+<li><strong>/proc/meminfo，/proc/slabinfo及slaptop</strong>，观察页缓存、目录项缓存、索引节点缓存以及具体的文件系统的缓存</li>
+<li><strong>iostat，pidstat</strong>观察磁盘和进程的IO情况<ul>
+<li><strong>iostat</strong>查看磁盘的IO使用率、吞吐量、响应时间以及IOPS性能指标</li>
+<li><strong>pidstat</strong>查看进程的IO吞吐量以及块设备的IO延迟     </li>
+</ul>
+</li>
+<li><strong>strace+lsof</strong>定位问题进程正在读写的文件</li>
+<li><strong>filetop+opensnoop</strong>，从内核中跟踪系统调用，最终找出瓶颈来源</li>
+</ul>
+<h3 id="性能指标和工具的联系"><a href="#性能指标和工具的联系" class="headerlink" title="性能指标和工具的联系"></a>性能指标和工具的联系</h3><h4 id="根据指标找工具"><a href="#根据指标找工具" class="headerlink" title="根据指标找工具"></a>根据指标找工具</h4><p><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/metrictool.png" alt>  </p>
+<h4 id="根据工具查指标"><a href="#根据工具查指标" class="headerlink" title="根据工具查指标"></a>根据工具查指标</h4><p><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/toolmetric.png" alt>  </p>
+<h3 id="如何迅速分析I-O的性能瓶颈"><a href="#如何迅速分析I-O的性能瓶颈" class="headerlink" title="如何迅速分析I/O的性能瓶颈"></a>如何迅速分析I/O的性能瓶颈</h3><ul>
+<li>先用iostat发现磁盘IO性能瓶颈</li>
+<li>再借助pidstat定位出导致瓶颈的进程</li>
+<li>随后分析进程的IO行为</li>
+<li>最后结合应用程序的原理，分析这些IO的来源</li>
+</ul>
+<p>为了缩小排查范围，通常先运行几个支持指标较多的工具，如iostat、vmstat、pidstat等，然后再根据观察到的现象，结合系统和应用程序的原理，寻找下一步的分析方向。</p>
+<p>例如MYSQL和Redis案例中，通过iostat确认磁盘出现IO性能瓶颈，然后用pidstat找出I/O最大的进程，接着借助strace找出该进程正在读写的文件，最后结合应用程序的原理找出大量IO的原因。</p>
+<p>当用iostat发现磁盘IO性能瓶颈后，再用pidstat和vmstat检查，可能会发现IO来自内核线程。如Swap使用大量升高。这种情况下，就得进行内存分析，先找出占用大量内存的进程，再设法减少内存的使用。</p>
+<p><img src="/2020/06/21/Linux性能优化实战第四周--IO性能篇/analysis.png" alt>  </p>
+<hr>
+<h2 id="Lesson-31-套路篇：-磁盘I-O性能优化的几个思路"><a href="#Lesson-31-套路篇：-磁盘I-O性能优化的几个思路" class="headerlink" title="Lesson 31 套路篇： 磁盘I/O性能优化的几个思路"></a>Lesson 31 套路篇： 磁盘I/O性能优化的几个思路</h2><h3 id="IO基准测试"><a href="#IO基准测试" class="headerlink" title="IO基准测试"></a>IO基准测试</h3><p>为了更客观的评估优化效果，首先应该对磁盘和文件系统进行基准测试，得到文件系统或磁盘IO的极限性能。<br>fio（Flexible I/O Tester）是最常用的基准测试工具</p>
+<pre><code># 随机读
+fio -name=randread -direct=1 -iodepth=64 -rw=randread -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+# 随机写
+fio -name=randwrite -direct=1 -iodepth=64 -rw=randwrite -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+#顺序读
+fio -name=read -direct=1 -iodepth=64 -rw=read -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+#顺序写
+fio -name=write -direct=1 -iodepth=64 -rw=write -ioengine=libaio -bs=4k -size=1G -numjobs=1 -runtime=1000 -group_reporting -filename=/dev/sdb
+</code></pre><ul>
+<li>direct表示是否跳过系统缓存，1表示跳过</li>
+<li>iodepth表示使用异步I/O（asynchronous I/O）时同时发出的IO请求上限</li>
+<li>rw表示I/O模式</li>
+<li>ioengine表示I/O引擎，支持同步sync，异步libaio，内存映射mmap，网络net等</li>
+<li>bs表示I/O的大小</li>
+</ul>
+<p>结果报告中</p>
+<ul>
+<li>slat表示从I/O提交到实际执行I/O的时长。 submission latency</li>
+<li>clat表示从I/O提交到I/O完成的时长。 completion latency</li>
+<li>lat表示从fio创建IO到IO完成的总时长</li>
+</ul>
+<p>fio支持I/O的重放，先用blktrace记录磁盘设备的I/O访问情况，然后使用fio重放blktrace的记录。</p>
+<pre><code>blktrace /dev/sdb #跟踪磁盘IO
+ls #查看blktrace记录的结果
+blkparse sdb -d sdb.bin #将结果转化为二进制文件
+fio --name=reply --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin #使用fio重放日志
+</code></pre><h3 id="I-O性能优化"><a href="#I-O性能优化" class="headerlink" title="I/O性能优化"></a>I/O性能优化</h3><h4 id="应用程序优化"><a href="#应用程序优化" class="headerlink" title="应用程序优化"></a>应用程序优化</h4><ul>
+<li>可以用追加写代替随机写，减少寻址开销，加快I/O写的速度</li>
+<li>可以借助缓存I/O，充分利用系统缓存，降低实际I/O的次数 </li>
+<li>在应用程序内部构建自己的缓存，或者用Redis等外部缓存。一方面能在应用程序内部控制缓存的数据和生命周期，另一方面可以降低其他应用程序使用缓存对自身的影响</li>
+<li>需要频繁读写同一块磁盘空间时，可以用mmap代替read/write，减少内存的拷贝次数</li>
+<li>在需要写同步的场景中，尽量将写请求合并，即可以用fsync()取代O_SYNC</li>
+<li>在多个应用程序共享磁盘时，为了保证I/O不被某个应用完全占用，推荐使用cgroups的I/O子系统来限制进程/进程组的IOPS以及吞吐量</li>
+<li>在使用CFQ调度器时，可以用ionice来调整进程的调度优先级，提高核心应用的I/O优先级。</li>
+</ul>
+<h4 id="文件系统优化"><a href="#文件系统优化" class="headerlink" title="文件系统优化"></a>文件系统优化</h4><ul>
+<li>根据实际负载场景不同选择最适合的文件系统</li>
+<li>选好文件系统后进一步优化文件系统的配置选项，包括文件系统的特性、日志模式、挂载选项等</li>
+<li>优化文件系统的缓存</li>
+<li>不需要持久化时可以用内存文件系统tmpfs来获取更好的IO性能。</li>
+</ul>
+<h4 id="磁盘优化"><a href="#磁盘优化" class="headerlink" title="磁盘优化"></a>磁盘优化</h4><ul>
+<li>换用性能更好的磁盘， 如SSD替换HDD</li>
+<li>使用RAID将多块磁盘组合成一个逻辑磁盘，构成冗余独立磁盘阵列。既可以提高数据的可靠性，又可以提升数据的访问性能</li>
+<li>针对磁盘和应用程序IO模式特征，选择最合适的IO调度算法<ul>
+<li>SSD和虚拟机中的磁盘，用noop调度算法</li>
+<li>数据库应用，用deadline算法</li>
+</ul>
+</li>
+<li>对应用程序的数据进行磁盘级别的隔离。 为日志、数据库等I/O压力大的应用配置单独的磁盘</li>
+<li>顺序读多的场景增大磁盘的预读数据<ul>
+<li>调整内核选项/sys/block/sdb/queue/read_ahead_kb， 默认为128KB</li>
+<li>blockdev工具设置， blockdev –setra 8192 /dev/sdb， 这里单位为512B</li>
+</ul>
+</li>
+<li>优化块设备的I/O选项<ul>
+<li>调整磁盘队列的长度，/sys/block/sdb/queue/nr_requests</li>
+</ul>
+</li>
+</ul>
+<p>最后要注意磁盘本身是否存在硬件错误。 可以查看dmesg中是否有硬件I/O故障的日志。还可以用badblocks、smartctl等工具检测磁盘的硬件问题，或者用e2fsck来检测文件系统的错误。 如果发现问题可以用fsck来修复。</p>
+<hr>
+<h2 id="Lesson-32-答疑-（略）"><a href="#Lesson-32-答疑-（略）" class="headerlink" title="Lesson 32 答疑 （略）"></a>Lesson 32 答疑 （略）</h2><p>捞评论学习：</p>
+<ol>
+<li>数据写ES，运行一段时间后发现写入很慢，查IO时发现读IO很高写IO很少。用iotop定位es一些写的线程，将线程id转成16进制，用jstack打印出ES的堆栈信息，查处16进程的线程号的堆栈。发现原来时ES会根据doc id查数据，然后选择更新或新插入。ES数据量大时，会占用很多的读IO。 解决方法：写ES时不传入id，让es自动生成来解决。</li>
+</ol>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2020/06/14/Linux性能优化实战第三周--内存性能篇/" itemprop="url">
+                  《Linux 性能优化实战》第三周--内存性能篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-06-14T10:57:55+08:00" content="2020-06-14">
+              2020-06-14
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周主要学习内存性能方面的检测与优化。首先在概念上更加系统的了解了Linux内存的工作原理。进程看到的内存是内核提供的虚拟内存，通过页表映射到实际的物理内存。进程通过malloc申请内存根据页面大小有两种不同的方式，并且内存并不是立即分配而是在首次访问时通过缺页异常在内核态进行分配并更新页表。</p>
+<p>通过阅读文档以及实验了解了Buffer和Cache的区别。前者是对磁盘数据的缓存，后者是对文件数据的缓存，且<strong>两者均作用于读写操作</strong>。并掌握cachestat/cachetop/pcstat等工具如何检测系统缓存命中指标，在实验中掌握如何处理缓存异常的场景。</p>
+<p>在内存资源紧张时，Linux通过直接回收和定期扫描的方式来释放文件页和匿名页。其中资源是否紧张可以通过内存的三个阈值来判断。另外我们可以手动调整内存资源配置，例如修改 /proc/sys/vm/min_free_kbytes来调整内存阈值，/proc/sys/vm/swappiness来调整文件页和匿名页回收倾向。在NUMA架构下还可以设置/proc/sys/vm/zone_reclaim_node来调整本地内存的回收策略。</p>
+<p>当Swap变高时，可以用sar，/proc/zoneinfo，/proc/pid/status等方法查看系统or进程的内存使用情况，进而找到Swap升高的根源和受影响的进程。不过通常我们禁止Swap的使用来提升系统的整体性能：</p>
+<ul>
+<li>内存足够大时，禁用Swap</li>
+<li>实在需要Swap时，可以尝试降低swapiness的值，减少回收时Swap的使用倾向</li>
+<li>响应延迟敏感的应用，可以用mlock/mlockall来锁定内存，禁止内存换出</li>
+</ul>
+<p>之前在搭建组内K8S环境时按照教程都是先关闭Swap，不明所以。现在通过这周的学习才真正了解到缘由。</p>
+<p>本周对内存使用情况监测所用的主要工具有：</p>
+<ul>
+<li>常用性能工具： free/top/ps，vmstat观察内存变化情况</li>
+<li>查看缓存命中情况： bcc包中的cachestat和cachetop，基于Linux内核的eBPF(extend Berkeley Packet Filters)来跟踪内核中管理的缓存<ul>
+<li>cachestat 查看整个操作系统缓存的读写命中情况</li>
+<li>cachetop 提供了每个进程的缓存命中情况 </li>
+</ul>
+</li>
+<li>跟踪内存分配/释放： memleak    </li>
+<li>查看内存各个指标变化： sar</li>
+</ul>
+<p>对于系统内存问题的分析与定位，通常先运行几个覆盖面比较大的性能工具，如free，top，vmstat，pidstat等</p>
+<ul>
+<li>先用free和top查看系统整体内存使用情况</li>
+<li>再用vmstat和pidstat，查看一段时间的趋势，从而判断内存问题的类型</li>
+<li>最后进行详细分析，比如内存分配分析，缓存/缓冲区分析，具体进程的内存使用分析等 </li>
+</ul>
+<p><img src="/2020/06/14/Linux性能优化实战第三周--内存性能篇/analysis.png" alt> </p>
+<p>以及一些常见的优化思路：</p>
+<ul>
+<li>最好禁止Swap，若必须开启则尽量降低swappiness的值</li>
+<li>减少内存的动态分配，如可以用内存池，HugePage等</li>
+<li>尽量使用缓存和缓冲区来访问数据。如用堆栈明确声明内存空间来存储需要缓存的数据，或者用Redis外部缓存组件来优化数据的访问</li>
+<li>cgroups等方式来限制进程的内存使用情况，确保系统内存不被异常进程耗尽</li>
+<li>/proc/pid/oom_adj调整核心应用的oom_score，保证即使内存紧张核心应用也不会被OOM杀死 </li>
+</ul>
+<p>另外，在探索问题的过程中由于性能指标较多，我们不可能记住所有指标的详细含义，网上搜索有时并不能得到真正准确的答案，因此养成查文档的爱好非常重要。</p>
+<hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-15-Linux内存是怎么工作的"><a href="#Lesson-15-Linux内存是怎么工作的" class="headerlink" title="Lesson 15 Linux内存是怎么工作的"></a>Lesson 15 Linux内存是怎么工作的</h2><h3 id="内存映射"><a href="#内存映射" class="headerlink" title="内存映射"></a>内存映射</h3><p>大多数计算机用的主存都是动态随机访问内存(DRAM)，只有内核才可以直接访问物理内存。Linux内核给每个进程提供了一个独立的虚拟地址空间，并且这个地址空间是连续的。这样进程就可以很方便的访问内存(虚拟内存)。</p>
+<p>虚拟地址空间的内部分为内核空间和用户空间两部分，不同字长的处理器地址空间的范围不同。32位系统内核空间占用1G，用户空间占3G。 64位系统内核空间和用户空间都是128T，分别占内存空间的最高和最低处，中间部分为未定义。</p>
+<p>并不是所有的虚拟内存都会分配物理内存，只有实际使用的才会。分配后的物理内存通过内存映射管理。为了完成内存映射，内核为每个进程都维护了一个页表，记录虚拟地址和物理地址的映射关系。页表实际存储在CPU的内存管理单元MMU中，处理器可以直接通过硬件找出要访问的内存。</p>
+<p>当进程访问的虚拟地址在页表中查不到时，系统会产生一个缺页异常，进入内核空间分配物理内存，更新进程页表，再返回用户空间恢复进程的运行。</p>
+<p>MMU以页为单位管理内存，页大小4KB。为了解决页表项过多问题Linux提供了<strong>多级页表</strong>和<strong>HugePage</strong>的机制。</p>
+<h3 id="虚拟内存空间分布"><a href="#虚拟内存空间分布" class="headerlink" title="虚拟内存空间分布"></a>虚拟内存空间分布</h3><p>从图中可以看出用户空间内存从低到高是五种不同的内存段：</p>
+<ul>
+<li><strong>只读段</strong> 代码和常量等</li>
+<li><strong>数据段</strong> 全局变量等</li>
+<li><strong>堆</strong> 动态分配的内存，从低地址开始向上增长</li>
+<li><strong>文件映射</strong> 动态库、共享内存等，从高地址开始向下增长</li>
+<li><strong>栈</strong> 包括局部变量和函数调用的上下文等，栈的大小是固定的。一般8MB</li>
+</ul>
+<h3 id="内存分配与回收"><a href="#内存分配与回收" class="headerlink" title="内存分配与回收"></a>内存分配与回收</h3><h4 id="分配"><a href="#分配" class="headerlink" title="分配"></a>分配</h4><p>malloc对应到系统调用上有两种实现方式：</p>
+<ul>
+<li><strong>brk()</strong> 针对小块内存(&lt;128K)，通过移动堆顶位置来分配。内存释放后不立即归还内存，而是被缓存起来。</li>
+<li><strong>mmap()</strong>针对大块内存(&gt;128K)，直接用内存映射来分配，即在文件映射段找一块空闲内存分配。</li>
+</ul>
+<p>前者的缓存可以减少缺页异常的发生，提高内存访问效率。但是由于内存没有归还系统，在内存工作繁忙时，频繁的内存分配/释放会造成内存碎片。</p>
+<p>后者在释放时直接归还系统，所以每次mmap都会发生缺页异常。在内存工作繁忙时，频繁内存分配会导致大量缺页异常，使内核管理负担增加。</p>
+<p>上述两种调用并没有真正分配内存，这些内存只有在首次访问时，才通过缺页异常进入内核中，由内核来分配。</p>
+<h4 id="回收"><a href="#回收" class="headerlink" title="回收"></a>回收</h4><p>内存紧张时，系统通过以下方式来回收内存：</p>
+<ul>
+<li>回收缓存： LRU算法回收最近最少使用的内存页面；</li>
+<li>回收不常访问内存： 把不常用的内存通过交换分区写入磁盘</li>
+<li><p>杀死进程： OOM内核保护机制 （进程消耗内存越大oom_score越大，占用CPU越多oom_score越小，可以通过/proc手动调整oom_adj） </p>
+<pre><code>echo -16 &gt; /proc/$(pidof XXX)/oom_adj
+</code></pre></li>
+</ul>
+<h3 id="如何查看内存使用情况"><a href="#如何查看内存使用情况" class="headerlink" title="如何查看内存使用情况"></a>如何查看内存使用情况</h3><p>free来查看整个系统的内存使用情况</p>
+<p>top/ps来查看某个进程的内存使用情况</p>
+<ul>
+<li><strong>VIRT</strong> 进程的虚拟内存大小</li>
+<li><strong>RES</strong> 常驻内存的大小，即进程实际使用的物理内存大小，不包括swap和共享内存</li>
+<li><strong>SHR</strong> 共享内存大小，与其他进程共享的内存，加载的动态链接库以及程序代码段</li>
+<li><strong>%MEM</strong> 进程使用物理内存占系统总内存的百分比 </li>
+</ul>
+<hr>
+<h2 id="Lesson-16-怎样理解内存中的Buffer和Cache？"><a href="#Lesson-16-怎样理解内存中的Buffer和Cache？" class="headerlink" title="Lesson 16 怎样理解内存中的Buffer和Cache？"></a>Lesson 16 怎样理解内存中的Buffer和Cache？</h2><h3 id="free数据来源"><a href="#free数据来源" class="headerlink" title="free数据来源"></a>free数据来源</h3><p>在free手册中可以看到buffer和cache的定义，但是并不能直观帮助我们理解</p>
+<pre><code>buffers： Memory used by kernel buffers (Buffers in /proc/meminfo)
+cache: Memory used by the page cache and slabs (Cache and Sreclaimable in /proc/meminfo)
+</code></pre><h3 id="proc文件系统"><a href="#proc文件系统" class="headerlink" title="proc文件系统"></a>proc文件系统</h3><p>接着看proc文件系统中的文档可以看到： Buffers是对原始磁盘块的临时存储，也就是用来缓存磁盘的数据(通常不会特别大)。Cached是从磁盘读取文件的页缓存，用来缓存从文件中读取的数据。Slab包括可回收和不可回收两部分。</p>
+<pre><code>Buffers %lu: Relatively temporary storage for raw disk blocks that shouldn&apos;t get tremendously large (20MB or so)    
+
+Cached %lu: In-memory cache for files read from the disk(the page cache). Doesn&apos;t include SwapCached.
+
+SReclaimable %lu: Part of Slab, that might be reclaimed, such as ceches.
+
+Sunreclaim %lu: Part of Slab, that cannot bt reclaimed on memory pressure.
+</code></pre><h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><p><strong>该实验对环境要求较高，需要系用配置多块磁盘，并且分区/dev/sdb1处于未使用状态。如果不满足千万不要尝试，否则会对磁盘分区造成损坏</strong></p>
+<p>首先安装sysstat包，然后清理系统缓存</p>
+<pre><code>echo 3 &gt; /proc/sys/vm/drop_caches
+</code></pre><h4 id="场景1-磁盘和文件写案例"><a href="#场景1-磁盘和文件写案例" class="headerlink" title="场景1 磁盘和文件写案例"></a>场景1 磁盘和文件写案例</h4><pre><code>vmstat 1 #空闲情况下查看系统内存使用情况
+dd if=/dev/urandom of=/tmp/file bs=1M count=500 #通过读取随机设备，生产一个500MB大小的文件
+#此时观察vmstat，发现cache在不断增长，但是Buffer基本保持不变
+#Cache开始增长时，块设备IO很少，dd命令结束后cache不再增长，但块设备写还会持续一段时间
+
+echo 3 &gt;/proc/sys/vm/drop_caches
+dd if=/dev/urandom of=/dev/sdb1 bs=1M count=2048 #清理缓存后向磁盘分区写入2GB的随机数据
+#此时观察vmstat输出，发现写磁盘会时buffer和cache都在增长，但是buffer增长快得多
+</code></pre><p>通过该案例可以看出写文件时会用到cache缓存数据，写磁盘时会用到buffer来缓存数据。</p>
+<h4 id="场景2-磁盘和文件读案例"><a href="#场景2-磁盘和文件读案例" class="headerlink" title="场景2 磁盘和文件读案例"></a>场景2 磁盘和文件读案例</h4><pre><code>echo 3 &gt; /proc/sys/vm/drop_caches
+dd if=/tmp/file of=/dev/null
+#观察vmstat输出，发现读取文件时buffer保持不变，cache不停增长
+
+echo 3 &gt;/proc/sys/vm/drop_caches
+dd if=/dev/sda1 of=/dev/null bs=1M count=1024
+#观察vmstat发现读磁盘时，buffer和cache都在增长，但是buffer增长快得多
+</code></pre><p><strong>通过上述实验可以看出buffer是对磁盘数据的缓存，cache是对文件数据的缓存，它们既会用在读请求也会用在写请求中。</strong></p>
+<hr>
+<h2 id="Lesson-17-如何利用系统缓存优化程序的运行效率"><a href="#Lesson-17-如何利用系统缓存优化程序的运行效率" class="headerlink" title="Lesson 17 如何利用系统缓存优化程序的运行效率"></a>Lesson 17 如何利用系统缓存优化程序的运行效率</h2><h3 id="缓存命中率"><a href="#缓存命中率" class="headerlink" title="缓存命中率"></a>缓存命中率</h3><p><strong>缓存命中率</strong>是指直接通过缓存获取数据的请求次数，占所有请求次数的百分比。<strong>命中率越高说明缓存带来的收益越高，应用程序的性能也就越好。</strong></p>
+<p>安装bcc包后可以通过cachestat和cachetop来监测缓存的读写命中情况。</p>
+<p>安装pcstat后可以查看文件在内存中的缓存大小以及缓存比例。</p>
+<pre><code>#首先安装Go
+export GOPATH=~/go
+export PATH=~/go/bin:$PATH
+go get golang.org/x/sys/unix
+go ge github.com/tobert/pcstat/pcstat
+</code></pre><h3 id="实验案例一-dd缓存加速"><a href="#实验案例一-dd缓存加速" class="headerlink" title="实验案例一 dd缓存加速"></a>实验案例一 dd缓存加速</h3><pre><code>dd if=/dev/sda1 of=file bs=1M count=512 #生产一个512MB的临时文件
+echo 3 &gt; /proc/sys/vm/drop_caches #清理缓存
+pcstat file #确定刚才生成文件不在系统缓存中，此时cached和percent都是0
+cachetop 5
+dd if=file of=/dev/null bs=1M #测试文件读取速度
+#此时文件读取性能为30+MB/s，查看cachetop结果发现并不是所有的读都落在磁盘上，读缓存命中率只有50%。
+dd if=file of=/dev/null bs=1M #重复上述读文件测试
+#此时文件读取性能为4+GB/s，读缓存命中率为100%
+pcstat file #查看文件file的缓存情况，100%全部缓存
+</code></pre><p>实验表明系统缓存对第二次dd命令有明显的加速效果，大大提高了文件读取的性能。同时要注意如果我们把dd作为性能测试工具时，由于缓存存在会导致测试结果严重失真。</p>
+<h3 id="实验案例二-O-DIRECT选项绕过系统缓存"><a href="#实验案例二-O-DIRECT选项绕过系统缓存" class="headerlink" title="实验案例二 O_DIRECT选项绕过系统缓存"></a>实验案例二 O_DIRECT选项绕过系统缓存</h3><pre><code>cachetop 5
+sudo docker run --privileged --name=app -itd feisky/app:io-direct
+sudo docker logs app #确认案例启动成功
+#实验结果表明每读32MB数据都要花0.9s，且cachetop输出中显示1024次缓存全部命中
+</code></pre><p>但是凭感觉可知如果缓存命中读速度不应如此慢，读次数时1024，页大小为4K，五秒的时间内读取了1024*4KB数据，即每秒0.8MB，和结果中32MB相差较大。说明该案例没有充分利用缓存，怀疑系统调用设置了直接I/O标志绕过系统缓存。因此接下来观察系统调用</p>
+<pre><code>strace -p $(pgrep app)
+#strace 结果可以看到openat打开磁盘分区/dev/sdb1，传入参数为O_RDONLY|O_DIRECT
+</code></pre><p>这就解释了为什么读32MB数据那么慢，直接从磁盘读写肯定远远慢于缓存。找出问题后我们再看案例的源代码发现flags中指定了直接IO标志。删除该选项后重跑，验证性能变化。</p>
+<hr>
+<h2 id="Lesson-18-内存泄漏，如何定位和处理？"><a href="#Lesson-18-内存泄漏，如何定位和处理？" class="headerlink" title="Lesson 18 内存泄漏，如何定位和处理？"></a>Lesson 18 内存泄漏，如何定位和处理？</h2><p>对应用程序来说，动态内存的分配和回收是核心又复杂的一个逻辑功能模块。管理内存的过程中会发生各种各样的“事故”：</p>
+<ul>
+<li>没正确回收分配的内存，导致了泄漏</li>
+<li>访问的是已分配内存边界外的地址，导致程序异常退出</li>
+<li>…</li>
+</ul>
+<h3 id="内存的分配与回收"><a href="#内存的分配与回收" class="headerlink" title="内存的分配与回收"></a>内存的分配与回收</h3><p>在Lesson15中我们了解到了虚拟内存分布从低到高分别是<strong>只读段，数据段，堆，内存映射段，栈</strong>五部分。其中会导致内存泄漏的是：</p>
+<ul>
+<li>堆： 由应用程序自己来分配和管理，除非程序退出这些堆内存不会被系统自动释放。</li>
+<li>内存映射段：包括动态链接库和共享内存，其中共享内存由程序自动分配和管理</li>
+</ul>
+<p><strong>内存泄漏的危害比较大，这些忘记释放的内存，不仅应用程序自己不能访问，系统也不能把它们再次分配给其他应用。</strong> 内存泄漏不断累积甚至会耗尽系统内存。</p>
+<h3 id="实验-如何检测内存泄漏"><a href="#实验-如何检测内存泄漏" class="headerlink" title="实验 如何检测内存泄漏"></a>实验 如何检测内存泄漏</h3><p>预先安装systat，docker，bcc</p>
+<pre><code>sudo docker run --name=app -itd feisky/app:mem-leak
+sudo docker logs app
+vmstat 3
+</code></pre><p>可以看到free在不断下降，buffer和cache基本保持不变。说明系统的内存一致在升高。但并不能说明存在内存泄漏。此时可以通过memleak工具来跟踪系统或进程的内存分配/释放请求。</p>
+<pre><code>/usr/share/bcc/tools/memleak -a -p $(pidof app)
+</code></pre><p>从memleak输出可以看到，应用在不停地分配内存，并且这些分配的地址并没有被回收。通过调用栈看到是fibonacci函数分配的内存没有释放。定位到源码后查看源码来修复增加内存释放函数即可。</p>
+<p>另外，在该实验中也可以通过将动态分配的内存改为数组来避免内存泄漏的问题，数据放在栈中由系统自动分配与回收。</p>
+<hr>
+<h2 id="Lesson-19-20-为什么系统的Swap变高"><a href="#Lesson-19-20-为什么系统的Swap变高" class="headerlink" title="Lesson 19/20 为什么系统的Swap变高"></a>Lesson 19/20 为什么系统的Swap变高</h2><p>系统内存资源紧张时通过内存回收和OOM杀死进程来解决。其中可回收内存包括：</p>
+<ul>
+<li>缓存/缓冲区，属于可回收资源，在文件管理中通常叫做文件页<ul>
+<li>被应用程序修改过暂时没写入磁盘的数据(脏页)，要先写入磁盘然后才能内存释放<ul>
+<li>在应用程序中通过fsync将脏页同步到磁盘</li>
+<li>交给系统，内核线程pdflush负责这些脏页的刷新</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>内存映射获取的文件映射页，也可以被释放掉，下次访问时从文件重新读取</li>
+</ul>
+<p>对于程序自动分配的堆内存，也就是我们在内存管理中的匿名页，虽然这些内存不能直接释放，但是Linux提供了Swap机制将不常访问的内存写入到磁盘来释放内存，再次访问时从磁盘读取到内存即可。</p>
+<h3 id="Swap原理"><a href="#Swap原理" class="headerlink" title="Swap原理"></a>Swap原理</h3><p>Swap本质就是把一块磁盘空间或者一个本地文件当作内存来使用，包括换入和换出两个过程：</p>
+<ul>
+<li>换出： 将进程暂时不用的内存数据存储到磁盘中，并释放这些内存</li>
+<li>换入： 进程再次访问内存时，将它们从磁盘读到内存中</li>
+</ul>
+<p>Linux如何衡量内存资源是否紧张？</p>
+<ul>
+<li><strong>直接内存回收</strong> 新的大块内存分配请求，但剩余内存不足。此时系统会回收一部分内存；</li>
+<li><p><strong>kswapd0</strong> 内核线程定期回收内存。为了衡量内存使用情况，定义了pages_min,pages_low,pages_high三个阈值，并根据其来进行内存的回收操作。</p>
+<ul>
+<li>剩余内存 &lt; pages_min，进程可用内存耗尽了，只有内核才可以分配内存</li>
+<li>pages_min &lt; 剩余内存 &lt; pages_low,内存压力较大，kswapd0执行内存回收，直到剩余内存 &gt; pages_high</li>
+<li>pages_low &lt; 剩余内存 &lt; pages_high，内存有一定压力，但可以满足新内存请求</li>
+<li><p>剩余内存 &gt; pages_high，说明剩余内存较多，无内存压力</p>
+<p>pages_low = pages_min <em> 5 / 4<br>pages_high = pages_min </em> 3 / 2</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="NUMA-与-SWAP"><a href="#NUMA-与-SWAP" class="headerlink" title="NUMA 与 SWAP"></a>NUMA 与 SWAP</h3><p>很多情况下系统剩余内存较多，但SWAP依旧升高，这是由于处理器的NUMA架构。</p>
+<p>在NUMA架构下多个处理器划分到不同的Node，每个Node都拥有自己的本地内存空间。在分析内存的使用时应该针对每个Node单独分析。</p>
+<pre><code>numactl --hardware #查看处理器在Node的分布情况，以及每个Node的内存使用情况
+</code></pre><p>内存三个阈值可以通过/proc/zoneinfo来查看，该文件中还包括活跃和非活跃的匿名页/文件页数。</p>
+<p>当某个Node内存不足时，系统可以从其他Node寻找空闲资源，也可以从本地内存中回收内存。 通过/proc/sys/vm/zone_raclaim_mode来调整。</p>
+<ul>
+<li>0表示既可以从其他Node寻找空闲资源，也可以从本地回收内存</li>
+<li>1，2，4表示只回收本地内存，2表示可以会回脏数据回收内存，4表示可以用Swap方式回收内存。</li>
+</ul>
+<h3 id="swappiness"><a href="#swappiness" class="headerlink" title="swappiness"></a>swappiness</h3><p>在实际回收过程中Linux根据/proc/sys/vm/swapiness选项来调整使用Swap的积极程度，从0-100，数值越大越积极使用Swap，即更倾向于回收匿名页；数值越小越消极使用Swap，即更倾向于回收文件页。</p>
+<p><strong>注意：这只是调整Swap积极程度的权重，即使设置为0，当剩余内存+文件页小于页高阈值时，还是会发生Swap。</strong></p>
+<h3 id="实验-Swap升高时如何定位分析"><a href="#实验-Swap升高时如何定位分析" class="headerlink" title="实验 Swap升高时如何定位分析"></a>实验 Swap升高时如何定位分析</h3><pre><code>free #首先通过free查看swap使用情况，若swap=0表示未配置Swap
+#先创建并开启swap
+fallocate -l 8G /mnt/swapfile
+chmod 600 /mnt/swapfile
+mkswap /mnt/swapfile
+swapon /mnt/swapfile
+
+free #再次执行free确保Swap配置成功
+
+dd if=/dev/sda1 of=/dev/null bs=1G count=2048 #模拟大文件读取
+sar -r -S 1  #查看内存各个指标变化 -r内存 -S swap
+#根据结果可以看出，%memused在不断增长，剩余内存kbmemfress不断减少，缓冲区kbbuffers不断增大，由此可知剩余内存不断分配给了缓冲区
+#一段时间之后，剩余内存很小，而缓冲区占用了大部分内存。此时Swap使用之间增大，缓冲区和剩余内存只在小范围波动
+
+停下sar命令
+cachetop5 #观察缓存
+#可以看到dd进程读写只有50%的命中率，未命中数为4w+页，说明正式dd进程导致缓冲区使用升高
+watch -d grep -A 15 ‘Normal’ /proc/zoneinfo #观察内存指标变化
+#发现升级内存在一个小范围不停的波动，低于页低阈值时会突然增大到一个大于页高阈值的值
+</code></pre><p>说明剩余内存和缓冲区的波动变化正是由于内存回收和缓存再次分配的循环往复。有时候Swap用的多，有时候缓冲区波动更多。此时查看swappiness值为60，是一个相对中和的配置，系统会根据实际运行情况来选去合适的回收类型。</p>
+<hr>
+<h2 id="Lesson-21-套路篇：如何“快准狠”找到系统内存存在的问题"><a href="#Lesson-21-套路篇：如何“快准狠”找到系统内存存在的问题" class="headerlink" title="Lesson 21 套路篇：如何“快准狠”找到系统内存存在的问题"></a>Lesson 21 套路篇：如何“快准狠”找到系统内存存在的问题</h2><h3 id="内存性能指标"><a href="#内存性能指标" class="headerlink" title="内存性能指标"></a>内存性能指标</h3><p><strong>系统内存指标</strong></p>
+<ul>
+<li>已用内存/剩余内存</li>
+<li>共享内存 （tmpfs实现）</li>
+<li>可用内存： 包括剩余内存和可回收内存</li>
+<li>缓存：磁盘读取文件的页缓存，slab分配器中的可回收部分</li>
+<li>缓冲区： 原始磁盘块的临时存储，缓存将要写入磁盘的数据</li>
+</ul>
+<p><strong>进程内存指标</strong></p>
+<ul>
+<li>虚拟内存： 5大部分</li>
+<li>常驻内存： 进程实际使用的物理内存，不包括Swap和共享内存</li>
+<li>共享内存： 与其他进程共享的内存，以及动态链接库和程序的代码段</li>
+<li>Swap内存： 通过Swap换出到磁盘的内存</li>
+</ul>
+<p><strong>缺页异常</strong></p>
+<ul>
+<li>可以直接从物理内存中分配，次缺页异常</li>
+<li>需要磁盘IO介入(如Swap)，主缺页异常。 此时内存访问会慢很多</li>
+</ul>
+<h3 id="内存性能工具"><a href="#内存性能工具" class="headerlink" title="内存性能工具"></a>内存性能工具</h3><p>根据不同的性能指标来找合适的工具:<br><img src="/2020/06/14/Linux性能优化实战第三周--内存性能篇/metric_tool.png" alt> </p>
+<p>内存分析工具包含的性能指标:<br><img src="/2020/06/14/Linux性能优化实战第三周--内存性能篇/tool_metric.png" alt> </p>
+<h3 id="如何迅速分析内存的性能瓶颈"><a href="#如何迅速分析内存的性能瓶颈" class="headerlink" title="如何迅速分析内存的性能瓶颈"></a>如何迅速分析内存的性能瓶颈</h3><p>通常先运行几个覆盖面比较大的性能工具，如free，top，vmstat，pidstat等</p>
+<ul>
+<li>先用free和top查看系统整体内存使用情况</li>
+<li>再用vmstat和pidstat，查看一段时间的趋势，从而判断内存问题的类型</li>
+<li>最后进行详细分析，比如内存分配分析，缓存/缓冲区分析，具体进程的内存使用分析等</li>
+</ul>
+<p>常见的优化思路：</p>
+<ul>
+<li>最好禁止Swap，若必须开启则尽量降低swappiness的值</li>
+<li>减少内存的动态分配，如可以用内存池，HugePage等</li>
+<li>尽量使用缓存和缓冲区来访问数据。如用堆栈明确声明内存空间来存储需要缓存的数据，或者用Redis外部缓存组件来优化数据的访问</li>
+<li>cgroups等方式来限制进程的内存使用情况，确保系统内存不被异常进程耗尽</li>
+<li>/proc/pid/oom_adj调整核心应用的oom_score，保证即使内存紧张核心应用也不会被OOM杀死 </li>
+</ul>
+<h2 id="Lesson-22-答疑-（略）"><a href="#Lesson-22-答疑-（略）" class="headerlink" title="Lesson 22 答疑 （略）"></a>Lesson 22 答疑 （略）</h2>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/" itemprop="url">
+                  《Linux 性能优化实战》第二周--CPU性能篇(下)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-06-03T22:57:55+08:00" content="2020-06-03">
+              2020-06-03
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>这两周主要围绕CPU性能优化相关基础知识进行学习。对于CPU性能问题的处理，首先我们要了解CPU相关性能指标。</p>
+<h3 id="CPU性能指标"><a href="#CPU性能指标" class="headerlink" title="CPU性能指标"></a>CPU性能指标</h3><p><strong>平均负载,上下文切换,CPU使用率,CPU缓存命中率</strong>等.</p>
+<p><strong>平均负载</strong>是指系统处于可运行状态和不可中断状态的平均进程数（一般平均负载高于CPU数量70%的时候需要注意排查）。 平均负载升高可能是<strong>CPU密集进程</strong>导致,也可能是<strong>I/O</strong>或<strong>进程过多超负载</strong>导致. 可以用<strong>mpstat</strong>和<strong>pidstat</strong>辅助分析.</p>
+<pre><code>uptime #查看最近1/5/15分钟平均负载
+watch -d uptime #实时查看变化情况
+mpstat -P ALL 5 #查看CPU使用率,间隔5秒输出
+pidstat -u 5 1  #查看进程CPU使用率/IOwait
+</code></pre><p><strong>上下文切换</strong>,主要分为进程上下文切换,线程上下文切换以及中断上下文切换（可以利用多线程替代多进程来提升性能）。可以通过vmstat查看系统总体上下文切换和中断次数. pidstat -w 查看每个进程上下文切换次数, -wt输出线程指标.</p>
+<pre><code>watch -d cat /proc/interrupts #查看中断变化具体来源
+</code></pre><ul>
+<li>系统调用涉及内核态和用户态的切换因此实际发生两次CPU上下文切换,不过不涉及虚拟内存等资源也不切换进程. </li>
+<li>进程的切换都在内核态,保存内核状态和CPU寄存器之前,先保存进程的虚拟内存,栈等 </li>
+<li>同一进程内的线程切换只需要保存线程的私有数据,寄存器等.</li>
+<li>中断上下文切换并不涉及进程的用户态,比进程优先级高</li>
+</ul>
+<p><strong>CPU使用率</strong>过高时一般都是结合top/pidstat/perf来进行分析定位. 如果定位不到CPU使用率高的进程,可以跟踪top查看是否存在短时进程. 调用pstree分析父进程. </p>
+<pre><code>perf record -g
+perf report #查看性能报告找到瓶颈
+
+execsnoop #监控短时进程
+</code></pre><p><strong>iowait</strong>升高时,可以用dstat观察CPU和I/O的使用情况. </p>
+<pre><code>pidstat -d -p XXX n m  #-d输出I/O情况,指定线程号间隔n秒输出m组数据
+strace -p XXX #跟踪系统调用
+如果定位进程状态为Z,通过perf report查看调用栈
+</code></pre><p><strong>僵尸进程</strong>, 通过pstree查看父进程,在父进程中进行解决(子进程创建和清理的地方)</p>
+<pre><code>pstree -aps XXX
+</code></pre><p><strong>中断处理</strong></p>
+<pre><code>/proc/softirqs #查看软中断
+/proc/interrupts #查看硬中断
+</code></pre><p><strong>网络监测工具</strong></p>
+<pre><code>sar -n DEV 1 #网络收发报告, 间隔1秒输出一组数据
+tcpdump -i eth0 -n tcp port 80 #指定网卡eth0,tcp协议,端口号80
+</code></pre><h3 id="CPU性能分析套路"><a href="#CPU性能分析套路" class="headerlink" title="CPU性能分析套路"></a>CPU性能分析套路</h3><p>通过几组实验分析我们发现对于CPU性能，常用的瓶颈问题有一些套路可以定位问题所在。虽然CPU性能指标很多，但是都不是孤立存在的，很多指标间都存在一定的关联。 再遇到CPU性能问题时我们可以先运行几个支持指标较多的工具(top/vmstat/pidstat)来缩小排查范围，查看是否是因为某个进程导致，找出导致性能问题的进程之后，再用进程分析工具来分析进程的行为。比如strace分析系统调用情况，或者perf分析调用链中各级函数的执行情况。 </p>
+<h3 id="CPU性能优化方案"><a href="#CPU性能优化方案" class="headerlink" title="CPU性能优化方案"></a>CPU性能优化方案</h3><p>定位到问题所在之后并不是要立即着手进行优化。在需要优化之前,要先考虑优化到底能提升多少性能(应用程序和系统资源多维度评估),选取哪些性能问题进行优化以及优化方案的取舍. 优化往往会带来复杂度的提升,所以要做好性能和复杂度的平衡.</p>
+<p><strong>CPU优化的一些常用方法</strong></p>
+<ul>
+<li>应用程序优化<ul>
+<li>编译器优化</li>
+<li>算法优化</li>
+<li>异步处理</li>
+<li>多线程代替多进程</li>
+<li>善用缓存</li>
+</ul>
+</li>
+<li>系统优化<ul>
+<li>CPU绑定</li>
+<li>CPU独占</li>
+<li>优先级调整</li>
+<li>为进程设置资源限制</li>
+<li>NUMA优化</li>
+<li>中断负载均衡</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>接下来是本周读书笔记</p>
+<hr>
+<h2 id="Lesson-9-怎么理解Linux软中断"><a href="#Lesson-9-怎么理解Linux软中断" class="headerlink" title="Lesson 9 怎么理解Linux软中断"></a>Lesson 9 怎么理解Linux软中断</h2><p>本周继续学习CPU性能相关知识点,<a href="http://xiaozhazi.github.io/2020/05/31/Linux性能优化实战第一周--CPU性能篇%28上%29">Linux 性能优化实战第一周</a>第8课提到不可中断状态一般都是短时进程,主要是系统的一种保护机制,保证硬件的交互过程不被意外打断. 但是如果进程长时间处于不可中断状态就需要注意是否存在磁盘I/O问题.</p>
+<p>除了iowait,软中断softirq导致CPU使用率增加的场景也比较常见.</p>
+<p>为了解决中断处理程序执行时间过长和中断丢失的问题,Linux将中断过程分为两阶段:</p>
+<ul>
+<li><strong>快速处理中断</strong> (硬中断, 会打断CPU正在执行的任务)</li>
+<li><strong>延迟处理上半部未完成的工作, 通常以内核线程的方式运行</strong> (软中断,内核线程执行)</li>
+</ul>
+<p>以网卡接收数据包为例: 网卡接收到数据包之后,先通过硬中断通知内核新数据到达.此时内核调用中断处理程序来响应. 第一步快速处理中断,将网卡数据读到内存中,然后更新硬件寄存器的状态(表示数据已经读完); 第二步发送软中断信号,内核线程从内存中找到网络数据,按照网络协议栈对数据逐层解析和处理,直到将其发送给应用程序.</p>
+<p>软中断不仅包括上述硬件设备中断处理程序的第二阶段,还包含一些内核自定义的事件. 如内核调度,RCU锁等.</p>
+<pre><code>~ cat /proc/softirqs   #查看软中断的运行情况　10种不同软中断类型
+                CPU0       CPU1       CPU2       CPU3       
+      HI:     940848    8695970     929219     958387
+   TIMER:    6032528    8523080    6185804    7882723
+  NET_TX:         13         18         10      21655
+  NET_RX:      81303      81483      74123    5497701
+   BLOCK:        112        109    1961852         73
+IRQ_POLL:          0          0          0          0
+ TASKLET:         40        152      69233      41556
+   SCHED:    5262219    6279886    5054733    5849054
+ HRTIMER:          0          0          0          0
+     RCU:    4615615    5897520    4693046    5749548
+
+➜  ~ ps -aux | grep softirq #一个CPU对应一个软中断内核线程
+  root         7  0.0  0.0      0     0 ?        S    Jun01   0:00 [ksoftirqd/0]
+  root        16  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/1]
+  root        22  0.0  0.0      0     0 ?        S    Jun01   0:01 [ksoftirqd/2]
+  root        28  0.0  0.0      0     0 ?        S    Jun01   0:02 [ksoftirqd/3]
+</code></pre><hr>
+<h2 id="Lesson-10-系统的软中断CPU使用率高，怎么解决"><a href="#Lesson-10-系统的软中断CPU使用率高，怎么解决" class="headerlink" title="Lesson 10 系统的软中断CPU使用率高，怎么解决"></a>Lesson 10 系统的软中断CPU使用率高，怎么解决</h2><h3 id="所需工具"><a href="#所需工具" class="headerlink" title="所需工具"></a>所需工具</h3><table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sar</td>
+<td>系统报告工具,实时查看当前系统活动,配置保存和报告历史统计</td>
+</tr>
+<tr>
+<td>hping3</td>
+<td>构造TCP/IP包, 对系统进行安全审计,防火墙测试等</td>
+</tr>
+<tr>
+<td>tcpdump</td>
+<td>网络抓包工具, 用来分析各种网络问题</td>
+</tr>
+</tbody>
+</table>
+<h3 id="实验与分析"><a href="#实验与分析" class="headerlink" title="实验与分析"></a>实验与分析</h3><pre><code>sudo docker run -itd --name=nginx -p 81:80 nginx  #启动nginx服务
+curl http://localhost:81  #检查nginx服务是否正常运行
+
+hping3 -S -p 81 -i u100 localhost    #每100微秒发送一个网络帧
+</code></pre><p>本机测试中并没有监测到系统响应变慢,改为1微秒时数据包全丢, 10微秒时丢包率为80%.</p>
+<p>top查看ksoftirqd软中断进程CPU使用率也不高.</p>
+<p>继续执行后续指令</p>
+<pre><code>watch -d cat /proc/softirqs #观察高亮变化
+</code></pre><p>此时发现TIMER/NET_RX/SCHED/RCU都在不停变化,且NET_RX变化速率较快,几K级别的在增加. 其它几种类型的软中断是保证linux调度,时钟,临界区保护等正常工作必须,有变化是正常的. </p>
+<p>因此我们着手分析网络接收的软中断,选取sar工具查看网络收发情况</p>
+<pre><code>sar -n DEV 1  #每隔1秒输出网络收发报告
+
+07:01:11 PM     IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s rxcmp/s   txcmp/s  rxmcst/s   %ifutil
+07:01:12 PM veth3a2b4de      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM        lo  20895.00  20895.00    843.42    843.42      0.00      0.00      0.00      0.00
+07:01:12 PM   docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM enp0s31f6      6.00      0.00      0.85      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM vethedb691a      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+07:01:12 PM br-1665f3682889      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+</code></pre><ul>
+<li>rxpck/s txpck/s　表示每秒接收/发送的网络帧数　　PPS</li>
+<li>rxkB/s  txkB/s　　表示每秒接收/发送的千字节数　BPS　</li>
+</ul>
+<p>看到网卡lo每秒接收的数据明显较多，　843*1024/20895 =41　说明每个网络帧只有41字节，小包问题．</p>
+<p>进一步通过tcpdump分析这是什么样的网络帧</p>
+<pre><code>tcpdump -i lo -n tcp port 81
+
+18:20:43.273056 IP 127.0.0.1.12537 &gt; 127.0.0.1.81: Flags [R], seq 393134060, win 0, length 0
+18:20:43.273184 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [S], seq 1240632262, win 512, length 0
+18:20:43.273193 IP 127.0.0.1.81 &gt; 127.0.0.1.12538: Flags [S.], seq 3698133257, ack 1240632263, win 65495, options [mss 65495], length 0
+18:20:43.273198 IP 127.0.0.1.12538 &gt; 127.0.0.1.81: Flags [R], seq 1240632263, win 0, length 0
+</code></pre><p>可以看出网络帧是发送到nginx端口，Flags [S]表示这是一个ＳＹＮ包，　可以锁定是SYN FLOOD问题，最简单的解决方法就是防火墙中封锁该来源ＩＰ．</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>如果碰到软中断线程CPU使用率高的情况下, 可以借助sar和tcpdump等工具进一步分析来源.</p>
+<hr>
+<h2 id="Lesson-11-套路-如何迅速分析出系统CPU的瓶颈在哪里"><a href="#Lesson-11-套路-如何迅速分析出系统CPU的瓶颈在哪里" class="headerlink" title="Lesson 11 [套路] 如何迅速分析出系统CPU的瓶颈在哪里?"></a>Lesson 11 [套路] 如何迅速分析出系统CPU的瓶颈在哪里?</h2><p>要想分析处理CPU性能问题, 首先我们需要了解CPU性能指标.</p>
+<h3 id="CPU性能指标-1"><a href="#CPU性能指标-1" class="headerlink" title="CPU性能指标"></a>CPU性能指标</h3><p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_metric.png" alt> </p>
+<ul>
+<li>CPU使用率<ul>
+<li>用户CPU使用率, 包括用户态(user)和低优先级用户态(nice). 该指标过高说明应用程序比较繁忙.</li>
+<li>系统CPU使用率, CPU在内核态运行的时间百分比(不含中断). 该指标高说明内核比较繁忙.</li>
+<li>等待I/O的CPU使用率, iowait, 该指标高说明系统与硬件设备I/O交互时间比较长.</li>
+<li>软/硬中断CPU使用率, 该指标高说明系统中发生大量中断.</li>
+<li>steal CPU / guest CPU, 表示虚拟机占用的CPU百分比.</li>
+</ul>
+</li>
+<li><p>平均负载</p>
+<p>  理想情况下平均负载等于逻辑CPU个数,表示每个CPU都被充分利用. 若大于则说明系统负载较重.</p>
+</li>
+<li><p>进程上下文切换</p>
+<p>  包括无法获取资源的自愿切换和系统强制调度时的非自愿切换. 上下文切换本身是保证Linux正常运行的一项核心功能. 过多的切换则会将原本运行进程的CPU时间消耗在寄存器,内核占及虚拟内存等数据保存和恢复上.</p>
+</li>
+<li><p>CPU缓存命中率</p>
+<p>  CPU缓存的复用情况,命中率越高性能越好. 其中L1/L2常用在单核,L3则用在多核中.</p>
+</li>
+</ul>
+<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/cache.png" alt>  </p>
+<h3 id="性能工具"><a href="#性能工具" class="headerlink" title="性能工具"></a>性能工具</h3><p>回顾之前的几个CPU性能测试场景:</p>
+<ul>
+<li>平均负载案例<ul>
+<li>先用uptime查看系统平均负载</li>
+<li>判断负载在升高后再用mpstat和pidstat分别查看每个CPU和每个进程CPU使用情况.找出导致平均负载较高的进程. </li>
+</ul>
+</li>
+<li>上下文切换案例<ul>
+<li>先用vmstat查看系统上下文切换和中断次数</li>
+<li>再用pidstat观察进程的自愿和非自愿上下文切换情况</li>
+<li>最后通过pidstat观察线程的上下文切换情况</li>
+</ul>
+</li>
+<li>进程CPU使用率高案例<ul>
+<li>先用top查看系统和进程的CPU使用情况,定位到进程</li>
+<li>再用perf top观察进程调用链,定位到具体函数</li>
+</ul>
+</li>
+<li>系统CPU使用率高案例<ul>
+<li>先用top查看系统和进程的CPU使用情况,top/pidstat都无法找到CPU使用率高的进程</li>
+<li>重新审视top输出</li>
+<li>从CPU使用率不高,但是处于Running状态的进程入手</li>
+<li>perf record/report发现短时进程导致 (execsnoop工具)</li>
+</ul>
+</li>
+<li>不可中断和僵尸进程案例<ul>
+<li>先用top观察iowait升高,发现大量不可中断和僵尸进程</li>
+<li>strace无法跟踪进程系统调用</li>
+<li>perf分析调用链发现根源来自磁盘直接I/O</li>
+</ul>
+</li>
+<li>软中断案例<ul>
+<li>top观察系统软中断CPU使用率高</li>
+<li>查看/proc/softirqs找到变化速率较快的几种软中断</li>
+<li>sar命令发现是网络小包问题</li>
+<li>tcpdump找出网络帧的类型和来源, 确定SYN FLOOD攻击导致</li>
+</ul>
+</li>
+</ul>
+<p>根据不同的性能指标来找合适的工具:<br><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_tool.png" alt> </p>
+<p>在生产环境中往往开发者没有权限安装新的工具包,只能最大化利用好系统中已经安装好的工具. 因此要了解一些主流工具能够提供哪些指标分析.</p>
+<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/performance_tool_1.png" alt> </p>
+<p>作者给了一个直观的套路, 先运行几个支持指标较多的工具, 如top/vmstat/pidstat,根据它们的输出可以得出是哪种类型的性能问题. 定位到进程后再用strace/perf分析调用情况进一步分析. 如果是软中断导致用/proc/softirqs</p>
+<p><img src="/2020/06/03/Linux性能优化实战第二周--CPU性能篇(下)/normal_tool.png" alt> </p>
+<hr>
+<h2 id="Lesson-12-CPU性能优化的几个思考"><a href="#Lesson-12-CPU性能优化的几个思考" class="headerlink" title="Lesson 12 CPU性能优化的几个思考"></a>Lesson 12 CPU性能优化的几个思考</h2><h3 id="性能优化方法论"><a href="#性能优化方法论" class="headerlink" title="性能优化方法论"></a>性能优化方法论</h3><p>遇到性能问题,优化前首先思考三个问题:</p>
+<ul>
+<li>首先判断优化是否有效,能提升多少性能?</li>
+<li>多种性能问题同时存在情况下,先优化哪一个?</li>
+<li>提升性能的方法往往不唯一,如何选取? 是否总选最大程度提升的那一种?</li>
+</ul>
+<h3 id="怎样评估性能优化效果"><a href="#怎样评估性能优化效果" class="headerlink" title="怎样评估性能优化效果"></a>怎样评估性能优化效果</h3><ul>
+<li>确定性能的量化指标<ul>
+<li>不要局限在单一维度,至少从应用程序和系统资源两个维度,分别选择不同的指标<ul>
+<li>应用程序: 吞吐量和请求延迟</li>
+<li>系统资源: CPU使用率</li>
+</ul>
+</li>
+<li>好的应用程序是性能优化的最终目的和结果,系统资源的使用情况是影响应用程序性能的根源.</li>
+<li>例如, web程序可以用ab等工具测试并发请求数和响应延迟,同时可以用vmstat/pidstat观察系统和进程的CPU使用率 </li>
+</ul>
+</li>
+<li>测试优化前的性能指标</li>
+<li>测试优化后的性能指标<ul>
+<li>要避免性能测试工具的干扰</li>
+<li>避免外部环境的变化</li>
+</ul>
+</li>
+</ul>
+<h3 id="多个性能问题同时存在-如何选择"><a href="#多个性能问题同时存在-如何选择" class="headerlink" title="多个性能问题同时存在,如何选择?"></a>多个性能问题同时存在,如何选择?</h3><p><strong>并不是所有性能问题都值得优化,性能测试也存在二八法则</strong></p>
+<ul>
+<li>如果是系统资源达到的瓶颈,首先优化系统资源的使用问题.</li>
+<li>针对不同类型的指标,首先优化那些由瓶颈导致,性能指标变化幅度较大的问题.</li>
+</ul>
+<h3 id="多个优化方法-如何选择"><a href="#多个优化方法-如何选择" class="headerlink" title="多个优化方法, 如何选择?"></a>多个优化方法, 如何选择?</h3><p>在提升性能的同时也要考虑优化成本.性能优化通常会带来复杂度的提升,降低程序的可维护性. (balance)</p>
+<p>例如DPDK(Data Plane Development Kit)是一种优化网络处理速度的方法,通过绕开内核网络协议栈的方法,提升网络的处理能力. 但是它要求独占一个CPU以及一定数量的内存大页,并且以100%CPU使用率运行. 在CPU核数较少的情况下不适合.</p>
+<h3 id="CPU-优化"><a href="#CPU-优化" class="headerlink" title="CPU 优化"></a>CPU 优化</h3><ul>
+<li>应用程序优化<ul>
+<li>编译器优化: 编译阶段开启优化选项, 如gcc -O2</li>
+<li>算法优化</li>
+<li>异步处理: 避免程序因为等待某个资源而一直阻塞,提升程序的并发处理能力. (将轮询替换为事件通知)</li>
+<li>多线程代替多进程: 减少上下文切换成本</li>
+<li>善用缓存: 加快程序处理速度</li>
+</ul>
+</li>
+<li>系统优化<ul>
+<li>CPU绑定: 将进程绑定要1个/多个CPU上,提高CPU缓存命中率,减少CPU调度带来的上下文切换</li>
+<li>CPU独占: CPU亲和性机制来分配进程</li>
+<li>优先级调整:使用nice适当降低非核心应用的优先级</li>
+<li>为进程设置资源显示: cgroups设置使用上限,防止由某个应用自身问题耗尽系统资源</li>
+<li>NUMA优化: CPU尽可能访问本地内存</li>
+<li>中断负载均衡: irpbalance,将中断处理过程自动负载均衡到各个CPU上</li>
+</ul>
+</li>
+</ul>
+<h3 id="避免过早优化"><a href="#避免过早优化" class="headerlink" title="避免过早优化"></a>避免过早优化</h3><p>优化可能会带来复杂性的提升,降低可维护性.针对当前情况进行的优化可能不适应快递迭代的新需求. </p>
+<p>因此性能优化最好逐步完善,根据性能评估的结果选择最重要的性能问题进行优化.</p>
+<h2 id="Lesson-13-14-答疑-略"><a href="#Lesson-13-14-答疑-略" class="headerlink" title="Lesson 13/14 答疑 (略)"></a>Lesson 13/14 答疑 (略)</h2><h2 id="读书群内分享"><a href="#读书群内分享" class="headerlink" title="读书群内分享"></a>读书群内分享</h2><ul>
+<li><p><a href="https://blog.csdn.net/u010889616/article/details/83245695" target="_blank" rel="external">TPS QPS 系统吞吐量的区别和理解</a></p>
+<ul>
+<li>QPS (Queries Per Second)每秒查询率,一台服务器每秒能够响应的查询次数.</li>
+<li><p>TPS (Transactions Per Second)每秒事务数,软件测试的结果.</p>
+<ul>
+<li>用户请求服务器</li>
+<li>服务器内部处理</li>
+<li><p>服务器返回给客户</p>
+<p>QPS类似TPS,但是对于一个页面的访问形成一个TPS,但是一次页面请求可能包含多次对服务器的请求,可能计入多次QPS</p>
+</li>
+</ul>
+</li>
+<li><p>系统吞吐量, 包括几个重要参数:</p>
+<ul>
+<li>QPS(TPS)</li>
+<li>并发数</li>
+<li><p>响应时间</p>
+<p>QPS(TPS)=并发数/平均相应时间</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/cute/archive/2011/04/20/2022280.html" target="_blank" rel="external">深入理解Linux系统下proc文件系统内容</a></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/05/31/Linux性能优化实战第一周--CPU性能篇(上)/" itemprop="url">
                   《Linux 性能优化实战》第一周--CPU性能篇(上)
                 </a>
@@ -454,6 +1589,358 @@ ps aux | grep &apos;/app&apos;
 <h3 id="总结-4"><a href="#总结-4" class="headerlink" title="总结"></a>总结</h3><p><strong>碰到iowait升高时，先用dstat pidstat等工具确认是否存在磁盘I/O问题，再找是哪些进程导致I/O，不能用strace直接分析进程调用时可以通过perf工具分析。</strong></p>
 <p><strong>对于僵尸问题，用pstree找到父进程，然后看源码检查子进程结束的处理逻辑即可。</strong></p>
 <p>——————————————————————————————————————————————————————————————————<br>LastModify：2020-05-31</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2019/09/20/Kubernetes学习--其他/" itemprop="url">
+                  Kubernetes学习——调基础
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2019-09-20T14:53:00+08:00" content="2019-09-20">
+              2019-09-20
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="kube-proxy在大规模集群中的性能问题以及解决方法"><a href="#kube-proxy在大规模集群中的性能问题以及解决方法" class="headerlink" title="kube-proxy在大规模集群中的性能问题以及解决方法"></a>kube-proxy在大规模集群中的性能问题以及解决方法</h2><p><a href="https://medium.com/@jeremy.i.cowan/the-problem-with-kube-proxy-enabling-ipvs-on-eks-169ac22e237e" target="_blank" rel="external">The problem with kube-proxy: enabling IPVS on EKS</a><br>当集群规模增长到1000+个服务时，传统的iptables模式下的kube-proxy可能会遇到性能问题（calico team测试发现），解决方法是将模式切换为IPVS。在切换时需要跑一下kube-proxy cleanup或者重启worker node才能生效。</p>
+<p>K8S集群中的所有worker node上都会运行一个kube-proxy的服务，用来负责将流量路由到后端pods。每次新服务创建时都会增加一个object存储到ETCD中，触发endpoint控制器，该控制器在ETCD中记录一组endpoints。这些断点传播到每个节点的kube-proxy中来更新本地iptable rules。在大规模集群中会遇到以下问题：</p>
+<p>kube-proxy是用户空间程序，允许用户创建内核级的firewall规则。</p>
+<ul>
+<li>插入、删除entries随着集群服务规模增加而越来越低效；</li>
+<li>每一个收到的包都需要和iptables中的rule进行比对匹配，当iptable很大时会导致延迟增加，最终导致低吞吐量。</li>
+<li>表更新时需要全局锁，竞争会进一步导致延迟问题。如一5000个服务的集群可能需要10min来插入一条rule。</li>
+</ul>
+<p>此时就需要IPVS来解决，它是一个内核模式下，传输层负载均衡直接将流量路由到实际的服务中。基于hash而非列表避免了上述问题。同时支持UDP、TCP和提供不同的负载均衡算法：round robin，least connected，destination hashing，source hashing，shortest expected delay，never queue等。</p>
+<p>To enable IPVS, you need to add the –proxy-mode and –ipvs-scheduler flags to the kube-proxy command. </p>
+<h2 id="ECTD如何实现MVCC？"><a href="#ECTD如何实现MVCC？" class="headerlink" title="ECTD如何实现MVCC？"></a>ECTD如何实现MVCC？</h2><p><a href="https://mp.weixin.qq.com/s/mW4juWcLbkcJ7aoHbXNbQA" target="_blank" rel="external">知道MVCC吗？在ETCD中如何实现的</a><br>数据库面对高并发下数据冲突的问题，常用的解决方案：</p>
+<ul>
+<li>避免冲突。使用悲观锁确保同一时刻只有一人能对数据进行更改，如读写锁，两阶段锁</li>
+<li>允许冲突，但发生时有能力检测到。乐观锁，先天乐观的认为冲突不会发生，除非被检测到。如逻辑时钟，MVCC</li>
+</ul>
+<p>其中MVCC因其出色的性能优势，被越来越多的数据库采用。如Oracle，PostgreSQL，MySQL InnoDB，etcd等。它的基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。</p>
+<p>版本一般选择使用时间戳或者事务ID来标识，在处理一个写请求时，MVCC并不是简单的覆盖旧值，而是为这一项添加一个新版本的数据。在读取数据项时，先确定一个要读取的版本，根据版本找到对应的数据。写操作创建新版本，读操作访问旧版本的方式使得读写隔离，不需要锁协调。MVCC读操作不会被阻塞，因此适合ETCD这种读操作比较多的场景。</p>
+<pre><code>type revision struct {
+  main int64  //对应事务ID，全局递增不重复，在ETCD中被当做一个逻辑时钟来使用
+  sub int64 //代表一次事务中不同的修改操作编号，从0开始递增
+}
+
+//keyIndex用来记录一个key声明周期中所涉及的版本，modified最近一次修改的版本号
+type keyIndex struct {
+  key []byte
+  modified revision
+  generations []generation
+}
+//一个generation代表一个key从创建到被删除的过程
+type generation struct {
+  ver int64
+  created revision // first revision
+  revs []revision
+}
+</code></pre><p>treeIndex是一个树状索引，它通过在内存中维护一个B树来达到加速查询key的功能。树的每一个节点都是keyIndex，它实现了Item接口，其中的比较函数主要是比较key的大小。这里只存储key的信息，value保存在磁盘。</p>
+<p>backend封装了etcd中的存储，按照设计，backend可以对接多种存储，当前使用的是boltdb。纯GO实现的支持事务的KV存储，etcd就是基于boltdb事务实现的。 etcd在boltdb中存储的key是revision，value是etcd自己的KV组合，每次更新时，新的revision记在keyIndex中，同时revision对应的KV组合存储在boltdb中。</p>
+<p>总之，内存btree维护的是key到keyIndex的映射，keyIndex内维护多版本的revision信息，revision可以映射到磁盘bolt中具体的value。</p>
+<ol>
+<li>K8S的服务发现是如何做的？<br><a href="https://blog.fleeto.us/post/demystifying-kubernetes-service-discovery/" target="_blank" rel="external">浅谈K8S中的服务发现</a></li>
+</ol>
+<p>每个Pod都会附着在一个大的扁平的IP网络中，通常是VXLAN叠加网络。每个Pod都有自己的IP，在pod网络中可路由，因此应用之间不需要NAT之类的网络过程，可直接通信。</p>
+<p>Pod动态添加和删除时，都会伴随Pod IP列表的变化，如果每个应用都检测网络管理Pod列表会比较低效。K8S通过Service对象简化该过程。客户端和Service通信，Service负责将流量负载均衡给Pod。</p>
+<p>Service可以分为前后端两部分：前端稳定可靠，名称、IP、端口在Service整个生命周期都不会改变，无需担心客户端DNS缓存超时等问题；后端是高度动态的，包括一组符合标签选择条件的Pod，通过负载均衡的方式访问。4层轮询，工作在连接层面，同一个连接的所有请求都会进入同一个pod。</p>
+<p>服务注册： k8s通过DNS作为服务注册表，集群会在kube-system命名中间中运行一个DNS服务，以pod的形式，成为集群DNS。</p>
+<ul>
+<li>向API server以POST方式提交一个新的service定义；</li>
+<li>请求经过认证、鉴权以及准入策略检查；</li>
+<li>service得到一个clusterIP，并保存到集群数据仓库中；</li>
+<li>在集群范围内广播Service配置；</li>
+<li>集群DNS服务得知该Service的创建，据此创建必要的DNSA记录 （集群DNS使用CoreDNS，实现了一个控制器对apiserver监听，一旦有新service对象就创建一个从service名到clusterIP的映射域名记录）</li>
+</ul>
+<p>K8S自动为每个service创建endpoint对象，保存符合条件的pod列表。</p>
+<p>服务发现： 本地DNS解析缓存没有记录时，向DNS服务器发起对域名your-app-svc的查询，得到服务的clusterIP。然后尝试向这个IP发送流量，service network没有路由所以容器把发现这种地址的流量都发送给缺省网关。这些流量会被转发到pod所在节点的网卡上。节点的网络栈也没有路由能到达service网络，只能发送给自己的缺省网关。每个k8s节点上都有kube-proxy系统服务，会监控apiserver上service的变化，并创建iptables或者IPVS规则。这些规则告知节点捕获service网络的报文，并转发给Pod IP。</p>
+<p>创建新的 Service 对象时，会得到一个虚拟 IP，被称为 ClusterIP。服务名及其 ClusterIP 被自动注册到集群 DNS 中，并且会创建相关的 Endpoints 对象用于保存符合标签条件的健康 Pod 的列表，Service 对象会向列表中的 Pod 转发流量。与此同时集群中所有节点都会配置相应的 iptables/IPVS 规则，监听目标为 ClusterIP 的流量并转发给真实的 Pod IP。</p>
+<p>一个 Pod 需要用 Service 连接其它 Pod。首先向集群 DNS 发出查询，把 Service 名称解析为 ClusterIP，然后把流量发送给位于 Service 网络的 ClusterIP 上。然而没有到 Service 网络的路由，所以 Pod 把流量发送给它的缺省网关。这一行为导致流量被转发给 Pod 所在节点的网卡，然后是节点的缺省网关。这个操作中，节点的内核修改了数据包 Header 中的目标 IP，使其转向健康的 Pod。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2019/07/10/Kubernetes学习--调度/" itemprop="url">
+                  Kubernetes学习——调度策略
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2019-07-10T21:45:00+08:00" content="2019-07-10">
+              2019-07-10
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>In Kubernetes, scheduling refers to making sure that Pods are matched to Nodes so that Kubelet can run them.</p>
+<p>首先学习Linux调度器的演化，然后Go语言调度器实现的发展，最后再看K8S调度器的演进以及如何自定义调度器。</p>
+<h1 id="1-Linux系统调度器演进"><a href="#1-Linux系统调度器演进" class="headerlink" title="1. Linux系统调度器演进"></a>1. Linux系统调度器演进</h1><h2 id="最初的进程调度"><a href="#最初的进程调度" class="headerlink" title="最初的进程调度"></a>最初的进程调度</h2><p>仅有sched.h sched.c两个文件构成，只有几十行代码就负责了操作系统进程的调度。所有的调度进程都存储在上限为64的数组中，调度器能处理的进程上限只有64.</p>
+<p>先唤醒获得信号的可中断进程，从队列倒序查找计数器counter最大的可执行进程，counter是进程能够占用的时间切片数量：</p>
+<ul>
+<li>如果最大的counter &gt; 0，调用汇编实现的switch_to切换进程</li>
+<li>如果最大的counter = 0，所有进程的可执行时间都为0，那么所有进程都会获得新的时间切片</li>
+</ul>
+<p>Linux系统计时器每隔10ms触发一次do_timer将当前运行进程的counter-1，当前进程计数器归0时重新触发调度。</p>
+<h2 id="O-n-调度器"><a href="#O-n-调度器" class="headerlink" title="O(n)调度器"></a>O(n)调度器</h2><p>Linux v2.4-2.6版本使用的，在最坏情况下会遍历所有任务，所以调度时间复杂度为O(n)。调度器将CPU时间分割成不同的时期Epoch，即每个任务能使用的时间切片。</p>
+<p>其实现比最初的复杂很多，在schedule函数中遍历运行队列的所有任务，并调用goodness函数计算它们的权重，获得下一个运行的进程。</p>
+<p>默认情况下每个任务在一个周期内都会分配200ms左右的时间片，当系统包含100个进程时，同一个进程被运行两次的间隔是21s，严重影响了可用性。每轮调度完成后就会陷入没有任务需要调度的情况，对于需要实时交互的场景不适合。</p>
+<h2 id="O-1-调度器"><a href="#O-1-调度器" class="headerlink" title="O(1)调度器"></a>O(1)调度器</h2><p>Linux在v2.6.0-v2.6.22用了4年该调度器，支持在常数时间内完成调度。调度代码从2100行增加到了5000行。</p>
+<ul>
+<li>支持O(1)时间复杂度， 通过运行队列runqueue和优先数组prio_array，每个运行队列都持有两个优先数组，分别存储活跃和过期的进程数组。</li>
+<li>支持对称多处理器SMP扩展性，引入本地队列解决降低多处理器下锁的粒度和冲突的可能性。引入工作窃取保证多个运行队列任务的平衡</li>
+<li>优化了对称多处理器的亲和性</li>
+</ul>
+<h2 id="完全公平调度器"><a href="#完全公平调度器" class="headerlink" title="完全公平调度器"></a>完全公平调度器</h2><p>CFS是在v2.6.23被合并进内核的调度器，目的是最大化CPU利用率和交互性能。</p>
+<ul>
+<li>调度器查找运行队列中受到不公平待遇的进程，并为其分配计算资源，分配的计算资源是与其他资源运行时间的差值+最小能够运行的时间单位；</li>
+<li>进程运行结束后发现队列中又有其他进程受到不公平待遇，调度器又运行新的进程</li>
+<li>…循环往复保证各个进程的运行时间差不会大于最小运行时间单位</li>
+</ul>
+<p>运行队列通过<strong>红黑树</strong>来替代之前的链表，增删改查最坏时间复杂度为O(logN)，树的最左侧节点运行时间最短，也就是下个待运行的进程。<br>调度过程和O(1)类似，只是增加了可选的工作窃取机制并改变了底层数据结构。通过调度类实现不同任务类型的不同调度策略。</p>
+<h1 id="2-Go语言调度器的演进"><a href="#2-Go语言调度器的演进" class="headerlink" title="2. Go语言调度器的演进"></a>2. Go语言调度器的演进</h1><p>Go语言高并发支持依靠的就是运行时的调度器。</p>
+<h2 id="单线程调度器"><a href="#单线程调度器" class="headerlink" title="单线程调度器"></a>单线程调度器</h2><p>0.x版本调度器只包含表示Goroutine的G和表示线程的M两种结构，全局只有一个线程。 此时调度器还是由C语言实现，调度函数只包含40行代码。</p>
+<p>获取调度器的全局锁；调用gosave保存栈寄存器和pc；调用nextgandunlock获取下一个需要运行的goroutine并解锁调度器；修改全局线程m上要执行的G，调用gogo函数运行最新的G。</p>
+<h2 id="多线程调度器"><a href="#多线程调度器" class="headerlink" title="多线程调度器"></a>多线程调度器</h2><p>在1.0版本正式支持了多线程的调度器，实现了从不可用到可用的跨越。调度函数包含70行代码，引入了GOMAXPROCS变量帮助控制程序中的最大处理器数，即活跃线程数。</p>
+<p>多线程调度器的主要问题是调度时锁竞争会严重浪费资源，14%的时间都花费在futex上。因此该调度器有以下问题需要解决：</p>
+<ul>
+<li>调度器和锁是全局资源，所有调度状态中心化存储，竞争严重</li>
+<li>线程需要经常互相传递可运行的G，引入大量延迟</li>
+<li>每个线程都需要处理内存缓存，导致大量的内存占用并影响数据局部性</li>
+<li>系统调用频繁阻塞和解除阻塞正在运行的线程，增加了额外开销</li>
+</ul>
+<h2 id="任务窃取调度器"><a href="#任务窃取调度器" class="headerlink" title="任务窃取调度器"></a>任务窃取调度器</h2><p>在GM模型中引入P，增加中间层；在处理器P的基础上实现基于工作窃取的调度器。</p>
+<ul>
+<li>如果当前运行时在等待垃圾回收，调用gcstopm函数</li>
+<li>调用runqget和findrunnable函数从本地或全局的运行队列中获取待执行的G</li>
+<li>调用execute在当前M上运行该G</li>
+</ul>
+<p>处理器P持有一个由可运行的G组成的运行队列runq，并且反向持有一个线程M。</p>
+<p>存在的问题：1)某些G可以长时间占用线程，造成饥饿问题；2)垃圾回收需要暂停整个程序</p>
+<h2 id="抢占式调度器"><a href="#抢占式调度器" class="headerlink" title="抢占式调度器"></a>抢占式调度器</h2><p>1.1版本的调度器不支持抢占，程序只能依靠G主动让出CPU资源才能触发调度。因此在1.2版本中引入了基于协作的抢占调度，能缓解上述问题。但是存在一些无法被抢占的边缘情况，如for循环或垃圾回收STW，这些问题直到1.14基于信号的抢占式调度才解决。</p>
+<h3 id="基于协作抢占"><a href="#基于协作抢占" class="headerlink" title="基于协作抢占"></a>基于协作抢占</h3><p>编译器会在调用函数前插入morestack；Go语言运行时会在垃圾回收暂停程序、系统监控发现G运行超过10ms时发出抢占请求StackPreempt；当发生函数调用时，可能会执行编译器插入的morestack函数，它调用的newstack会检查G的stackguard0字段是否为StackPreempt；如果是则触发抢占让出该线程；</p>
+<p>这里的抢占是通过编译器插入函数实现，需要函数调用作为入口才能触发，因此是一种协作式的抢占式调度。</p>
+<h3 id="基于信号抢占"><a href="#基于信号抢占" class="headerlink" title="基于信号抢占"></a>基于信号抢占</h3><p>程序启动时，在sighandler函数中注册SIGURG信号的处理函数doSigPreempt；在触发垃圾回收的栈扫描时调动suspendG挂起G，该函数会将_Grunning状态的G标记成可以被抢占，即将preemptStop设置为true，然后调用preemptM触发抢占；preemptM会调用singnalM向线程发送SIGURG信号；系统会中断正在运行的线程并执行doSigPreempt函数；该函数会处理抢占信号，获取当前SP和PC寄存器并调用sigctxt.pushCall；pushCall会修改寄存器并在程序回到用户态时执行asyncPreempt-&gt;asyncPreempt2-&gt;preemptPark；后者会将当前G状态改为_GPreempted并调用schedule函数让当前函数休眠并让出线程，调度器选择其他G执行。</p>
+<p>选择SIGURG的原因：1)信号需要被调试器透传 2)信号不会被内部libc库使用并拦截 3)信号可以随意出现并不触发任何后果 4)需要处理多平台不通信号</p>
+<h2 id="NUMA调度器"><a href="#NUMA调度器" class="headerlink" title="NUMA调度器"></a>NUMA调度器</h2><p>目前只是提案，因为过于复杂且目前调度性能足够优异，因此暂时没有实现。其原理是通过拆分全局资源，让各个处理器能够就近获取，减少锁竞争并增加数据局部性。堆栈、全局运行队列、线程池会按照NUMA节点分区，网络轮询器和计时器由单独处理器持有。</p>
+<h1 id="3-Kubernetes调度器演进"><a href="#3-Kubernetes调度器演进" class="headerlink" title="3. Kubernetes调度器演进"></a>3. Kubernetes调度器演进</h1><h2 id="基于谓词和优先级的调度器"><a href="#基于谓词和优先级的调度器" class="headerlink" title="基于谓词和优先级的调度器"></a>基于谓词和优先级的调度器</h2><p>Predicates和Priorities调度器是从v1.0.0发布时就存在的模式，v1.14.0最后实现和最初设计也没太多区别。不过其中引入了多次改进：</p>
+<ul>
+<li>调度器扩展，v1.2.0，通过外部调度器扩展的方式改变调度器策略</li>
+<li>Map-Reduce优先级算法，v1.5.0，为调度器优先级算法支持MapReduce计算方式，引入可并行的Map阶段优化调度器计算性能</li>
+<li>调度器迁移，v1.10.0,从plugin/pkg/scheduler -&gt; pkg/scheduler，kube-scheduler成为对外直接提供的可执行文件</li>
+</ul>
+<p>谓词算法使用FitPredicate类型，优先级算法使用PriorityMapFunction和PriorityReduceFunction两种类型。</p>
+<ul>
+<li>从NodeLister中获取当前系统中存在的全部节点； </li>
+<li>调用genericScheduler.findNodesThatFit方法执行全部的谓词过滤节点<ul>
+<li>根据传入pod和node对节点进行过滤，过滤掉端口号冲突，资源不足的节点</li>
+<li>调用所有调度器扩展的Filter方法辅助过滤</li>
+</ul>
+</li>
+<li>调用PrioritizeNodes函数为所有节点打分<ul>
+<li>以Pod和Node作为参数并执行同一优先级的PriorityMapFunction</li>
+<li>以Pod和优先级返回的NOde到分数的映射为参数调用PriorityReduceFunction函数</li>
+<li>调用所有调度器扩展的Prioritize方法</li>
+<li>将所有分数按照权重相加后返回从Node到分数的映射</li>
+</ul>
+</li>
+<li>调用genericScheduler.selectHost方法选择得分最高的节点<h2 id="基于调度框架的调度器"><a href="#基于调度框架的调度器" class="headerlink" title="基于调度框架的调度器"></a>基于调度框架的调度器</h2>2018年提出的最新调度器设计，明确了K8S中各个调度阶段，提供设计良好的基于插件的接口。调度框架认为K8S目前存在Scheduling和Binding两个循环：</li>
+<li>调度循环在多个Node中为Pod选取最合适的Node</li>
+<li>绑定循环将调度决策应用到集群中，包括绑定pod和node，绑定持久存储等</li>
+</ul>
+<p>除了两大循环外，调度器还包含QueueSort、PreFilter、Filter、PostFilter、Score、Reserve、Permit、PreBind、Bind、PostBind和Unreserve11个扩展点。</p>
+<p>通过调度器中的Scheduler.schedulerOne方法作为入口分析其实现：</p>
+<ul>
+<li>调度阶段<ul>
+<li>调用内部优先队列的MakeNextPodFunc从队列中获取下一个等待调度的Pod，用于维护等待Pod的队列会执行QueueSort插件</li>
+<li>调用genericScheduler.Schedule函数选择节点，该过程会执行PreFilter，Filter，PostFilter，Score四个扩展点的插件</li>
+<li>调用framework.RunReservePlugins函数运行Reserve插件，用于保留资源并进入绑定阶段。如果运行失败会调用Unreserve插件</li>
+</ul>
+</li>
+</ul>
+<p>因为每一次调度策略都会改变上下文，所以该阶段需要串行执行。</p>
+<ul>
+<li>绑定阶段<ul>
+<li>启动一个G并调用framework.RunPermitPlugin异步运行Permit插件，该阶段可以实现批调度</li>
+<li>调用Scheduler.bindVolume将卷先绑定在Node上</li>
+<li>调用Scheduler.bind函数将Pod绑定到Node上完成调度，绑定过程会执行PreBind、Bind、PostBind三个扩展点的插件</li>
+</ul>
+</li>
+</ul>
+<h2 id="自定义K8S调度器"><a href="#自定义K8S调度器" class="headerlink" title="自定义K8S调度器"></a>自定义K8S调度器</h2><p><a href="https://www.qikqiak.com/post/custom-kube-scheduler/" target="_blank" rel="external">自定义K8S调度器</a><br>默认情况下，kube-scheduler提供的默认调度器能满足绝大多数需求，在实际项目中，因为开发者相比K8S更了解自己的应用，需要定制化调度。</p>
+<p>kube-scheduler是一个独立的二进制程序，启动之后会一直监听API Server，获取到PodSpec.NodeName为空的pod，对每个pod创建一个binding。看起来流程非常简单，但在实际生产环境中，需要考虑：</p>
+<ul>
+<li>如何保证全部的节点调度公平性？并不是所有节点资源配置都相同 </li>
+<li>如何保证每个节点都能被分配资源？</li>
+<li>集群资源如何能够被高效利用？</li>
+<li>集群资源如何能够被最大化利用？</li>
+<li>如何保证Pod调度的性能和效率？</li>
+<li>用户是否可以根据自己的实际需求定制自己的调度策略？</li>
+</ul>
+<p>考虑到实际环境中的复杂情况，K8S调度器采用插件化的形式实现，可以方便用户进行定制或者二次开发。</p>
+<ul>
+<li>直接clone kube-scheduler源码修改重新编译后运行， 不推荐，因为需要花费额外精力来和上游的调度程序保持一致；</li>
+<li>和默认的调度程序一起运行独立的调度程序，默认的调度器和我们自定义的调度器可以通过pod的spec.schedulerName来覆盖各自的pod。但是多个调度器同时存在比较麻烦，比如多个调度器将pod调度到同一节点时，节点资源如果不能同时满足的话会出问题。而且维护一个高质量的自定义调度程序也不容易，需要全面了解默认的调度程序，k8s架构以及各种kubernetes api对象的关系和限制等。</li>
+<li>调度器扩展程序，可以和上游调度程序兼容，本质就是一个可配置的webhook，包含过滤器和优先级两个端点。1.16中废弃</li>
+<li>调度框架，1.15版本之后引入可插拔架构的调度框架，使得定制调度器变得容易。调度框架向现有调度器添加了一组插件化的API，该API在保持调度程序核心简单且易于维护的同时，使得大部分调度功能以插件的形式存在。</li>
+</ul>
 
           
         
@@ -1016,725 +2503,11 @@ There are two ways to reach the bottom-right corner:
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/12/23/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第十周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第十周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-12-23T15:53:56+08:00" content="2016-12-23">
-              2016-12-23
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="10、Large-Scale-Machine-Learning"><a href="#10、Large-Scale-Machine-Learning" class="headerlink" title="10、Large Scale Machine Learning"></a>10、Large Scale Machine Learning</h1><h2 id="10-1、Gradient-Descent-with-Large-Datasets"><a href="#10-1、Gradient-Descent-with-Large-Datasets" class="headerlink" title="10.1、Gradient Descent with Large Datasets"></a>10.1、Gradient Descent with Large Datasets</h2><h3 id="10-1-1、Learning-with-large-dataset"><a href="#10-1-1、Learning-with-large-dataset" class="headerlink" title="10.1.1、Learning with large dataset"></a>10.1.1、Learning with large dataset</h3><p>It’s not who has the best algorithm that wins.<br>It’s who has the most data.</p>
-<h3 id="10-1-2、Stochastic-gradient-descent"><a href="#10-1-2、Stochastic-gradient-descent" class="headerlink" title="10.1.2、Stochastic gradient descent"></a>10.1.2、Stochastic gradient descent</h3><p>不像Batch gradient descent每次迭代时都需要将数据集代入计算。</p>
-<p>当数据集大的时候我们需要随机shuffle数据集，<br>然后选取第一个数据进行计算，然后进行梯度下降，再接着使用接下来的数据依次进行此过程。</p>
-<h3 id="10-1-3、Mini-batch-gradient-descent"><a href="#10-1-3、Mini-batch-gradient-descent" class="headerlink" title="10.1.3、Mini-batch gradient descent"></a>10.1.3、Mini-batch gradient descent</h3><p>batch 和  stochastic的结合。每次选一组数据进行计算，然后再接着使用下一组重复此过程。</p>
-<h3 id="10-1-4、Stochastic-gradient-descent-convergence"><a href="#10-1-4、Stochastic-gradient-descent-convergence" class="headerlink" title="10.1.4、Stochastic gradient descent convergence"></a>10.1.4、Stochastic gradient descent convergence</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/10_1.png" alt="10_1"></p>
-<p>Learning rate α is tapically held constant. Can slowly descrease α over time if we want θ to converge.</p>
-<h2 id="10-2、Online-Learning"><a href="#10-2、Online-Learning" class="headerlink" title="10.2、Online Learning"></a>10.2、Online Learning</h2><p>上述方法可以应用在实时在线学习上，数据集大小不固定，以数据流的形式出现。</p>
-<h2 id="10-3、Map-reduce-and-data-parallelism"><a href="#10-3、Map-reduce-and-data-parallelism" class="headerlink" title="10.3、Map-reduce and data parallelism"></a>10.3、Map-reduce and data parallelism</h2><p>在进行梯度下降计算时，中间有步骤需要求和，我们可以利用Map-reduce和并行计算来缩短处理时间。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/12/16/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第九周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第九周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-12-16T10:56:39+08:00" content="2016-12-16">
-              2016-12-16
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="9、Anomaly-detection"><a href="#9、Anomaly-detection" class="headerlink" title="9、Anomaly detection"></a>9、Anomaly detection</h1><h2 id="9-1、Density-Estimation"><a href="#9-1、Density-Estimation" class="headerlink" title="9.1、Density Estimation"></a>9.1、Density Estimation</h2><h3 id="9-1-1、Problem-motivation"><a href="#9-1-1、Problem-motivation" class="headerlink" title="9.1.1、Problem motivation"></a>9.1.1、Problem motivation</h3><p>密度估计，判断一个test实例是否为不正常的。</p>
-<p>Anomaly detection example：</p>
-<ol>
-<li><p>Fraud detection</p>
-<pre><code>xi = features of user i&apos;s ativities.
-Model p(x) from data.
-Identify unusual users by checking which have p(x)&lt;ε
-</code></pre></li>
-<li><p>Manufacturing</p>
-</li>
-<li><p>Monitoring computers in a data center.</p>
-<pre><code>xi = features of machine i.
-memory use,number of disk access/sec,cpu load...
-</code></pre></li>
-</ol>
-<h3 id="9-1-2、Gaussian-distribution"><a href="#9-1-2、Gaussian-distribution" class="headerlink" title="9.1.2、Gaussian distribution"></a>9.1.2、Gaussian distribution</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_1.png" alt="9_1"></p>
-<h3 id="9-1-3、Anomaly-detection-algorithm"><a href="#9-1-3、Anomaly-detection-algorithm" class="headerlink" title="9.1.3、Anomaly detection algorithm"></a>9.1.3、Anomaly detection algorithm</h3><ol>
-<li>Choose features xi that might be indicative of anomalous examples.</li>
-<li><p>Fit parameters μ1, … μn,σ12,…σn2</p>
-<pre><code>μj = 1/m ξxji
-σj2 = 1/m ξ(xji-μj)2
-</code></pre></li>
-<li>Given new example x, compute p(x),Anomaly if p(x)&lt;ε.</li>
-</ol>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_2.png" alt="9_2"></p>
-<h3 id="9-1-4、Developing-and-evaluating-an-anomaly-detection-system"><a href="#9-1-4、Developing-and-evaluating-an-anomaly-detection-system" class="headerlink" title="9.1.4、Developing and evaluating an anomaly detection system"></a>9.1.4、Developing and evaluating an anomaly detection system</h3><ol>
-<li>The importance of real-number evaluation</li>
-</ol>
-<p>例如 10000 good engines， 20 flawed engines，我们可以进行如下划分：</p>
-<pre><code>Training set：6000 good engines
-CV:2000 good engines,10 anomalous
-Test:2000 good engines,10 anomalous
-</code></pre><ol>
-<li>Algorithm evaluation  </li>
-</ol>
-<p>可以利用F1-score来评估算法，我们也可以用CV来选择参数ε。</p>
-<h3 id="9-1-5、Anomaly-detection-VS-supervised-learning"><a href="#9-1-5、Anomaly-detection-VS-supervised-learning" class="headerlink" title="9.1.5、Anomaly detection VS supervised learning"></a>9.1.5、Anomaly detection VS supervised learning</h3><p>Anomaly detection:</p>
-<ol>
-<li>Very small number of positive example.</li>
-<li>Large number of negative example.</li>
-<li>Many different types od anomalies. 很难通过positive实例来学习异常的特征</li>
-<li>未来和异常和目前的异常实例不相关</li>
-</ol>
-<p>Supervised Learning：</p>
-<ol>
-<li>Large number of positive and negative examples.</li>
-<li>可以根据大量的positive值推断出其特征值，未来的positive和现在的训练集非常相似</li>
-</ol>
-<h3 id="9-1-6、多元高斯分布"><a href="#9-1-6、多元高斯分布" class="headerlink" title="9.1.6、多元高斯分布"></a>9.1.6、多元高斯分布</h3><p>通过μ矩阵和ξ矩阵来对多远高斯分布进行调整。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_3.png" alt="9_3"></p>
-<h2 id="9-2-推荐系统"><a href="#9-2-推荐系统" class="headerlink" title="9.2 推荐系统"></a>9.2 推荐系统</h2><h3 id="9-3-1-基于内容的推荐"><a href="#9-3-1-基于内容的推荐" class="headerlink" title="9.3.1 基于内容的推荐"></a>9.3.1 基于内容的推荐</h3><p>问题描述：</p>
-<ol>
-<li>r(i,j)=1 if user j has rated movie i</li>
-<li>y(i,j)=rating by user j on movie i</li>
-<li>θ(j)=paramater vector for user j</li>
-<li>x(i)=feature vector for movie i</li>
-<li>For user j,movie i, predicted rating θ(j)T(x(i))</li>
-<li>m(j)=no. of movies rated by user j</li>
-</ol>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_4.png" alt="9_4"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_5.png" alt="9_5"></p>
-<h3 id="9-3-2-正交过滤"><a href="#9-3-2-正交过滤" class="headerlink" title="9.3.2 正交过滤"></a>9.3.2 正交过滤</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/9_6.png" alt="9_6"></p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/9_7.png" alt="9_7"></p>
-<h3 id="9-3-2-实现技巧"><a href="#9-3-2-实现技巧" class="headerlink" title="9.3.2 实现技巧"></a>9.3.2 实现技巧</h3><p>归一化，计算平均值，然后同时减去该值</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/12/08/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第八周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第八周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-12-08T19:59:23+08:00" content="2016-12-08">
-              2016-12-08
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="8、Unsupervised-Learning"><a href="#8、Unsupervised-Learning" class="headerlink" title="8、Unsupervised Learning"></a>8、Unsupervised Learning</h1><h2 id="8-1-Clustering"><a href="#8-1-Clustering" class="headerlink" title="8.1 Clustering"></a>8.1 Clustering</h2><h3 id="8-1-1-Unsupervised-Learning-Introduction"><a href="#8-1-1-Unsupervised-Learning-Introduction" class="headerlink" title="8.1.1 Unsupervised Learning: Introduction"></a>8.1.1 Unsupervised Learning: Introduction</h3><p>Applications of clustering:</p>
-<ol>
-<li>Market segementation</li>
-<li>Social network analysis</li>
-<li>Organize computing clusters</li>
-<li>Astronomical data analysis</li>
-</ol>
-<p>无监督学习，数据是没有label的。</p>
-<h3 id="8-1-2-K-Means-Algorithm"><a href="#8-1-2-K-Means-Algorithm" class="headerlink" title="8.1.2 K-Means Algorithm"></a>8.1.2 K-Means Algorithm</h3><p>Input:</p>
-<pre><code>K (number of clusters)
-Training set {x1,x2,...xm}
-</code></pre><p>算法：</p>
-<p>随机初始化K个聚类簇（cluster centroids）u1,u2…uK</p>
-<p>然后repeat操作：</p>
-<ol>
-<li><p>cluster assignment step：</p>
-<pre><code>for     i = 1 to m
-  c(i):=index(from 1 to K) of cluster centroids closest to xi
-</code></pre></li>
-<li><p>Move centroid:</p>
-<pre><code>for k = 1 to K
-  uk := average(mean)of points assigned to cluster k
-</code></pre></li>
-</ol>
-<h3 id="8-1-3-Optimization-objective"><a href="#8-1-3-Optimization-objective" class="headerlink" title="8.1.3 Optimization objective"></a>8.1.3 Optimization objective</h3><p>最小化distortion：<br><img src="http://ofacak8l3.bkt.clouddn.com/8_1.png" alt="8_1"></p>
-<p>因此K-means算法也可以表示为：</p>
-<ol>
-<li>Randomly initialize K cluster centroids u1,u2,…uk</li>
-<li><p>Repeat:</p>
-<pre><code>for i = 1 to m
-    c(i):= index(from 1 to K) of cluster centroid closest to xi
-</code></pre></li>
-</ol>
-<pre><code>for k = 1 to K
-    uk:= average(mean) of points assigned to cluster k [minize J]
-</code></pre><h3 id="8-1-4-Random-initialization"><a href="#8-1-4-Random-initialization" class="headerlink" title="8.1.4 Random initialization"></a>8.1.4 Random initialization</h3><p>Random initialize:</p>
-<p>首先满足 K &lt; m；</p>
-<p>然后随机选择K个训练实例；</p>
-<p>将u1,u2,…uk等于这K个实例；</p>
-<pre><code>for i = 1 to 100{
-    Randomly initialize K-means.
-    Run K-means. Get c1,c2,...cm,u1,...uk.
-    Compute cost function(distortion)
-</code></pre><p>选择最小cost的聚类</p>
-<h3 id="8-1-5-Choosing-the-number-of-clusters"><a href="#8-1-5-Choosing-the-number-of-clusters" class="headerlink" title="8.1.5 Choosing the number of clusters"></a>8.1.5 Choosing the number of clusters</h3><p>目前最好的方法还是手动选择；</p>
-<p>Elbow cost：手肘方法，不是所有情况都能画出这样的图形，有时候会下降趋势较平滑。</p>
-<p>sometimes, you’re running K-means to get clusters to use for some later/downstream purpose.</p>
-<p>Evaluate K-means based on a metric for how well it performs for that later purpose.    </p>
-<h2 id="8-2-Dimensionality-Reduction"><a href="#8-2-Dimensionality-Reduction" class="headerlink" title="8.2 Dimensionality Reduction"></a>8.2 Dimensionality Reduction</h2><p>介绍了第二种无监督学习算法：维数约减。</p>
-<p>主要分为两大类应用：</p>
-<ol>
-<li>Data Compression</li>
-<li>Data Visualization</li>
-</ol>
-<h3 id="8-2-1-Data-Compression"><a href="#8-2-1-Data-Compression" class="headerlink" title="8.2.1 Data Compression"></a>8.2.1 Data Compression</h3><p>将数据从2D 降维到 1D</p>
-<p>将数据从3D 降维到 2D （将三维中的点投影到一个平面上）</p>
-<h3 id="8-2-2-Data-Visualization"><a href="#8-2-2-Data-Visualization" class="headerlink" title="8.2.2 Data Visualization"></a>8.2.2 Data Visualization</h3><p>数据可视化，便于用户更好的观察数据，理解数据之间的含义。</p>
-<p>将数据比较相关的进行降维，原来N维的数据降低到K维</p>
-<p>k &lt;= N； 并且通常K=2或3， 便于进行可视化视图分析 </p>
-<h2 id="8-3-Principal-Component-Analysis"><a href="#8-3-Principal-Component-Analysis" class="headerlink" title="8.3 Principal Component Analysis"></a>8.3 Principal Component Analysis</h2><h3 id="8-3-1-Principal-Component-Analysis-Problem-Formulation"><a href="#8-3-1-Principal-Component-Analysis-Problem-Formulation" class="headerlink" title="8.3.1 Principal Component Analysis Problem Formulation"></a>8.3.1 Principal Component Analysis Problem Formulation</h3><p>Reduce from 2-dimension to 1-dimension:</p>
-<p>Find a direction (a vector v1) onto which to project the data so as to minimize the projection error.</p>
-<p>Reduce from n-dimension to k-dimension:</p>
-<p>Find k vectors v1,v2…vk on to which to project the data, so as to minimize the projection error.</p>
-<p>PCA 不是线性回归：线性回归是竖着映射，PCA是垂直映射。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/8_2.png" alt="8_2"></p>
-<h3 id="8-3-2-Principal-Component-Analysis-algorithm"><a href="#8-3-2-Principal-Component-Analysis-algorithm" class="headerlink" title="8.3.2 Principal Component Analysis algorithm"></a>8.3.2 Principal Component Analysis algorithm</h3><p><strong>Data Preprocessing:</strong></p>
-<p>Training set: x1,x2,…xm</p>
-<p>Preprocessing(feature scaling/mean normalization):</p>
-<pre><code>uj = 1/m(x1+x2+...+xm)
-xj&apos; = xj - uj
-</code></pre><p>If different features on different scales, scale features to have comparable range of values.</p>
-<p><strong>Principal Component Analysis (PCA) algorithm</strong></p>
-<p>Reduce data from n-dimensions to k-dimensions</p>
-<p>compute “covariance matrix”: sigma = 1/m(x1<em>x1T+…+xn</em>xnT)</p>
-<p>compute “eigenvectors” of matrix sigma: [U,S,V] = svd(sigma)</p>
-<p>Ureduce = U(:,1:k)</p>
-<p>z = Ureduce’ * x</p>
-<h3 id="8-4-Applying-PCA"><a href="#8-4-Applying-PCA" class="headerlink" title="8.4 Applying PCA"></a>8.4 Applying PCA</h3><h4 id="8-4-1-Reconstruction-from-Compressed-Representation"><a href="#8-4-1-Reconstruction-from-Compressed-Representation" class="headerlink" title="8.4.1 Reconstruction from Compressed Representation"></a>8.4.1 Reconstruction from Compressed Representation</h4><p>Xapprox = Ureduce*z</p>
-<h4 id="8-4-2-Choosing-the-number-of-principal-components"><a href="#8-4-2-Choosing-the-number-of-principal-components" class="headerlink" title="8.4.2 Choosing the number of principal components"></a>8.4.2 Choosing the number of principal components</h4><p><strong>choosing k    </strong></p>
-<p>(1)Average squared projection error: 1/m(||x1-xapprox1||2 +…)</p>
-<p>(2)Total variation in the data : 1/m(||x1||2 + … +||xm||2)</p>
-<p>Typically, choose k to be smallest value so that (1)/(2)&lt;=0.01</p>
-<p>“99% of variance is retained”    </p>
-<p><strong>Advice for applying PCA</strong></p>
-<p>Supervised learning speedup</p>
-<p>Compression:</p>
-<ol>
-<li>Reduce memory/disk needed to store data</li>
-<li>speed up learning algorithm</li>
-</ol>
-<p>Visualization</p>
-<p><strong>Bad use of PCA: To prevent overfitting</strong></p>
-<p>fewer features, less likely to overfit.</p>
-<p>This might work ok, but isn’t good way to address overfitting. Use regularization instead.</p>
-<p>Before implementing PCA, first try running whatever you want to do with the original/raw data xi. Only if that doesn’t do what you want, then implement PCA and consider using zi.</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/12/04/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第七周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第七周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-12-04T16:41:16+08:00" content="2016-12-04">
-              2016-12-04
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="7、Support-Vector-Machines"><a href="#7、Support-Vector-Machines" class="headerlink" title="7、Support Vector Machines"></a>7、Support Vector Machines</h2><h3 id="7-1-Optimization-objective"><a href="#7-1-Optimization-objective" class="headerlink" title="7.1 Optimization objective"></a>7.1 Optimization objective</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_1.png" alt="7_1"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_2.png" alt="7_2"></p>
-<h3 id="7-2-Large-Margin-Intuition"><a href="#7-2-Large-Margin-Intuition" class="headerlink" title="7.2 Large Margin Intuition"></a>7.2 Large Margin Intuition</h3><p><img src="http://ofacak8l3.bkt.clouddn.com/7_3.png" alt="7_3"></p>
-<p>C如果越大，两个分类的间距越小。</p>
-<h3 id="7-3-The-Mathematics-behind-large-margin-classification"><a href="#7-3-The-Mathematics-behind-large-margin-classification" class="headerlink" title="7.3 The Mathematics behind large margin classification"></a>7.3 The Mathematics behind large margin classification</h3><p>先讲解了||u||符号的含义,可以利用向量的长度来计算矩阵的乘积.</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/7_4.png" alt="7_4"><br>SVM Decision Boundary 计算时可以利用这个特性。</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/7_5.png" alt="7_5"></p>
-<h3 id="7-4-Kernels"><a href="#7-4-Kernels" class="headerlink" title="7.4 Kernels"></a>7.4 Kernels</h3><h4 id="7-4-1-Kernels-I"><a href="#7-4-1-Kernels-I" class="headerlink" title="7.4.1 Kernels I"></a>7.4.1 Kernels I</h4><p>Gaussian Kernel.</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/7_6.png" alt="7_6"><br><img src="http://ofacak8l3.bkt.clouddn.com/7_7.png" alt="7_7"></p>
-<h4 id="7-5-Kernels-II"><a href="#7-5-Kernels-II" class="headerlink" title="7.5 Kernels II"></a>7.5 Kernels II</h4><p>SVM parameters:<br>Large C: Lower bias, high variance</p>
-<p>Small C: High bias, low variance</p>
-<p>Large segma*segma: more smoothly. High bias, low variance.</p>
-<p>Small segma*segma: less smoothly. Lower bias, higher variance.</p>
-<h3 id="7-6-Using-an-SVM"><a href="#7-6-Using-an-SVM" class="headerlink" title="7.6 Using an SVM"></a>7.6 Using an SVM</h3><p>Use SVM software package(liblinear,libsvm…)to solve for parameters theta.</p>
-<p><strong>Need to specify:</strong></p>
-<pre><code>Choice of parameter C.
-Choice of Kernel(similarity function):
-    No Kernel(&apos;Linear Kernel&apos;)
-    Gaussian Kernel.(need to choose segma)
-</code></pre><p><strong>Note:</strong></p>
-<pre><code>Do not perform feature scaling before using the Gaussian kernel.
-</code></pre><p><strong>Other Choice of kernel:</strong></p>
-<pre><code>Not all similarity functions similarity(x,l) make valid kernels. 
-(Need to satisfy &apos;mercer&apos;s Theorem&apos; to make sure SVM package&apos;s optimications run correctly, and do not diverge)    
-</code></pre><p><strong>Multi-class classification:</strong></p>
-<p>Train K SVMs, 需要对K个类进行分类，而非k-1。</p>
-<p><strong>Logistic regression vs SVM:</strong></p>
-<p>n= number of features, m =number of training examples</p>
-<pre><code>if n is large（相对于m）:
-    using Logistic regression, or SVM without kernel.
-if n is small, m is intermediate:
-    use SVM with Gaussian Kernel.
-if n is small, m is large:
-    create/add more features,
-    then use logistic regression or SVM without kernel.
-
-Neural network likely to work well for most od these settings,
-but many slower to train.
-</code></pre>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/11/27/AI入门之——Andrew-Ng-“Machine-Learning”课程学习笔记第六周/" itemprop="url">
-                  AI入门之——Andrew Ng “Machine Learning”课程学习笔记第六周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-11-27T15:46:44+08:00" content="2016-11-27">
-              2016-11-27
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="6、Advice-for-Applying-Machine-Learning"><a href="#6、Advice-for-Applying-Machine-Learning" class="headerlink" title="6、Advice for Applying Machine Learning"></a>6、Advice for Applying Machine Learning</h2><h3 id="6-1、Evaluating-a-learning-Algorithm"><a href="#6-1、Evaluating-a-learning-Algorithm" class="headerlink" title="6.1、Evaluating a learning Algorithm"></a>6.1、Evaluating a learning Algorithm</h3><h4 id="6-1-1、Deciding-What-to-Try-Next"><a href="#6-1-1、Deciding-What-to-Try-Next" class="headerlink" title="6.1.1、Deciding What to Try Next"></a>6.1.1、Deciding What to Try Next</h4><p>Which of the following statements about diagnostics are true? (BCD)</p>
-<p>A. It’s hard to tell what will work to improve a learning algorithm, so the best approach is to go with gut feeling and just see what works.</p>
-<p>B. Diagnostics can give guidance as to what might be more fruitful things to try to improve a learning algorithm.</p>
-<p>C. Diagnostics can be time-consuming to implement and try, but they can still be a very good use of your time.</p>
-<p>D. A diagnostic can sometimes rule out certain courses of action(changes to your learning algorithm) as being unlikely to improve its performance signigicantly.</p>
-<h4 id="6-1-2、Evaluating-a-Hypothesis"><a href="#6-1-2、Evaluating-a-Hypothesis" class="headerlink" title="6.1.2、Evaluating a Hypothesis"></a>6.1.2、Evaluating a Hypothesis</h4><p>如何评估假设函数，后面可以以此为基础讨论如何避免过拟合和欠拟合的问题。</p>
-<p>Suppose an implementation of linear regression(without reguarization) is badly overfitting the training set. In this case, we would expect:</p>
-<p>The training error to be low, and the test error to be high.</p>
-<p>数据划分为训练集和测试集，一般比例为7:3,random select。如果数据不是随机的，最好自己随机排序或打乱顺序后再选取70%.</p>
-<p>Misclassification error(0/1 misclassification error)</p>
-<h4 id="6-1-3、Model-Selection-and-Training-Validation-Test-Sets"><a href="#6-1-3、Model-Selection-and-Training-Validation-Test-Sets" class="headerlink" title="6.1.3、Model Selection and Training/Validation/Test Sets"></a>6.1.3、Model Selection and Training/Validation/Test Sets</h4><p>如何确定对于某组数据，最合适的多项式次数是几次？如何选择学习算法中的正规化参数lamda？</p>
-<p>模型选择问题。（泛化误差）</p>
-<p>我们将数据集分为三部分，training set(60%), cross validation set(20%), test set(20%).</p>
-<p>Training error</p>
-<p>cross validation error</p>
-<p>test error</p>
-<p>我们使用交叉验证集来选择模型，看这些假设在交叉验证集表现如何。选择最小交叉验证集误差的模型。</p>
-<p>Consider the model selection procedure where we choose the degree of polynomial using a cross validation set. For the final model, we might generally expect Jcv to be lower than Jtest because:</p>
-<p>An extra parameter(d,the degree of the polynomial) has been fit to the cross validation set.</p>
-<h3 id="6-2、Bias-vs-Variance-偏差和方差"><a href="#6-2、Bias-vs-Variance-偏差和方差" class="headerlink" title="6.2、Bias vs. Variance(偏差和方差)"></a>6.2、Bias vs. Variance(偏差和方差)</h3><h4 id="6-2-1、Diagnosing-Bias-vs-Variance"><a href="#6-2-1、Diagnosing-Bias-vs-Variance" class="headerlink" title="6.2.1、Diagnosing Bias vs. Variance"></a>6.2.1、Diagnosing Bias vs. Variance</h4><p>High Bias Overfitting</p>
-<p>High Variance Underfitting</p>
-<p><img src="http://ofacak8l3.bkt.clouddn.com/6_1.png" alt="6_1"></p>
-<h4 id="6-2-2、Regularization-and-Bias-Variance"><a href="#6-2-2、Regularization-and-Bias-Variance" class="headerlink" title="6.2.2、Regularization and Bias/Variance"></a>6.2.2、Regularization and Bias/Variance</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_2.png" alt="6_2"></p>
-<h4 id="6-2-3、Learning-Curves"><a href="#6-2-3、Learning-Curves" class="headerlink" title="6.2.3、Learning Curves"></a>6.2.3、Learning Curves</h4><p>判断一个假设是否存在偏差方差问题</p>
-<pre><code>High Bias
-If a learning algorithm is suffering from high bias, getting more training data will not help much.
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_3.png" alt="6_3"><br>因此知道自己的假设是否存在高偏差/方差问题，非常有用。</p>
-<pre><code>High variance
-If a learning algorithm is suffering from high variance, getting more training data is likely to help.
-</code></pre><p><img src="http://ofacak8l3.bkt.clouddn.com/6_4.png" alt="6_4"></p>
-<h4 id="6-2-4、Deciding-What-to-Do-Next-Revisited"><a href="#6-2-4、Deciding-What-to-Do-Next-Revisited" class="headerlink" title="6.2.4、Deciding What to Do Next Revisited"></a>6.2.4、Deciding What to Do Next Revisited</h4><p><img src="http://ofacak8l3.bkt.clouddn.com/6_5.png" alt="6_5"></p>
-<h3 id="6-3、Machine-Learning-system-design"><a href="#6-3、Machine-Learning-system-design" class="headerlink" title="6.3、Machine Learning system design"></a>6.3、Machine Learning system design</h3><h4 id="6-3-1、Priorityzing-what-to-work-on"><a href="#6-3-1、Priorityzing-what-to-work-on" class="headerlink" title="6.3.1、Priorityzing what to work on"></a>6.3.1、Priorityzing what to work on</h4><h4 id="6-3-2、Error-Analysis"><a href="#6-3-2、Error-Analysis" class="headerlink" title="6.3.2、Error Analysis"></a>6.3.2、Error Analysis</h4><p>建议的方法：</p>
-<p>1、尽快的实现一个最基本的算法，然后在交叉验证数据集上进行验证；</p>
-<p>2、画出learning curves，看是否更多的数据、更多的features能提升正确性；</p>
-<p>3、Error Analysis：主要分析那些算法预测出错的例子，看能否发现一些系统趋势。</p>
-<pre><code>Error analysis may not be helpful for deciding is this is likely to improve performance, only solution is to try it and say if it works.
-</code></pre><h4 id="6-3-3-Error-Metrics-for-Skewed-Classes"><a href="#6-3-3-Error-Metrics-for-Skewed-Classes" class="headerlink" title="6.3.3 Error Metrics for Skewed Classes"></a>6.3.3 Error Metrics for Skewed Classes</h4><p>不能仅仅依靠错误率来判断算法的性能，还需要利用Precision 和 Recall<br><img src="http://ofacak8l3.bkt.clouddn.com/6_6.png" alt="6_6"></p>
-<h4 id="6-3-4-Trading-off-precision-and-recall"><a href="#6-3-4-Trading-off-precision-and-recall" class="headerlink" title="6.3.4 Trading off precision and recall"></a>6.3.4 Trading off precision and recall</h4><p>我们可以通过计算F1来自动选择性能较高的算法。</p>
-<pre><code>F1 = 2*(P*R)/(P+R);
-</code></pre><h4 id="6-3-5-Data-for-Machine-Learning"><a href="#6-3-5-Data-for-Machine-Learning" class="headerlink" title="6.3.5 Data for Machine Learning"></a>6.3.5 Data for Machine Learning</h4><p>Banko anf Brill 在2001年提出了一个观点：</p>
-<pre><code>It&apos;s not who has the best algorithm that wins, 
-It&apos;s who has the most data.
-</code></pre><p>这个观点有时候不一定正确：</p>
-<p>当feature很少不足以预测时（例，预测房价时仅知道尺寸），此时再多的数据可能也无法提升算法的性能； </p>
-<p>当算法参数很多时（例，逻辑回归和线性回归有很多的feature，或者神经网络有很多的隐藏单元），更大的测试集可以尽可能的减少过拟合。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1775,7 +2548,7 @@ It&apos;s who has the most data.
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">40</span>
+              <span class="site-state-item-count">45</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
@@ -1785,7 +2558,7 @@ It&apos;s who has the most data.
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">Tags</span>
               </a>
             </div>
@@ -1822,7 +2595,7 @@ It&apos;s who has the most data.
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2020</span>
+  <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

@@ -1,0 +1,820 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Go," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="CPU寄存器
+通用寄存器： rax,rbx,rcx,rdx,rsi,rdi,rbp,rsp,r8-r15 64位，可以作为32/16/8位寄存器使用，需要换个名字，如eax，ax，al/ah
+程序计数器： rip，存放下一条即将执行的指令地址  64位
+段寄存器：fs和gs。一般用来实现线程本地存储TLS。 16位
+
+内存一个内存单元是1字节，任何大于一个字节的变量在内存中都存储在相邻连续的的几个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GO学习--调度">
+<meta property="og:url" content="http://xiaozhazi.github.io/2021/03/10/GO学习--调度器源码分析/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="CPU寄存器
+通用寄存器： rax,rbx,rcx,rdx,rsi,rdi,rbp,rsp,r8-r15 64位，可以作为32/16/8位寄存器使用，需要换个名字，如eax，ax，al/ah
+程序计数器： rip，存放下一条即将执行的指令地址  64位
+段寄存器：fs和gs。一般用来实现线程本地存储TLS。 16位
+
+内存一个内存单元是1字节，任何大于一个字节的变量在内存中都存储在相邻连续的的几个">
+<meta property="og:updated_time" content="2021-06-10T15:25:17.557Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GO学习--调度">
+<meta name="twitter:description" content="CPU寄存器
+通用寄存器： rax,rbx,rcx,rdx,rsi,rdi,rbp,rsp,r8-r15 64位，可以作为32/16/8位寄存器使用，需要换个名字，如eax，ax，al/ah
+程序计数器： rip，存放下一条即将执行的指令地址  64位
+段寄存器：fs和gs。一般用来实现线程本地存储TLS。 16位
+
+内存一个内存单元是1字节，任何大于一个字节的变量在内存中都存储在相邻连续的的几个">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2021/03/10/GO学习--调度器源码分析/"/>
+
+  <title> GO学习--调度 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Startseite
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archiv
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                GO学习--调度
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-03-10T22:00:00+08:00" content="2021-03-10">
+              2021-03-10
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="CPU寄存器"><a href="#CPU寄存器" class="headerlink" title="CPU寄存器"></a>CPU寄存器</h2><ul>
+<li>通用寄存器： rax,rbx,rcx,rdx,rsi,rdi,rbp,rsp,r8-r15 64位，可以作为32/16/8位寄存器使用，需要换个名字，如eax，ax，al/ah</li>
+<li>程序计数器： rip，存放下一条即将执行的指令地址  64位</li>
+<li>段寄存器：fs和gs。一般用来实现线程本地存储TLS。 16位</li>
+</ul>
+<h2 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h2><p>一个内存单元是1字节，任何大于一个字节的变量在内存中都存储在相邻连续的的几个内存单元之中。存储模式有两种（存储模式和CPU相关）：</p>
+<ul>
+<li>大端：数据的高字节保存在内存的低地址中，低字节保存在高地址中</li>
+<li>小端：数据的高字节保存在内存的高地址中，低字节保存在低地址中</li>
+</ul>
+<h2 id="函数调用栈"><a href="#函数调用栈" class="headerlink" title="函数调用栈"></a>函数调用栈</h2><p>进程在内存中的布局： 从高到低 内核-&gt;栈-&gt;堆-&gt;全局数据-&gt;代码-&gt;系统保留区</p>
+<ul>
+<li>代码：能被CPU执行的机器代码（指令）和只读数据（如字符串常量），程序加载后该区域大小不变化</li>
+<li>全局数据：程序的全局变量，静态变量（C中有Go不包含），程序加载后大小不变</li>
+<li>堆： 程序运行时动态分配的内存，由内存分配器管理。大小随程序运行而变化。C++代码必须小心处理内存分配和释放，GO有垃圾回收器。</li>
+</ul>
+<p>栈主要用来：保存函数局部变量；向被调用函数传参；返回函数的返回值；保存函数的返回地址（指从被调用函数返回后调用者应该继续执行的指令地址）</p>
+<p>位于栈内存中的函数局部变量所使用的内存随函数调用而分配，随函数返回后自动释放。rsp寄存器始终指向栈顶，rbp寄存器指向函数栈帧的起始位置。</p>
+<p>即便是同一个函数，每次调用都会产生一个不同的栈帧，因此对于递归要考虑是否存在栈溢出的风险。</p>
+<h2 id="汇编指令"><a href="#汇编指令" class="headerlink" title="汇编指令"></a>汇编指令</h2><p>AT&amp;T格式的汇编指令格式：</p>
+<ul>
+<li>寄存器名前要加%作为前缀</li>
+<li>有2个操作数的，第一个为源操作数，第二个为目的操作数。</li>
+<li>立即操作数前面$前缀</li>
+<li>寄存器间接寻址的格式为offset(%register)，offset为0时省去。 括号也省去时表示直接寻址</li>
+</ul>
+<p>常用指令：</p>
+<ul>
+<li>add/sub</li>
+<li>call/ret call首先会把rip寄存器的值入栈，然后设置rip值为目标地址。ret指令从被调用函数返回调用函数，实现原理是把call入栈的返回地址返回弹出给rip寄存器</li>
+<li>jmp/je/jle/jge 跳转指令</li>
+<li>push/pop指令，自动修改rsp寄存器</li>
+<li>leave 指令没有操作数，一般放在函数尾部ret指令之前，用于调整rsp和rbp</li>
+</ul>
+<h2 id="GO汇编语言"><a href="#GO汇编语言" class="headerlink" title="GO汇编语言"></a>GO汇编语言</h2><p>引入了几个没有任何硬件寄存器对应的虚拟寄存器：</p>
+<ul>
+<li>FP虚拟寄存器: 主要用来引用函数参数，指向调用者的栈帧</li>
+<li>SB寄存器：保存程序地址空间的起始地址。即代码区的起始地址。主要用来定位全局符号</li>
+</ul>
+<p>操作码： 寄存器操作码没有%前缀，且寄存器名称用大写<br>操作数宽度： 寄存器名称没有位数之分，操作码带后缀B(8) W(16) D(32) Q(64)</p>
+<p>TEXT runtime·gogo(SB), NOSPLIT, $16-8</p>
+<ul>
+<li>TEXT runtime·gogo(SB) 在代码区定义一个名称为gogo的全局函数，函数属于runtime包</li>
+<li>NOSPLIT 编译器不要在此函数中插入栈是否溢出的代码</li>
+<li>$16-8 函数栈帧大小为16字节，参数和返回值一共占用8字节。</li>
+</ul>
+<h2 id="从汇编层面看函数调用的实现原理"><a href="#从汇编层面看函数调用的实现原理" class="headerlink" title="从汇编层面看函数调用的实现原理"></a>从汇编层面看函数调用的实现原理</h2><p>函数调用过程:</p>
+<ul>
+<li>参数传递：GCC编译器的C、C++代码一般通过寄存器传递参数，在AMD64 linux平台，gcc约定函数调用前面6个参数分别通过rdi rsi rdx r10 r8 r9传递。GO语言通过栈传递给别调用函数，最后一个参数最先入栈。参数在调用者的栈帧中，被调用函数通过rsp加一定的偏移量来获取参数；</li>
+<li>call指令负责把执行call指令的rip寄存器入栈 （函数返回地址）</li>
+<li>GCC通过rbp+偏移量的方式来访问局部和临时变量。GO编译器则通过rsp寄存器加偏移量的方式</li>
+<li>ret指令负责将call指令入栈的返回地址出站给rip，从而实现从被调用函数返回后继续执行</li>
+<li>GCC使用rax寄存器返回函数的返回值，GO语言使用栈返回函数调用的返回值。</li>
+</ul>
+<p>main函数<br>push %rbp<br>mov %rsp，%rbp<br>sub $0x20,%rsp 栈给函数局部变量和临时变量预留32字节栈空间</p>
+<p>普通函数开始<br>push %rbp<br>mov %rsp，%rbp</p>
+<p>leaveq 相当于：<br>mov %rbp，%rsp<br>pop %rbp</p>
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><p>系统调用是指使用类似函数调用的方式调用操作系统提供的API。</p>
+<p>用户代码调用操作系统API不是通过函数名调用，而是需要根据操作系统为每个API提供一个整型编号来调用。AMD64 Linux约定在系统调用时用rax寄存器存放该编号，同时约定使用rdi rsi rdx r10 r8 r9来传递前6个系统调用参数。</p>
+<pre><code>mov   0x10(%rsp),%rdi #第1个参数
+mov   0x18(%rsp),%rsi #第2个参数
+mov   0x20(%rsp),%rdx #第3个参数
+mov   0x28(%rsp),%r10 #第4个参数
+mov   0x30(%rsp),%r8  #第5个参数
+mov   0x38(%rsp),%r9  #第6个参数
+mov   0x8(%rsp),%rax  #系统调用编号 rax = 267，表示调用openat系统调用
+syscall               #系统调用指令，进入Linux内核
+</code></pre><h2 id="操作系统线程及线程调度"><a href="#操作系统线程及线程调度" class="headerlink" title="操作系统线程及线程调度"></a>操作系统线程及线程调度</h2><p>C语言中一般使用pthread线程库，其创建的用户态线程其实就是Linux内核所支持的线程。和Go语言工作线程一样，都是由Linux内核负责管理和调度。</p>
+<p>Go语言在操作系统线程之上又做了Goroutine，实现了一个二级线程模型。</p>
+<ul>
+<li><p>什么时候会发生调度？</p>
+<ul>
+<li>用户程序使用系统调用进入操作系统内核；</li>
+<li>硬件中断。硬件中断由操作系统提供，当硬件发生中断时，就会执行操作系统代码。其中比较重要的是时钟中断，这是操作系统发起抢占调度的基础。</li>
+</ul>
+</li>
+<li><p>调度的时候会做哪些事情？<br>操作系统把不同的线程调度到同一个CPU上运行，每个线程都会使用CPU的寄存器。所以操作系统把线程B调度运行时首先把之前的A线程所使用的寄存器值保存在内存。然后把保存在内存中的B线程的寄存器值放回CPU寄存器，接着线程B恢复之前状态运行。</p>
+</li>
+</ul>
+<p>线程调度时操作系统还需要保存指令指针寄存器rip以及与栈相关的rsp和rbp。所以恢复寄存器的值相当于改变的CPU下一条需要执行的指令，同时切换了函数调用栈。</p>
+<p>因此可以对线程进行如下定义： 操作系统线程是由内核负责调度且拥有自己私有的一组寄存器值和栈的执行流。</p>
+<h2 id="线程本地存储及实现原理"><a href="#线程本地存储及实现原理" class="headerlink" title="线程本地存储及实现原理"></a>线程本地存储及实现原理</h2><p>TLS，其实就是存储线程私有的全局变量。 普通的全局变量在多线程中共享，而线程的私有全局变量是其私有财产，每个线程都有一个副本，线程对其修改只会修改到自己的副本。</p>
+<pre><code>int g = 0；
+void* start(void* arg){
+  printf(&quot;start, g[%p]: %d \n&quot;, &amp;g, g)  // print start, g[0x601064] : 100
+  g++;
+  return NULL;
+}
+int main(int argc, char* argv[]) {
+  pthread_t tid;
+  g = 100;
+  pthread_create(&amp;tid, NULL, start, NULL); //start thread to run start()
+  pthread_join(tid, NULL); // wait thread finish
+  printf(&quot;main, g[%p]: %d \n&quot;, &amp;g, g) // print main, g[0x601064] : 101
+  return 0;
+}
+
+------------------------------------------
+__thread int g = 0; 
+void* start(void* arg){
+  printf(&quot;start, g[%p]: %d \n&quot;, &amp;g, g)  // print start, g[0x7f0181b046fc] : 0
+  g++;
+  return NULL;
+}
+int main(int argc, char* argv[]) {
+  pthread_t tid;
+  g = 100;  // =&gt; 0x0000000000400793 &lt;+30&gt;:movl   $0x64,%fs:0xfffffffffffffffc    fs段基址-4
+  pthread_create(&amp;tid, NULL, start, NULL); //start thread to run start()
+  pthread_join(tid, NULL); // wait thread finish
+  printf(&quot;main, g[%p]: %d \n&quot;, &amp;g, g) // print main, g[0x7f01823076fc] : 100
+  return 0;
+}
+
+子线程fs段基地址为0x7f36757c8700，g的地址为0x7f36757c86fc，它正好是基地址 - 4
+主线程fs段基地址为0x7f3675fcb700，g的地址为0x7f3675fcb6fc，它也是基地址 - 4
+</code></pre><p>gcc编译器（其实还有线程库以及内核的支持）使用了CPU的fs段寄存器来实现线程本地存储，不同的线程中fs段基地址是不一样的</p>
+<h2 id="goroutine简介"><a href="#goroutine简介" class="headerlink" title="goroutine简介"></a>goroutine简介</h2><p>操作系统线程有两个问题：</p>
+<ul>
+<li>创建和切换开销过大： 都需要进入内核，存在性能消耗 </li>
+<li>内存使用过大：内核在创建线程时都会默认为其分配一个较大的栈内存（虚拟地址空间），多数情况下用不了。栈内存空间创建后就不会变化，在某些场景下存在溢出风险。</li>
+</ul>
+<p>用户态goroutine则相对轻量级：</p>
+<ul>
+<li>用户态，创建和切换无需进入内核，开销较小；</li>
+<li>启动时默认栈为2K，多数情况足够，不够还可以动态扩容和收缩。</li>
+</ul>
+<p>goroutine建立在操作系统线程基础上，与操作系统线程实现了多对多的两级线程模型。对goroutine的调度就是程序代码按照一定的算法在适当的时候挑选合适的goroutine并放到CPU上运行的过程。</p>
+<p>调度的实质同样也是，通过保存和修改CPU寄存器的值来达到切换线程 goroutine的目的。</p>
+<p>为了实现需要引入一个数据结构来保存cpu寄存器的值以及goroutine的其他状态信息。在Go调度器源码中，这个数据结构是一个g的结构体，保存了goroutine的所有信息。一个实例对象对应了一个goroutine，调度器代码可以通过g对象来对goroutine进行调度。</p>
+<p>仅仅有g结构体对象是不够的，至少还需要一个存放所有goroutine的容器。Go调度器引入schedt结构体，一方面保存调度器自身状态，另一方面还用来保存goroutine的运行队列。 因为每个Go程序中schedt结构体只有一个实例对象，共享的全局变量，每个工作线程都可以访问它，因此它拥有的运行队列为全局运行队列。</p>
+<p>全局队列访问需要频繁加锁，因此调度器又为每个工作线程引入一个私有的局部goroutine运行队列。该局部队列被包含在p结构体的实例对象中。每个运行着go代码的工作线程都会与一个p结构体的实例对象关联在一起。</p>
+<p>代表工作线程的是m结构体，每个工作线程都有唯一一个m结构体的实例对象与之对应。m结构体对象除了记录工作线程的诸如栈的起止位置、当前正在执行的goroutine以及是否空闲等状态信息，还通过指针维持着与p结构体的实例对象之间的绑定关系。</p>
+<p>通过TLS，每个工作线程拥有各自私有的m结构体全局变量，因此能在不同的工作线程中使用相同的全局变量名来访问不同的m结构体对象。</p>
+<pre><code>for i = 0; i &lt; N; i++ {
+  create_os_thread(schedule)
+}
+
+ThreadLocal self *m //定义一个线程私有全局变量，一个指向m结构体对象的指针
+schedule(){
+  self = initm()
+  if(self.p.runqueue is empty) {
+    g = find_a_runnable_goroutine_from_global_runqueue()
+  }else {
+    g = find_a_runnable_goroutine_from_local_runqueue()
+  }
+  run_g(g)
+  save_status_of_g(g)
+}
+</code></pre><p>程序入口 JMP _rt0_amd64(SB)， 这个符号中分别执行了下列步骤<br>    TEXT _rt0_amd64(SB), NOSPLIT, $-8<br>      MOVQ 0(SP), DI  //argc<br>      MOVQ 8(SP), SI //argv<br>      JMP runtime.rt0_go(SB) //rt0_go函数完成了go程序启动时的所有初始化工作</p>
+<p>初始化g0，g0主要作用是提供一个栈供runtime代码执行，这里主要对g0的几个与栈有关的成员进行初始化。 栈大约64K，SP-64<em>1024+104 ~ SP, 其中stackguard1，stackguard0，stack.hi均指向SP-64</em>1024+104， stack.hi指向SP</p>
+<p>主线程和m0绑定，首先调用settls函数初始化主线程的TLS，把m0和主线程关联在一起。验证TLS功能是否正常，不正常直接abort退出程序。主线程通过get_tls可以获取g0，通过g0的m成员又可以找到m0</p>
+<pre><code>//把m0和g0关联起来m0-&gt;g0 =g0，g0-&gt;m =m0
+// save m-&gt;g0 =g0
+MOVQ CX, m_g0(AX) //m0.g0 = &amp;g0
+// save m0 to g0-&gt;m 
+MOVQ AX, g_m(CX) //g0.m = &amp;m0
+</code></pre><p>初始化m0：接下来命令行参数处理完后调用osinit函数获取CPU核数量并保存在全局变量ncpu中。全局变量sched.maxmcount=10000，最多启动1w个工作线程。 mcommoninit将m0放入全局链表allm之中，确保GC不会自动回收。然后继续调用procresize创建和初始化p结构体对象。会创建指定个数（CPU核数和GOMAXPROCS决定）的p结构体对象，然后放到allp全局变量中。并把m0和allp[0]绑定在一起。</p>
+<pre><code>m0.p = allp[0]
+allp[0].m = &amp;m0
+</code></pre><p>至此，m0，g0，和m需要的p完全关联在一起。</p>
+<p>其中，procresize初始化allp流程如下 </p>
+<ul>
+<li>使用make([]*p, nprocs)初始化全局变量allp</li>
+<li>循环创建并初始化nprocs个p结构体对象，并依次放入allp切片中</li>
+<li>把m0和allp[0]绑定在一起，即m0.p=allp[0],allp[0].m=m0</li>
+<li>把除了allp[0]之外的所有p放入全局变量sched.pidle空闲队列之中</li>
+</ul>
+<h2 id="创建main-goroutine"><a href="#创建main-goroutine" class="headerlink" title="创建main goroutine"></a>创建main goroutine</h2><p>schedinit完成调度系统初始化后，返回到rt0_go函数开始调用newproc()创建一个新的goroutine用于执行main函数。</p>
+<p>newproc有两个参数，第二个参数fn是新建的goroutine将从这个fn函数开始执行，第一个参数是fn函数的参数以字节为单位的大小。</p>
+<p>newproc是对newproc1的一个包装，主要获取fn函数第一个参数的地址，另一个使用systemstack函数切换到g0栈上（初始化场景本来就在g0，无需切换）</p>
+<p>newproc1第一个参数fn，第二个参数是fn函数第一个参数的地址，第三个参数是fn参数以字节为单位的大小。其代码主要：从堆上分配一个g结构体对象newg，并为其分配一个2k的栈，并设置好栈成员。然后把newg需要执行的函数参数从newproc函数的栈拷贝到newg栈中。 然后对newg的sched成员初始化，该成员包含了调度器代码在调度goroutine到CPU运行时所必须的一些信息。其中sched的sp表示newg被调度运行时应该使用的栈的栈顶，pc成员表示当newg调度运行时从这个地址开始执行指令。</p>
+<p>然而代码中newg.sched.pc被设置成了goexit函数地址＋１，即其第二条指令地址，而不是fn.fn</p>
+<p>主要是因为gostartcallfn函数的处理，其首先从参数fc中提取出函数地址（初始化是runtime.main，然后调用gostartcall函数）。</p>
+<p>gostartcall函数作用：1.调整newg的栈空间，把goexit函数的第二条指令地址入栈，伪造成goexit函数调用了fn，从而使fn执行完ret指令时返回到goexit函数执行最后的清理工作 2.重新设置newg.buf.pc为需要执行的函数的地址，即fn</p>
+<p>newproc1函数最后设置了几个无关调度的成员变量，然后把newg状态改为_Grunnable，并放入运行队列。</p>
+<h2 id="调度main-goroutine"><a href="#调度main-goroutine" class="headerlink" title="调度main goroutine"></a>调度main goroutine</h2><p>mstart1首先调用save函数来保存g0的调度信息。（非常重要，是理解调度循环的关键点之一）</p>
+<pre><code>//getcallerpc()获取mstart1执行完的返回地址
+//getcallersp()获取调用mstart1时的栈顶地址
+save(getcallerpc(), getcallersp())
+
+func save(pc, sp uintptr) {
+  _g_ := getg()
+
+  _g_.sched.pc = pc //再次运行时的指令地址
+  _g_.sched.sp = sp //再次运行时到栈顶
+  _g_.sched.lr = 0
+  _g_.sched.ret = 0
+  _g_.sched.g = guintptr(unsafe.Pointer(_g_))
+  // We need to ensure ctxt is zero, but can&apos;t have a write
+  // barrier here. However, it should always already be zero.
+  // Assert that.
+  if _g_.sched.ctxt != nil {
+      badctxt()
+  }
+}
+</code></pre><p>调度核心函数schedule()</p>
+<pre><code>func schedule(){
+  _g_ := getg()
+  var gp *g
+  if gp == nil {
+    //为了保证调度公平，每进行61次调度就优先从全局队列中获取goroutine
+    if _g_.m.p.ptr().schedtick%61 == 0 &amp;&amp; sched.runqsize &gt; 0 {
+      lock(&amp;sched.lock)
+      gp = globrunqget(_g_.m.p.ptr(),1) //从全局队列中获取1个goroutine
+      unlock(&amp;sched.lock)
+    }
+  }
+  if gp == nil {
+    gp, inheritTime = runqget(_g_.m.p.ptr())
+    if gp != nil &amp;&amp; _g_.m.spinning {
+      throw(&quot;schedule: spinning with local work&quot;)
+    }
+  }
+  //如果本地和全局都没有找到需要运行的，调用findrunnable从其他工作的线程运行队列中偷取，偷取不到则进入睡眠
+  //直到获取到需要运行的goroutine之后findrunnable才返回
+  if gp == nil {
+    gp,inheritTime = findrunnable() //blocks until work is available
+  }
+  execute(gp, inheritTime) //切换到gp的代码和栈空间运行
+}
+
+func execute() {
+  _g_ := getg() //g0
+  casgstatus(gp, _Grunnable, _Grunning)
+  _g_.m.curg = gp
+  gp.m = _g_.m
+  gogo(&amp;gp.sched) //gogo完成从g0到gp真正的切换
+}
+</code></pre><p>execute函数的第一个参数gp即是需要调度起来运行的goroutine，这里首先把gp的状态从_Grunnable修改为_Grunning，然后把gp和m关联起来，这样通过m就可以找到当前工作线程正在执行哪个goroutine，反之亦然。</p>
+<p>完成gp运行前的准备工作之后，execute调用gogo函数完成从g0到gp的的切换：CPU执行权的转让以及栈的切换。</p>
+<p>gogo函数通过汇编编写，因为涉及寄存器及函数调用栈的切换，只能靠汇编指令来达成。</p>
+<ul>
+<li>把gp.sched的成员恢复到CPU的寄存器完成状态以及栈的切换；</li>
+<li>跳转到gp.sched.pc所指的指令地址（runtime.main）处执行</li>
+</ul>
+<p>main函数工作流程：</p>
+<ul>
+<li>启动一个sysmon系统监控线程，该线程负责整个程序的gc、抢占调度以及netpoll等功能的监控，在抢占调度一章我们再继续分析sysmon是如何协助完成goroutine的抢占调度的；</li>
+<li>执行runtime包的初始化；</li>
+<li>执行main包以及main包import的所有包的初始化；</li>
+<li>执行main.main函数；</li>
+<li>从main.main函数返回后调用exit系统调用退出进程；</li>
+</ul>
+<p>runtime.main是main函数的入口，通过schedule()-&gt;execute()-&gt;gogo()调用链的gogo函数中用汇编代码直接跳转过来的，所以不需要返回。</p>
+<p>总结来说 从g0切换到main goroutine的流程：</p>
+<ul>
+<li>保存g0的调度信息，主要是保存CPU栈顶寄存器SP到g0.sched.sp成员之中；</li>
+<li>调用schedule函数寻找需要运行的goroutine，我们这个场景找到的是main goroutine;</li>
+<li>调用gogo函数首先从g0栈切换到main goroutine的栈，然后从main goroutine的g结构体对象之中取出sched.pc的值并使用JMP指令跳转到该地址去执行；</li>
+<li>main goroutine执行完毕直接调用exit系统调用退出进程。</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Go/" rel="tag">#Go</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/02/23/GO学习--GC/" rel="next" title="GO学习--GC">
+                <i class="fa fa-chevron-left"></i> GO学习--GC
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">45</span>
+              <span class="site-state-item-name">Artikel</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">Tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU寄存器"><span class="nav-number">1.</span> <span class="nav-text">CPU寄存器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存"><span class="nav-number">2.</span> <span class="nav-text">内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#函数调用栈"><span class="nav-number">3.</span> <span class="nav-text">函数调用栈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#汇编指令"><span class="nav-number">4.</span> <span class="nav-text">汇编指令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GO汇编语言"><span class="nav-number">5.</span> <span class="nav-text">GO汇编语言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#从汇编层面看函数调用的实现原理"><span class="nav-number">6.</span> <span class="nav-text">从汇编层面看函数调用的实现原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#系统调用"><span class="nav-number">7.</span> <span class="nav-text">系统调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#操作系统线程及线程调度"><span class="nav-number">8.</span> <span class="nav-text">操作系统线程及线程调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#线程本地存储及实现原理"><span class="nav-number">9.</span> <span class="nav-text">线程本地存储及实现原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#goroutine简介"><span class="nav-number">10.</span> <span class="nav-text">goroutine简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建main-goroutine"><span class="nav-number">11.</span> <span class="nav-text">创建main goroutine</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#调度main-goroutine"><span class="nav-number">12.</span> <span class="nav-text">调度main goroutine</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
