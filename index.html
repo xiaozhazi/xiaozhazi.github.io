@@ -235,6 +235,622 @@
             
               
                 
+                <a class="post-title-link" href="/2021/05/20/系统设计系列/" itemprop="url">
+                  系统设计相关
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-05-20T22:00:00+08:00" content="2021-05-20">
+              2021-05-20
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>本文主要收录关于系统设计相关的问题学习笔记。</p>
+<h2 id="设计分布式ID生成器"><a href="#设计分布式ID生成器" class="headerlink" title="设计分布式ID生成器"></a>设计分布式ID生成器</h2><p>现实中很多业务都有生成唯一ID的需求，如用户、微博、订单等，这些ID往往会作为数据库的主键要保证全局唯一。数据库会在该字段上做聚集索引，即此字段会影响各条数据在物理存储上的顺序。</p>
+<p>ID要尽可能短来节省内存，同时使得索引效率更高。基本上64位能满足绝大多数场景。但通常并不需要这么多，可以根据业务需求预估ID最大值，然后选取合适的bit来表示ID。</p>
+<p>查询时往往有排序分页需求，需要给每个数据添加一个时间字段，并在其上建立普通索引。但是普通索引访问较慢，所以尽量使得ID按时间粗略有序来节省这个字段。</p>
+<ul>
+<li>全局唯一</li>
+<li>按时间粗略有序</li>
+<li>尽可能短</li>
+</ul>
+<p>一些生成ID的常用方法： </p>
+<ul>
+<li>UUID: mongoDB自动给每条数据赋值ObjectId，保证不会重复，就是采用了UUID的算法。 ObjectID=4bytes timestamp + 3bytes 机器ID + 2bytes 进程ID + 3 bytes计数器。 优点是每个机器都可以独立产生ID，天然分布式，缺点是ID太长占用内存且查询效率低。</li>
+<li>多台mysql服务器： 组成一个高性能的分布式发号器，通过轮询均衡的将请求发送给N个mysql中的任意一个，然后返回一个ID。Mysql不需要把所有的ID都记录，只需要记录最大MAX_ID即可。更新使用REPLACE INTO删除旧值，增加新值。缺点是ID不是严格递增的</li>
+<li>Snowflake: twitter的开源项目，专门生成ID。核心算法是0+ 41bit时间戳 + 13bit机器ID+10bit自增序列号。 41位时间戳可以表示2082年，10bit支持1023台机器，序列号支持1ms产生4095个id </li>
+</ul>
+<h2 id="设计短网址服务"><a href="#设计短网址服务" class="headerlink" title="设计短网址服务"></a>设计短网址服务</h2><p>当前互联网的网页总数大概是45亿，超过了2^32，但远远小于64位整数的上限值。微博的短网址服务用的是长度为7的字符串，可以看做是62位进制数，最大能表示62^7个网址，远大于45亿。</p>
+<p>因此使用长度不超过7的字符串，由大小写字母+数字共62个字母组成。</p>
+<p>一般来说一个长网址在不同地点不同用户等情况下生成的短网址应该不一样，这样在后端数据库可以更好的进行数据分析。入包含生成该网址的用户名、所在网站、http头的user agent信息等，因此长短网址最好是一对多映射。</p>
+<p>通过hash计算短网址不可避免存在冲突，因此最好采用上节所使用的分布式ID生成器的方式如雪花算法来实现。</p>
+<p>存储时以短网址作为key，长网址作为value存储在数据库中。可以使用传统的关系型数据库mysql postgresql，也可以使用任意一个分布式kv数据库，如redis，levelDB等。</p>
+<p>重定向使用的是302临时重定向，因为如果使用301永久重定向的话搜索引擎会直接展示真实地址，导致我们无法根据短网址解析需要的用户信息等。</p>
+<p>为了防止黑客网络攻击，短时间内向服务器发送大量请求导致耗光ID。</p>
+<ul>
+<li>可以采用限制单日IP的请求总数，超过阈值直接拒绝服务。</li>
+<li>同时可以用redis缓存，存储长网址-&gt;ID的映射，仅存储一天以内的数据并用LRU机制进行淘汰。</li>
+</ul>
+<h2 id="定时任务调度器"><a href="#定时任务调度器" class="headerlink" title="定时任务调度器"></a>定时任务调度器</h2><h3 id="priorityBlockingQueue-Polling"><a href="#priorityBlockingQueue-Polling" class="headerlink" title="priorityBlockingQueue+Polling"></a>priorityBlockingQueue+Polling</h3><ul>
+<li>用java.util.concurrent.PriorityBlockingQueue来作为优先级队列，同时保证了线程安全。如果使用java.util.PriorityQueue需要实现ReentrantLock用锁把队列保护起来</li>
+<li>生产者通过while true循环生成随机任务进入队列</li>
+<li>消费者起一个线程通过while true每隔几秒检查队列，有任务则取出来执行</li>
+</ul>
+<p>轮询的缺点就是间隔时间不好把握，间隔长任务无法及时处理，间隔短耗费CPU。</p>
+<h3 id="PriorityBlockingQueue-时间差"><a href="#PriorityBlockingQueue-时间差" class="headerlink" title="PriorityBlockingQueue+时间差"></a>PriorityBlockingQueue+时间差</h3><p>将方案一中的while true改成查看堆顶的元素但不取出，如果任务过期则取出，反之计算一个时间差，sleep该时间差。</p>
+<p>虽然消除了轮询的缺点，但是该方案同时也有自身缺陷。如果计算时间差之后又有新的小于该时间差的任务加入队列，会导致处理不及时。</p>
+<h3 id="DelayQueue"><a href="#DelayQueue" class="headerlink" title="DelayQueue"></a>DelayQueue</h3><p>改进后的priorityBlockingQueue，把计算时间差并让消费者等待该时间差的功能继承进了队列。消费者不需要关心时间差的事情，直接在while true循环中不断take即可。新的元素put时会唤醒所有等待的消费者线程。</p>
+<p>为了避免多个消费者竞争，采用leader/follower模式，当一个线程时leader时它只需要一个时间差，其它follower无限等待。多个消费线程用take方法取任务，内部先加锁然后每个线程去peek头结点，如果leader不为空说明已经有线程在取，当前消费者无限等待。如果leader为空则设置leader为当前消费者并让其等待指定的时间。</p>
+<p>需要注意的是take方法中会释放first=null，为了避免内存泄漏。如线程A获取first然后设置leader为A并让A等待一段时间；线程B同时进来获取first进入阻塞无限期等待，此时B持有first引用。A等待一定时间被唤醒后获得对象成功，出队后该对象应该被GC。但是此时B仍然持有此对象GC链路可达所以无法回收。极端情况下B无限休眠那么本该回收的对象就不能被GC销毁从而导致内存泄漏。</p>
+<p>JDK中的ScheduledThreadPoolExecutor类似</p>
+<h3 id="时间轮-HashedWheelTimer"><a href="#时间轮-HashedWheelTimer" class="headerlink" title="时间轮 HashedWheelTimer"></a>时间轮 HashedWheelTimer</h3><p>循环队列，每个任务都需要一个字段记录圈数，每转一圈就-1，减到0就立刻取出。 Netty中已经有实现，性能高，插入和删除都是O（1），Linux内核定时器就是采用这种方案。</p>
+<p>分布式定时任务调度器可以采用Redis的Zset和RabbitMQ等</p>
+<h2 id="设计模式在外卖业务的应用"><a href="#设计模式在外卖业务的应用" class="headerlink" title="设计模式在外卖业务的应用"></a>设计模式在外卖业务的应用</h2><p><a href="https://tech.meituan.com/2020/03/19/design-pattern-practice-in-marketing.html" target="_blank" rel="external">设计模式在外面业务中的实践</a></p>
+<ul>
+<li><p>面向对象设计模式七大基本原则</p>
+<ul>
+<li>开闭原则：OpenCloseP，对扩展开放对修改关闭</li>
+<li>单一职责原则：SingleResponsibleP，实现类要单一职责</li>
+<li>里氏代换原则：Liskov SubsitutionP，不要破坏继承体系</li>
+<li>依赖倒转原则：Dependency InversionP，面向接口编程</li>
+<li>接口隔离原则：Interface SegregationP，设计接口时要精简单一</li>
+<li>合成聚合复用原则：Composite/Aggregation Reuse P</li>
+<li>最少知识原则，迪米特法则， Least KnowledgeP，Law of Demeter， 指导降低耦合</li>
+</ul>
+</li>
+<li><p>美团邀请用户返奖业务场景<br>首先根据用户状态判断是否满足返奖，如果满足继续判断用户是新用户还是老用户，从而给予不同的奖励方案：</p>
+<ul>
+<li>新用户<ul>
+<li>普通奖励（固定额度）</li>
+<li>梯度奖励（根据用户邀请人数给予不同奖励金额）</li>
+</ul>
+</li>
+<li>老用户：根据老用户属性来计算返奖金额，为了评估不同的邀新效果，老用户也会存在多种返奖机制</li>
+</ul>
+</li>
+</ul>
+<p>考虑开闭原则，对于返奖流程保持封闭，对可能扩展的返奖规则进行开放。将返奖规则抽象为返奖策略。在DDD中返奖策略是一个值对象，通过工厂方式生产针对不同用户的奖励策略值对象。</p>
+<h3 id="返奖规则和设计模式实践"><a href="#返奖规则和设计模式实践" class="headerlink" title="返奖规则和设计模式实践"></a>返奖规则和设计模式实践</h3><p>工厂模式：工厂方法模式和抽象工厂模式。定义一个用于创建对象的接口，让子类决定实例化哪个对象。工厂方法是一个类的实例化延迟到子类。<br>    // 抽象的产品<br>    public abstract class Product {<br>      public abstract void method();<br>    }<br>    //定义一个具体产品<br>    class ProductA extends Product {<br>      @Override<br>      public void method(){}<br>    }<br>    //抽象的工厂<br>    abstract class Factory<t> {<br>      abstract Product createProduct(Class<t> c);<br>    }<br>    //具体的工厂可以生产相同的产品<br>    class FactoryA extends Factory {<br>      @Overrid<br>      Product createProduct(Class c) {<br>        Product pro = (Product) Class.forName(c.getName()).newInstance();<br>        return pro;<br>      }<br>    }</t></t></p>
+<p>策略模式：定义一系列算法，将每个算法都封装起来，且支持互换。是一种对象行为模式<br>    //定义一个抽象接口<br>    public interface Strategy {<br>      void strategyImplementation();<br>    }</p>
+<pre><code>public class StrategyA implements Strategy {
+  @Override
+  public void strategyImplementation(){}
+}
+
+//封装策略，屏蔽高层模块对策略、算法的直接访问，屏蔽可能存在的策略变化
+public class Context {
+  private Strategy strategy = null;
+  public Context(Strategy strategy) {
+    this.strategy = strategy;
+  }
+  public void doStrategy(){
+    strategy.strategyImplementation();
+  }
+}
+</code></pre><p>工程实践：我们可以使用工厂模式生成不同的策略，同时使用策略模式来进行不同策略的执行。</p>
+<pre><code>//抽象策略
+public abstract class RewardStrategy {
+  public abstract void reward(long userId);
+  public void insertRewardAndSettlement(long userId, int reward) {}; //更新用户信息及结算
+}
+
+//新用户返奖具体策略A
+public class newUserRewardStrategyA extends RewardStrategy {
+  @Override
+  public void reward(long userId) {...} //具体计算逻辑
+}
+//老用户返奖具体策略A
+public class oldUserRewardStrategyA extends RewardStrategy {
+  @Override
+  public void reward(long userId) {...}
+}
+//抽象工厂
+public abstract class StrategyFactory&lt;T&gt; {
+  abstract RewardStrategy createStrategy(Class&lt;T&gt; c);
+}
+//具体工厂创建具体的策略
+public class FactoryRewardStrategyFactory extends StrategyFactory {
+  @Override
+  RewardStrategy createStrategy(Class c) {
+    RewardStrategy product = null;
+    try {
+      product = (RewardStrategy) Class.forName(c.getName()).newInstance();
+    } catch (Exception e) {}
+    return product;
+  }
+}
+
+public class RewardContext {
+  private RewardStrategy strategy;
+  public RewardContext(RewardStrategy strategy) {
+    this.strategy = strategy;
+  }
+  public void doStrategy(long userId) {
+    int rewardMoney = strategy.reward(userId);
+    insertRewardAndSettlement(long userId, int reward) {
+      insertReward(userId, rewardMoney);
+      settlement(userId);
+    }
+  }
+}
+
+public class InviteRewardImpl {
+//返奖主流程
+public void sendReward(long userId) {
+    FactorRewardStrategyFactory strategyFactory = new FactorRewardStrategyFactory();  //创建工厂
+    Invitee invitee = getInviteeByUserId(userId);  //根据用户id查询用户信息
+    if (invitee.userType == UserTypeEnum.NEW_USER) {  //新用户返奖策略
+        NewUserBasicReward newUserBasicReward = (NewUserBasicReward) strategyFactory.createStrategy(NewUserBasicReward.class);
+        RewardContext rewardContext = new RewardContext(newUserBasicReward);
+        rewardContext.doStrategy(userId); //执行返奖策略
+    }if(invitee.userType == UserTypeEnum.OLD_USER){}  //老用户返奖策略，... 
+  }
+}
+</code></pre><p>通过这两个模式的组合，当我们系统需要增加一种返奖策略时，只需要实现RewardStrategy接口即可，无需考虑其他的改动。</p>
+<h3 id="返奖流程和设计模式实践"><a href="#返奖流程和设计模式实践" class="headerlink" title="返奖流程和设计模式实践"></a>返奖流程和设计模式实践</h3><p>当受邀人在下单后，返奖后台接收到下单记录，此时邀请人进入返奖流程。</p>
+<ul>
+<li>在接收到订单消息后，用户进入带校验状态，此时对订单进行返奖规则校验； （是否使用红包，红包是否在有效期，订单是否满足一定金额）</li>
+<li>若校验通过，用户进入预返奖状态，并放入延迟队列。若校验未通过，用户进入不返奖状态，结束流程；</li>
+<li>T+N天后，处理延迟消息，若用户没有对订单进行退款，则进入待返奖状态。若用户退款，则进入不返奖状态，结束流程；</li>
+<li>执行返奖，若成功进入完成状态，结束流程。反之，进入待补偿状态；</li>
+<li>待补偿状态的用户会由任务定期触发补偿机制，直到返奖成功，进入完成状态，保障流程结束。</li>
+</ul>
+<p>状态模式：当一个对象内在状态改变时，允许其改变行为，这个对象看起来像是改变了类。</p>
+<pre><code>//定义一个抽象的状态类
+public abstract class State {
+  Context context;
+  public void setContext(Context context) {
+    this.context = context;
+  }
+  public abstract void handle1();
+  public abstract void handle2();
+}
+//定义状态A
+public class ConcreteStateA extends State{
+  @Override
+  public void handle1() {} //本状态下必须要处理的事情
+  @Override
+  public void handle2() {
+    super.context.setCurrentState(Context.ConcreteStateB); //切换到状态B
+    super.context.handle2()；// 执行状态B的任务
+  }
+}
+//定义状态B
+public class ConcreteStateA extends State{
+  @Override
+  public void handle2() {} //本状态下必须要处理的事情
+  @Override
+  public void handle1() {
+    super.context.setCurrentState(Context.ConcreteStateA); //切换到状态A
+    super.context.handle1()；// 执行状态A的任务
+  }
+}
+//定义一个上下文管理环境
+public class Context {
+  public final static ConcrestateA concreteStateA = new ConcreteStateA();
+  public final static ConcreStateB concreteStateB = new ConcreateStateB();
+
+  private state currentState;
+  public state getCurrentState(){return currentState;}
+
+  public void setCurrentState(State currentState){
+    this.currentState = currentState;
+    this.currentState.setContext(this);
+  }
+  public void handle1() { this.currentState.handle1();}
+  public void handle2() { this.currentState.handle2();}
+}
+//定义client执行
+public class Client {
+  public static void main(String[] args) {
+    Context context = new Context();
+    context.setCurrentState(new ConcrestateA());
+    context.handle1();
+    context.handle2();
+  }
+}
+</code></pre><p>工程实践：</p>
+<pre><code>//返奖状态执行的上下文
+public class RewardStateContext {
+  private RewardState rewardState;
+
+  public void setRewardState(RewardState currentState) {this.rewardState = currentState;}
+  public RewardState getRewardState() {return rewardState;}
+  public void echo(RewardStateContext context, Request request) {
+      rewardState.doReward(context, request);
+  }
+}
+public abstract class RewardState {
+  abstract void doReward(RewardStateContext context, Request request);
+}
+//待校验状态
+public class OrderCheckState extends RewardState {
+  @Override
+  public void doReward(RewardStateContext context, Request request) {
+    orderCheck(context, request);  //对进来的订单进行校验，判断是否用券，是否满足优惠条件等等
+  }
+}
+//待补偿状态
+public class CompensateRewardState extends RewardState {
+  @Override
+  public void doReward(RewardStateContext context, Request request) {
+    compensateReward(context, request);  //返奖失败，需要对用户进行返奖补偿
+  }
+}
+//预返奖状态，待返奖状态，成功状态，失败状态(此处逻辑省略)
+//..
+public class InviteRewardServiceImpl {
+  public boolean sendRewardForInvtee(long userId, long orderId) {
+    Request request = new Request(userId, orderId);
+    RewardStateContext rewardContext = new RewardStateContext();
+    rewardContext.setRewardState(new OrderCheckState());
+    rewardContext.echo(rewardContext, request);  //开始返奖，订单校验
+    //此处的if-else逻辑只是为了表达状态的转换过程，并非实际的业务逻辑
+    if (rewardContext.isResultFlag()) {  //如果订单校验成功，进入预返奖状态
+      rewardContext.setRewardState(new BeforeRewardCheckState());
+      rewardContext.echo(rewardContext, request);
+    } else {//如果订单校验失败，进入返奖失败流程，...
+      rewardContext.setRewardState(new RewardFailedState());
+      rewardContext.echo(rewardContext, request);
+      return false;
+    }
+    if (rewardContext.isResultFlag()) {//预返奖检查成功，进入待返奖流程，...
+      rewardContext.setRewardState(new SendRewardState());
+      rewardContext.echo(rewardContext, request);
+    } else {  //如果预返奖检查失败，进入返奖失败流程，...
+      rewardContext.setRewardState(new RewardFailedState());
+      rewardContext.echo(rewardContext, request);
+      return false;
+    }
+    if (rewardContext.isResultFlag()) {  //返奖成功，进入返奖结束流程，...
+      rewardContext.setRewardState(new RewardSuccessState());
+      rewardContext.echo(rewardContext, request);
+    } else {  //返奖失败，进入返奖补偿阶段，...
+      rewardContext.setRewardState(new CompensateRewardState());
+      rewardContext.echo(rewardContext, request);
+    }
+    if (rewardContext.isResultFlag()) {  //补偿成功，进入返奖完成阶段，...
+      rewardContext.setRewardState(new RewardSuccessState());
+      rewardContext.echo(rewardContext, request);
+    } else {  //补偿失败，仍然停留在当前态，直至补偿成功（或多次补偿失败后人工介入处理）
+      rewardContext.setRewardState(new CompensateRewardState());
+      rewardContext.echo(rewardContext, request);
+    }
+    return true;
+  }
+}
+</code></pre><h2 id="投放系统中的设计模式"><a href="#投放系统中的设计模式" class="headerlink" title="投放系统中的设计模式"></a>投放系统中的设计模式</h2><p>投放业务就是要在资源位中展示符合当前用户的资源。首先运营人员会配置需要展示的资源，以及对资源进行过滤的规则。</p>
+<p>为了实现对过滤规则的解耦，对单个规则值对象修改封闭，对规则集合组成的过滤链开放。在资源位过滤时引入责任链模式。</p>
+<p>责任链模式：多个对象都有机会处理请求，避免了请求的发送者和接受者之间的耦合。将这些对象连成一条链，并沿着传递该请求，直到有对象处理它为止。</p>
+<pre><code>//定义一个抽象的handler
+public abstract class Handler {
+  private Handler nextHandler;
+  private int level;
+  public Handler(int level) {
+    this.level = level;
+  }
+  public setNextHandler(Handler handler) {
+    this.nextHandler = handler;
+  }
+  public final void handleMessage(Request request) {
+    if (level == request.getRequestLevel()) {
+      this.echo(request);
+    } else {
+      if (this.nextHandler != null) {
+        this.nextHandler.handleMessage(request);
+      } else {
+        System.out.Println(&quot;end&quot;);
+      }
+    }
+  }
+  public abstract void echo(Request request);
+}
+//定义一个具体handlerA
+public class HandlerA extends Handler {
+  public Handler(int level) {
+    super(level);
+  }
+  @Override
+  public void echo(Request request) {
+    System.out.println(&quot;我是处理者1,我正在处理A规则&quot;);
+  }
+}
+...
+//客户端实现
+class Client {
+  public static void main(String[] args) {
+    HandleRuleA handleRuleA = new HandleRuleA(1);
+    HandleRuleB handleRuleB = new HandleRuleB(2);
+    handleRuleA.setNextHandler(handleRuleB);  //这是重点，将handleA和handleB串起来
+    handleRuleA.echo(new Request());
+  }
+}
+</code></pre><p>工程实践：</p>
+<pre><code>//定义一个抽象的规则
+public abstract class BasicRule&lt;CORE_ITEM, T extends RuleContext&lt;CORE_ITEM&gt;&gt;{
+  //有两个方法，evaluate用于判断是否经过规则执行，execute用于执行具体的规则内容。
+  public abstract boolean evaluate(T context);
+  public abstract void execute(T context) {
+}
+
+//定义所有的规则具体实现
+//规则1：判断服务可用性
+public class ServiceAvailableRule extends BasicRule&lt;UserPortrait, UserPortraitRuleContext&gt; {
+  @Override
+  public boolean evaluate(UserPortraitRuleContext context) {
+    TakeawayUserPortraitBasicInfo basicInfo = context.getBasicInfo();
+    if (basicInfo.isServiceFail()) {
+      return false;
+    }
+    return true;
+  }
+  @Override
+  public void execute(UserPortraitRuleContext context) {}
+}
+//规则2：判断当前用户属性是否符合当前资源位投放的用户属性要求
+public class UserGroupRule extends BasicRule&lt;UserPortrait, UserPortraitRuleContext&gt; {
+  @Override
+  public boolean evaluate(UserPortraitRuleContext context) {}
+
+  @Override
+  public void execute(UserPortraitRuleContext context) {
+    UserPortrait userPortraitPO = context.getData();
+    if(userPortraitPO.getUserGroup() == context.getBasicInfo().getUserGroup().code) {
+      context.setValid(true);
+    } else {
+      context.setValid(false);
+    }
+  }
+}
+//规则3：判断当前用户是否在投放城市，具体逻辑省略
+public class CityInfoRule extends BasicRule&lt;UserPortrait, UserPortraitRuleContext&gt; {}
+//规则4：根据用户的活跃度进行资源过滤，具体逻辑省略
+public class UserPortraitRule extends BasicRule&lt;UserPortrait, UserPortraitRuleContext&gt; {} 
+
+//我们通过spring将这些规则串起来组成一个一个请求链
+&lt;bean name=&quot;serviceAvailableRule&quot; class=&quot;com.dianping.takeaway.ServiceAvailableRule&quot;/&gt;
+&lt;bean name=&quot;userGroupValidRule&quot; class=&quot;com.dianping.takeaway.UserGroupRule&quot;/&gt;
+&lt;bean name=&quot;cityInfoValidRule&quot; class=&quot;com.dianping.takeaway.CityInfoRule&quot;/&gt;
+&lt;bean name=&quot;userPortraitRule&quot; class=&quot;com.dianping.takeaway.UserPortraitRule&quot;/&gt;
+
+&lt;util:list id=&quot;userPortraitRuleChain&quot; value-type=&quot;com.dianping.takeaway.Rule&quot;&gt;
+    &lt;ref bean=&quot;serviceAvailableRule&quot;/&gt;
+    &lt;ref bean=&quot;userGroupValidRule&quot;/&gt;
+    &lt;ref bean=&quot;cityInfoValidRule&quot;/&gt;
+    &lt;ref bean=&quot;userPortraitRule&quot;/&gt;
+&lt;/util:list&gt;
+
+//规则执行
+public class DefaultRuleEngine{
+  @Autowired
+  List&lt;BasicRule&gt; userPortraitRuleChain;
+  public void invokeAll(RuleContext ruleContext) {
+    for(Rule rule : userPortraitRuleChain) {
+      rule.evaluate(ruleContext)
+    }
+  }
+}
+</code></pre><p>责任链模式最重要的优点就是解耦，将客户端与处理者分开，客户端不需要了解是哪个处理者对事件进行处理，处理者也不需要知道处理的整个流程。在我们的系统中，后台的过滤规则会经常变动，规则和规则之间可能也会存在传递关系，通过责任链模式，我们将规则与规则分开，将规则与规则之间的传递关系通过Spring注入到List中，形成一个链的关系。当增加一个规则时，只需要实现BasicRule接口，然后将新增的规则按照顺序加入Spring中即可。当删除时，只需删除相关规则即可，不需要考虑代码的其他逻辑。从而显著地提高了代码的灵活性，提高了代码的开发效率，同时也保证了系统的稳定性。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2021/04/10/吃透MQ系列/" itemprop="url">
+                  MQ相关学习
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-04-10T22:00:00+08:00" content="2021-04-10">
+              2021-04-10
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="基础篇"><a href="#基础篇" class="headerlink" title="基础篇"></a>基础篇</h2><p>消息队列本质：一发一存一消费。</p>
+<p>最原始模型包含两个关键词：消息和队列。生产者将消息传递给队列的容器，然后再从容器中取出消息，转发给消费者。</p>
+<p>常用的消息队列产品都在最原始模型上做了扩展，同时提出新名词：topic，partition，queue等</p>
+<ul>
+<li><p>队列模型：允许多个生产者往同一队列发送消息，但是如果有多个消费者，实际上是竞争关系，一条消息只能被一个消费者接收，读完即删除。</p>
+</li>
+<li><p>发布-订阅模型：如果需要一份消息数据分发给多个消费者，每个消费者都要求收到全量消息。可行的方案是为每个消费者创建单独的队列，让生产者发送多份。同一数据复制多份浪费空间。为解决此问题就演化出发布订阅模型。存放消息的容器变为topic主题，订阅者在接收消息之前需要先订阅主题。每个订阅者都可以收到同一topic下的全量消息。和队列模型不同在于消息是否可以被多次消费。</p>
+</li>
+</ul>
+<p>MQ应用场景：系统解耦，异步通信，流量削峰。初次之外还可以延迟通知，最终一致性保证，顺序消息和流式处理等。</p>
+<p>引入MQ之后之前一次RPC变成两次，生产者只和队列耦合，无需知道消费者的存在。多了中间节点队列进行消息转储，将同步变成异步。</p>
+<p>如电商中订单业务中订单支付场景：支付成功后，需要更新订单状态，更新用户积分，通知商家新订单，更新推荐系统中用户画像等。 引入MQ之后只需要关注其最主要的流程：更新订单状态。其他全部交给MQ来通知。</p>
+<ul>
+<li>系统解耦：后续业务再扩展也不涉及核心流程的稳定性，降低维护成本；</li>
+<li>异步通信：其他步骤变成异步执行，减少订单支付的整体耗时，提升订单系统吞吐量；</li>
+<li>流量削峰：队列转储消息，对于超负载场景可以使用MQ作为漏斗进行限流；</li>
+<li>顺序投递，延时消费：利用队列本身的顺序性满足顺序消费场景，叠加定时任务完成消息的延时消费；</li>
+</ul>
+<p>如何设计MQ：</p>
+<ul>
+<li>简单版：两次RPC+消息转储。利用成熟的RPC框架Dubbo或Thrift实现发消息和读消息接口；消息放在本地内存中，利用jdk自带的ArrayBlockingQueue</li>
+<li>适用生产环境：如何满足高性能、高可靠等非功能性需求。<ul>
+<li>RPC通信：直接利用成熟的RPC框架，不需要考虑服务注册与发现、负载均衡、通信协议、序列化方式等；也可以基于netty做底层通信，用zookeeper、Euraka等做注册中心，然后自定义通信协议，或者基于AMQP标准化的MQ协议来实现。后者定制化能力和优化空间更大。</li>
+<li>高可用：Broker高可用只需要保证可水平扩展集群部署，通过服务自动注册与发现、负载均衡、超时重试机制、发送和消费消息时的ack保证；存储高可用有两个思路1）kafka的分区+多副本模式，要考虑分布式下数据复制和一致性方案，类似zab、raft协议，并实现自动故障转移;2）用主流的DB、分布式文件系统、带持久化能力的kv系统；</li>
+<li>存储设计：追加写日志文件+索引文件的方式，索引设计可以考虑稠密或稀疏，查找消息可以利用跳表、二分查找等，还可以通过OS的页缓存，zero-copy技术提升磁盘读写；</li>
+<li>消费关系管理：基于Zookeeper，Apollo等配置中心管理</li>
+<li>高性能：Reactor网络IO模型，业务线程池，生产者批量发送，broker异步刷盘，消费端批量拉取等</li>
+</ul>
+</li>
+</ul>
+<h2 id="Kafka神秘面纱"><a href="#Kafka神秘面纱" class="headerlink" title="Kafka神秘面纱"></a>Kafka神秘面纱</h2><p>Kafka是linkedin内部孵化项目，设计用于处理1）运营活动场景：记录用户的浏览、搜索、点击、活跃度等行为；2）系统运维场景：监控CPU、内存、请求耗时等性能指标。两种数据都属于日志范畴，热点是数据实时生产，数据量大。Apache Kafka 是一个开源的分布式流处理平台。</p>
+<p>演化过程：</p>
+<ul>
+<li>将一份消息分发给多个消费者，每个消费者获取全量的消息。即广播</li>
+<li>并非每个消费者都需要全部数据，MQ不理解消费语义无法分类投递。将难题抛给生产者，发送消息时进行逻辑分类，即利用topic</li>
+<li>多个消费者都对同一个topic感兴趣，如果采用传统的队列模式，取出消息后立即删除，另一个消费者就拿不到。很自然想到当topic增加消费者时复制数据队列。但是复制成本会导致性能问题。</li>
+<li>将所有消息进行持久化存储，由消费者自己各取所需，只需要传递一个消息的offset即可。将复杂的消费问题转嫁给消费者，使得kafka本身复杂度降低，为高性能和高扩展性打下基础。</li>
+</ul>
+<h2 id="kafka架构设计"><a href="#kafka架构设计" class="headerlink" title="kafka架构设计"></a>kafka架构设计</h2><p>海量消息存储问题就是kafka架构设计中最大的难点。容易想到方案：对数据进行分片存储。</p>
+<p>常见分片存储场景：1）数据库中分库分表；2）缓存设计中分片集群架构；类似拆分思想在HDFS，ES中都能看到。</p>
+<p>kafka也采用partition分区进行水平拆分。分区路由可以简单理解为hash函数。分区规则设定合理可以将消息均匀分配到不同分区中。</p>
+<p>消费者和partition相结合做到并行处理需要满足两个基本诉求：1）广播消费能力：同一个topic可以被多个消费者订阅，一条消息可以被消费多次；2）集群消费能力：当消费者本身也是集群时，每条消息只能发送给集群中一个消费者进行处理。</p>
+<p>kafka引入消费组的概念，组间进行广播消费，组内进行集群消费。并且限制每个 Partition 只能由消费组中的一个消费者进行消费。</p>
+<p>存储可扩展、消息并行处理都解决后，对于高可用设计，kafka集群利用多副本机制实现自动故障转移能力。同一分区不同副本保存相同消息，副本之间一主多从，leader负责读写请求，follower只负责和leader同步，当leader故障时有机会被选举为新的leader并对外提供服务。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2021/03/10/GO学习--调度器源码分析/" itemprop="url">
                   GO学习--调度
                 </a>
@@ -1883,285 +2499,6 @@ for c := range in {
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/10/18/深入理解计算机系统第4周/" itemprop="url">
-                  《深入理解计算机系统》第4周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-10-18T22:00:00+08:00" content="2020-10-18">
-              2020-10-18
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>上周第三章已经看完，因此这周选择了加看第五章优化程序性能，通常编译器可以代替我们进行程序优化，例如循环展开、代码移动等。但是由于函数存在编译器无法感知的副作用，往往还需要程序员在编写代码时注重效率。</p>
-<p>一些看上去无足轻重的代码段可能隐藏着<strong>渐进低效率</strong>（asymptotic inefficiency），在数据量小时测试可能无法发现问题，但部署环境后代码会突然成为瓶颈。有经验的程序员工作的一部分就是避免引入这样的渐进低效率。</p>
-<p>比如在循环中止条件我们经常会用到 strlen（s）来作为循环中止条件，而strlen所需时间和字符串长度N成正比，如果每次循环迭代前都判断一次，那么循环的整体运行时间会是N<em>N。此时我们如果将字符串长度提前进行计算，再进行循环判断就会显著提升性能。书中实现对1048576字符进行测试，循环运行时间从17分钟降低到2毫秒， <em>*50W倍左右的提升</em></em>。</p>
-<p>当前GCC版本会对整数运算执行重新结合，但不是总有好的效果，通常循环展开和并行地累计在多个值中是提高程序性能的更可靠的方法。</p>
-<p><strong>CPE Cycles Per Element</strong>，作为一种表示程序性能并指导我们改进代码的度量标准。可以帮助我们在更细节的级别上理解迭代程序的循环性能。</p>
-<p>未经优化的代码通常效率比较低，简单地使用命令行选项就能显著地提高程序性能（超过两个数量级）。</p>
-<p><strong>代码移动，</strong>识别要执行多次（如循环内）但是计算结果不会改变的计算，将其移动到代码前不会多次求值的部分来提高性能。优化编译器会尝试进行代码移动，但是不能可靠地发现一个函数是否会有副作用。因此为了改进代码，程序员必须经常帮助编译器显示地完成代码移动。</p>
-<p><strong>过程调用会带来开销，而且妨碍大多数形式的程序优化。</strong></p>
-<p><strong>尽量消除代码中不必要的内存读写，用寄存器来保存中间值来提升性能</strong></p>
-<p>要进一步提高性能，必须<strong>考虑利用处理器微体系结构的优化</strong>，也就是处理器用来执行指令的底层系统设计。要想充分提高性能，需要仔细分析程序，同时代码的生成也要针对目标处理器进行调整。</p>
-<p><strong>延迟界限（latency bound）</strong>，在下一条指令开始之前，这条指令必须结束。当代码中的数据相关限制了处理器利用指令级并行的能力时，延迟界限能够限制程序性能。</p>
-<p><strong>吞吐量界限（throughput bound）</strong>，刻画了处理器功能单元的计算能力，这个界限是程序性能的终极限制。</p>
-<p><strong>整体操作：</strong> </p>
-<ul>
-<li>ICU从高速缓存中读取指令，通常会在当前正在执行的指令很早之前取指，才有足够的时间对指令进行译码并把操作发送给EU。</li>
-<li>当程序遇到分支时，通过分支预测猜测是否会执行分支，并且同时预测分支的目标地址。</li>
-<li>使用投机执行的技术，取出位于它预测的分支会调到的地方的指令，对指令进行译码，甚至在确定分支预测正确之前开始执行。</li>
-<li>如果分支预测错误的话，会将状态重新置于分支点的状态，接着往下执行。</li>
-</ul>
-<p><strong>功能单元的性能：由延迟、时间、容量来刻画。</strong></p>
-<ul>
-<li><strong>延迟</strong>latency，表示完成运算所需要的总时间；</li>
-<li><strong>发射时间</strong>issue time表示两个连续的同类型运算之间需要的最小时钟周期数；</li>
-<li><strong>capacity</strong>表示能够执行该运算功能单元的个数。 其中除法不是完全流水线化的，发射时间=延迟 即在开始一条新运算之前，除法器必须完成整个除法，使得其成为一个相对开销很大的运算。</li>
-</ul>
-<p><strong>循环展开</strong>通过增加每次迭代计算的元素数量，减少循环的迭代次数。编译器可以很容易地执行循环展开，只要优化级别设置得足够高。GCC -O3就会执行。</p>
-<p><strong>提高并行性：</strong></p>
-<p>对于可结合和可交换的合并运算来说，通过将一组合并运算分割成两路或多路，最后再合并来提高性能。</p>
-<p>重新结合变换打破顺序相关从而使性能提高到延迟界限之外的方法，减少计算中关键路径上操作的数量，更好地利用功能单元的流水线能力。 （大多数编译器不会对浮点运算重新结合，因为这些运算是不保证结合的）</p>
-<p><strong>其他一些制约程序在实际机器上性能的因素</strong>：</p>
-<ul>
-<li><strong>寄存器溢出</strong>，并行度p超过了可用的寄存器数量，编译器会溢出，将某些临时值存放在内存中。此时再进行循环展开就没有效果，甚至会导致性能变差。</li>
-<li><strong>分支预测错误处罚</strong>, 大约19个时钟周期，赌注很高。因此注意以下通用原则：<ul>
-<li>不要过分关心可预测的分支；</li>
-<li>书写适合条件传送实现的代码</li>
-</ul>
-</li>
-</ul>
-<p>总结来说，优化程序性能的基本策略如下：</p>
-<ul>
-<li><strong>高级设计：</strong> 选取合适的算法和数据结构，避免使用那些会产生渐进低效率的算法OR编码技术；</li>
-<li><strong>基本编码原则</strong>：避免限制优化的因素，使编译器产生高效地代码。</li>
-<li><strong>消除连续的函数调用</strong>：代码移动；</li>
-<li><strong>消除不必要的内存引用</strong>： 引入临时变量；</li>
-<li><strong>低级优化</strong>： 结构化代码以利用硬件功能；<ul>
-<li>循环展开</li>
-<li>累积变量、重新结合等技术，提高指令级并行</li>
-<li>功能性的风格重写条件操作，使得编译器采用条件数据传送。</li>
-</ul>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/10/11/深入理解计算机系统第3周/" itemprop="url">
-                  《深入理解计算机系统》第3周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-10-11T22:00:00+08:00" content="2020-10-11">
-              2020-10-11
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>第三章主要是从汇编代码级来了解程序是如何运行，通过阅读汇编代码一方面可以理解编译器的优化能力帮助分析优化源码，另一方面可以了解程序存储运行控制信息的细节可以用来防御代码漏洞等。</p>
-<p>有一定的汇编基础，所以这章比上章读起来稍微轻松一些，长假期间闲时顺手翻完。</p>
-<p>主要记录了以下几个知识点：</p>
-<p><strong>首先是定义</strong></p>
-<ul>
-<li>PC,存储将要执行的下一条指令在内存中的地址</li>
-<li>整数寄存器，存储整数数据和指针，有的jicunq被用来记录某些重要的程序状态</li>
-<li>条件码，保存最近执行的算术或逻辑指令的状态信息，用来实现控制或数据流中的条件变化</li>
-<li>向量寄存器用来存放一个或多个整数或浮点数值。</li>
-<li>一个X86-64的CPU中包含一组16个64位通用目的寄存器，用来存储整数数据和指针。其中%rsp是栈指针用来指明运行时栈的结束位置。</li>
-</ul>
-<p>数据传输指令、入栈出栈数据指令、算术逻辑操作以及跳转指令之前都有一定的了解，这次补充了下乘法和除法的运算逻辑。</p>
-<p>2个64位有符号/无符号整数相乘需要128位来表示，X86-64对128位数的操作提供有限的支持。</p>
-<p>mulq（无符号数乘法）和imulq（补码乘法）都要求一个参数必须在寄存器%rax中，另一个作为指令的源操作数给出，乘积存放在寄存器%rdx（高64位）和%rax（低64位）中。</p>
-<p>除法或取模运算，由单操作数除法指令来提供，idivl将寄存器%rdx（高64位）和%rax（低64位）中的128位数作为被除数，除数作为指令操作数给出，将商存储在%rax中，余数存储在%rdx中。</p>
-<p>条件码通常不会直接读取，常用的三种方法：</p>
-<ul>
-<li>根据条件码的某种组合将一个字节设置为0/1； </li>
-<li>条件跳转到程序的其他部分；</li>
-<li>有条件地传送数据。 常用的条件码寄存器：<ul>
-<li>CF：进位标志，可用来检查无符号操作的溢出</li>
-<li>ZF：零标志位</li>
-<li>SF：符号标志</li>
-<li>OF：溢出标志，最近的操作导致一个补码溢出</li>
-</ul>
-</li>
-</ul>
-<p><strong>基于条件数据传送的代码会比基于条件控制转移的代码性能要好</strong>是因为：</p>
-<p>首先，现代处理器通过pipelining重叠连续指令的步骤来获取高性能。</p>
-<p>当机器遇到条件跳转指令时只有当分支条件求值完成后才能决定分支往哪走，分支预测逻辑可靠的情况下流水线中依旧会充满指令并行，但是当跳转错误预测时需要丢掉它为跳转指令后续所有指令已做的工作，浪费大约15-30个时钟周期，导致程序性能严重下降。</p>
-<p>同条件跳转不同，处理器不需要预测结果就可以执行条件传送，处理器只是读源值，检查条件码，然后要么更新目的寄存器要么保持不变。</p>
-<p>不过条件传送也不总是会提高代码效率，需要权衡复杂计算开销和分支预测错误开销来判断具体使用哪种。</p>
-<p><strong>过程</strong>是软件中的一种重要抽象，要提供对过程的机器级支持需要处理<strong>传递控制、传递数据、分配和释放内存</strong>等机制。</p>
-<p>C语言过程调用机制的一个关键特性在于使用了栈数据结构的后进先出的内存管理原则，每个过程在栈中都有自己的私有空间，多个未完成调用的局部变量不会相互影响。</p>
-<p>C语言对数据引用不进行任何边界检查，局部变量和状态信息都存放在栈中。这两种情况结合在一起，对越界的数组元素写操作会破坏存储在栈中的状态信息，即常见的<strong>缓冲区溢出问题</strong>。 </p>
-<p>这种问题可以被用来攻击系统安全，将攻击代码包含在输入字符串中或者将一个指向攻击代码地址的指针覆盖返回地址等。</p>
-<p>现代的编译器和操作系统实现了很多机制限制入侵者通过缓冲区溢出攻击获得系统控制。常见的机制：</p>
-<ul>
-<li>栈随机化：为了插入攻击代码，攻击者既要插入代码又要插入指向该代码的指针。这个指针也是攻击字符串的一部分，要产生这个指针需要知道字符串存放的栈地址。栈的位置在程序每次运行时都有变化使得改地址难以预测。在Linux中栈随机化已经成为标准行为，ASLR地址空间布局随机化。</li>
-<li>栈破坏检测：第二道防线是能够检测到何时栈被破坏，栈保护者机制通过canary金丝雀值是否被改变来判断，该值是程序每次运行随机产生的，如果被某个函数或操作改变那么异常中止该程序。</li>
-<li>限制可执行代码区域：消除攻击者向系统中插入可执行代码的能力。</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2207,7 +2544,7 @@ for c := range in {
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">45</span>
+              <span class="site-state-item-count">47</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
@@ -2217,7 +2554,7 @@ for c := range in {
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">Tags</span>
               </a>
             </div>

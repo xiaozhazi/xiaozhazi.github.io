@@ -1,0 +1,946 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="设计模式之美," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="本文主要收录关于系统设计相关的问题学习笔记。
+设计分布式ID生成器现实中很多业务都有生成唯一ID的需求，如用户、微博、订单等，这些ID往往会作为数据库的主键要保证全局唯一。数据库会在该字段上做聚集索引，即此字段会影响各条数据在物理存储上的顺序。
+ID要尽可能短来节省内存，同时使得索引效率更高。基本上64位能满足绝大多数场景。但通常并不需要这么多，可以根据业务需求预估ID最大值，然后选取合适的bit">
+<meta property="og:type" content="article">
+<meta property="og:title" content="系统设计相关">
+<meta property="og:url" content="http://xiaozhazi.github.io/2021/05/20/系统设计系列/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="本文主要收录关于系统设计相关的问题学习笔记。
+设计分布式ID生成器现实中很多业务都有生成唯一ID的需求，如用户、微博、订单等，这些ID往往会作为数据库的主键要保证全局唯一。数据库会在该字段上做聚集索引，即此字段会影响各条数据在物理存储上的顺序。
+ID要尽可能短来节省内存，同时使得索引效率更高。基本上64位能满足绝大多数场景。但通常并不需要这么多，可以根据业务需求预估ID最大值，然后选取合适的bit">
+<meta property="og:updated_time" content="2021-06-15T02:19:05.588Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="系统设计相关">
+<meta name="twitter:description" content="本文主要收录关于系统设计相关的问题学习笔记。
+设计分布式ID生成器现实中很多业务都有生成唯一ID的需求，如用户、微博、订单等，这些ID往往会作为数据库的主键要保证全局唯一。数据库会在该字段上做聚集索引，即此字段会影响各条数据在物理存储上的顺序。
+ID要尽可能短来节省内存，同时使得索引效率更高。基本上64位能满足绝大多数场景。但通常并不需要这么多，可以根据业务需求预估ID最大值，然后选取合适的bit">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2021/05/20/系统设计系列/"/>
+
+  <title> 系统设计相关 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Startseite
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archiv
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                系统设计相关
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-05-20T22:00:00+08:00" content="2021-05-20">
+              2021-05-20
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本文主要收录关于系统设计相关的问题学习笔记。</p>
+<h2 id="设计分布式ID生成器"><a href="#设计分布式ID生成器" class="headerlink" title="设计分布式ID生成器"></a>设计分布式ID生成器</h2><p>现实中很多业务都有生成唯一ID的需求，如用户、微博、订单等，这些ID往往会作为数据库的主键要保证全局唯一。数据库会在该字段上做聚集索引，即此字段会影响各条数据在物理存储上的顺序。</p>
+<p>ID要尽可能短来节省内存，同时使得索引效率更高。基本上64位能满足绝大多数场景。但通常并不需要这么多，可以根据业务需求预估ID最大值，然后选取合适的bit来表示ID。</p>
+<p>查询时往往有排序分页需求，需要给每个数据添加一个时间字段，并在其上建立普通索引。但是普通索引访问较慢，所以尽量使得ID按时间粗略有序来节省这个字段。</p>
+<ul>
+<li>全局唯一</li>
+<li>按时间粗略有序</li>
+<li>尽可能短</li>
+</ul>
+<p>一些生成ID的常用方法： </p>
+<ul>
+<li>UUID: mongoDB自动给每条数据赋值ObjectId，保证不会重复，就是采用了UUID的算法。 ObjectID=4bytes timestamp + 3bytes 机器ID + 2bytes 进程ID + 3 bytes计数器。 优点是每个机器都可以独立产生ID，天然分布式，缺点是ID太长占用内存且查询效率低。</li>
+<li>多台mysql服务器： 组成一个高性能的分布式发号器，通过轮询均衡的将请求发送给N个mysql中的任意一个，然后返回一个ID。Mysql不需要把所有的ID都记录，只需要记录最大MAX_ID即可。更新使用REPLACE INTO删除旧值，增加新值。缺点是ID不是严格递增的</li>
+<li>Snowflake: twitter的开源项目，专门生成ID。核心算法是0+ 41bit时间戳 + 13bit机器ID+10bit自增序列号。 41位时间戳可以表示2082年，10bit支持1023台机器，序列号支持1ms产生4095个id </li>
+</ul>
+<h2 id="设计短网址服务"><a href="#设计短网址服务" class="headerlink" title="设计短网址服务"></a>设计短网址服务</h2><p>当前互联网的网页总数大概是45亿，超过了2^32，但远远小于64位整数的上限值。微博的短网址服务用的是长度为7的字符串，可以看做是62位进制数，最大能表示62^7个网址，远大于45亿。</p>
+<p>因此使用长度不超过7的字符串，由大小写字母+数字共62个字母组成。</p>
+<p>一般来说一个长网址在不同地点不同用户等情况下生成的短网址应该不一样，这样在后端数据库可以更好的进行数据分析。入包含生成该网址的用户名、所在网站、http头的user agent信息等，因此长短网址最好是一对多映射。</p>
+<p>通过hash计算短网址不可避免存在冲突，因此最好采用上节所使用的分布式ID生成器的方式如雪花算法来实现。</p>
+<p>存储时以短网址作为key，长网址作为value存储在数据库中。可以使用传统的关系型数据库mysql postgresql，也可以使用任意一个分布式kv数据库，如redis，levelDB等。</p>
+<p>重定向使用的是302临时重定向，因为如果使用301永久重定向的话搜索引擎会直接展示真实地址，导致我们无法根据短网址解析需要的用户信息等。</p>
+<p>为了防止黑客网络攻击，短时间内向服务器发送大量请求导致耗光ID。</p>
+<ul>
+<li>可以采用限制单日IP的请求总数，超过阈值直接拒绝服务。</li>
+<li>同时可以用redis缓存，存储长网址-&gt;ID的映射，仅存储一天以内的数据并用LRU机制进行淘汰。</li>
+</ul>
+<h2 id="定时任务调度器"><a href="#定时任务调度器" class="headerlink" title="定时任务调度器"></a>定时任务调度器</h2><h3 id="priorityBlockingQueue-Polling"><a href="#priorityBlockingQueue-Polling" class="headerlink" title="priorityBlockingQueue+Polling"></a>priorityBlockingQueue+Polling</h3><ul>
+<li>用java.util.concurrent.PriorityBlockingQueue来作为优先级队列，同时保证了线程安全。如果使用java.util.PriorityQueue需要实现ReentrantLock用锁把队列保护起来</li>
+<li>生产者通过while true循环生成随机任务进入队列</li>
+<li>消费者起一个线程通过while true每隔几秒检查队列，有任务则取出来执行</li>
+</ul>
+<p>轮询的缺点就是间隔时间不好把握，间隔长任务无法及时处理，间隔短耗费CPU。</p>
+<h3 id="PriorityBlockingQueue-时间差"><a href="#PriorityBlockingQueue-时间差" class="headerlink" title="PriorityBlockingQueue+时间差"></a>PriorityBlockingQueue+时间差</h3><p>将方案一中的while true改成查看堆顶的元素但不取出，如果任务过期则取出，反之计算一个时间差，sleep该时间差。</p>
+<p>虽然消除了轮询的缺点，但是该方案同时也有自身缺陷。如果计算时间差之后又有新的小于该时间差的任务加入队列，会导致处理不及时。</p>
+<h3 id="DelayQueue"><a href="#DelayQueue" class="headerlink" title="DelayQueue"></a>DelayQueue</h3><p>改进后的priorityBlockingQueue，把计算时间差并让消费者等待该时间差的功能继承进了队列。消费者不需要关心时间差的事情，直接在while true循环中不断take即可。新的元素put时会唤醒所有等待的消费者线程。</p>
+<p>为了避免多个消费者竞争，采用leader/follower模式，当一个线程时leader时它只需要一个时间差，其它follower无限等待。多个消费线程用take方法取任务，内部先加锁然后每个线程去peek头结点，如果leader不为空说明已经有线程在取，当前消费者无限等待。如果leader为空则设置leader为当前消费者并让其等待指定的时间。</p>
+<p>需要注意的是take方法中会释放first=null，为了避免内存泄漏。如线程A获取first然后设置leader为A并让A等待一段时间；线程B同时进来获取first进入阻塞无限期等待，此时B持有first引用。A等待一定时间被唤醒后获得对象成功，出队后该对象应该被GC。但是此时B仍然持有此对象GC链路可达所以无法回收。极端情况下B无限休眠那么本该回收的对象就不能被GC销毁从而导致内存泄漏。</p>
+<p>JDK中的ScheduledThreadPoolExecutor类似</p>
+<h3 id="时间轮-HashedWheelTimer"><a href="#时间轮-HashedWheelTimer" class="headerlink" title="时间轮 HashedWheelTimer"></a>时间轮 HashedWheelTimer</h3><p>循环队列，每个任务都需要一个字段记录圈数，每转一圈就-1，减到0就立刻取出。 Netty中已经有实现，性能高，插入和删除都是O（1），Linux内核定时器就是采用这种方案。</p>
+<p>分布式定时任务调度器可以采用Redis的Zset和RabbitMQ等</p>
+<h2 id="设计模式在外卖业务的应用"><a href="#设计模式在外卖业务的应用" class="headerlink" title="设计模式在外卖业务的应用"></a>设计模式在外卖业务的应用</h2><p><a href="https://tech.meituan.com/2020/03/19/design-pattern-practice-in-marketing.html" target="_blank" rel="external">设计模式在外面业务中的实践</a></p>
+<ul>
+<li><p>面向对象设计模式七大基本原则</p>
+<ul>
+<li>开闭原则：OpenCloseP，对扩展开放对修改关闭</li>
+<li>单一职责原则：SingleResponsibleP，实现类要单一职责</li>
+<li>里氏代换原则：Liskov SubsitutionP，不要破坏继承体系</li>
+<li>依赖倒转原则：Dependency InversionP，面向接口编程</li>
+<li>接口隔离原则：Interface SegregationP，设计接口时要精简单一</li>
+<li>合成聚合复用原则：Composite/Aggregation Reuse P</li>
+<li>最少知识原则，迪米特法则， Least KnowledgeP，Law of Demeter， 指导降低耦合</li>
+</ul>
+</li>
+<li><p>美团邀请用户返奖业务场景<br>首先根据用户状态判断是否满足返奖，如果满足继续判断用户是新用户还是老用户，从而给予不同的奖励方案：</p>
+<ul>
+<li>新用户<ul>
+<li>普通奖励（固定额度）</li>
+<li>梯度奖励（根据用户邀请人数给予不同奖励金额）</li>
+</ul>
+</li>
+<li>老用户：根据老用户属性来计算返奖金额，为了评估不同的邀新效果，老用户也会存在多种返奖机制</li>
+</ul>
+</li>
+</ul>
+<p>考虑开闭原则，对于返奖流程保持封闭，对可能扩展的返奖规则进行开放。将返奖规则抽象为返奖策略。在DDD中返奖策略是一个值对象，通过工厂方式生产针对不同用户的奖励策略值对象。</p>
+<h3 id="返奖规则和设计模式实践"><a href="#返奖规则和设计模式实践" class="headerlink" title="返奖规则和设计模式实践"></a>返奖规则和设计模式实践</h3><p>工厂模式：工厂方法模式和抽象工厂模式。定义一个用于创建对象的接口，让子类决定实例化哪个对象。工厂方法是一个类的实例化延迟到子类。<br>    // 抽象的产品<br>    public abstract class Product {<br>      public abstract void method();<br>    }<br>    //定义一个具体产品<br>    class ProductA extends Product {<br>      @Override<br>      public void method(){}<br>    }<br>    //抽象的工厂<br>    abstract class Factory<t> {<br>      abstract Product createProduct(Class<t> c);<br>    }<br>    //具体的工厂可以生产相同的产品<br>    class FactoryA extends Factory {<br>      @Overrid<br>      Product createProduct(Class c) {<br>        Product pro = (Product) Class.forName(c.getName()).newInstance();<br>        return pro;<br>      }<br>    }</t></t></p>
+<p>策略模式：定义一系列算法，将每个算法都封装起来，且支持互换。是一种对象行为模式<br>    //定义一个抽象接口<br>    public interface Strategy {<br>      void strategyImplementation();<br>    }</p>
+<pre><code>public class StrategyA implements Strategy {
+  @Override
+  public void strategyImplementation(){}
+}
+
+//封装策略，屏蔽高层模块对策略、算法的直接访问，屏蔽可能存在的策略变化
+public class Context {
+  private Strategy strategy = null;
+  public Context(Strategy strategy) {
+    this.strategy = strategy;
+  }
+  public void doStrategy(){
+    strategy.strategyImplementation();
+  }
+}
+</code></pre><p>工程实践：我们可以使用工厂模式生成不同的策略，同时使用策略模式来进行不同策略的执行。</p>
+<pre><code>//抽象策略
+public abstract class RewardStrategy {
+  public abstract void reward(long userId);
+  public void insertRewardAndSettlement(long userId, int reward) {}; //更新用户信息及结算
+}
+
+//新用户返奖具体策略A
+public class newUserRewardStrategyA extends RewardStrategy {
+  @Override
+  public void reward(long userId) {...} //具体计算逻辑
+}
+//老用户返奖具体策略A
+public class oldUserRewardStrategyA extends RewardStrategy {
+  @Override
+  public void reward(long userId) {...}
+}
+//抽象工厂
+public abstract class StrategyFactory&lt;T&gt; {
+  abstract RewardStrategy createStrategy(Class&lt;T&gt; c);
+}
+//具体工厂创建具体的策略
+public class FactoryRewardStrategyFactory extends StrategyFactory {
+  @Override
+  RewardStrategy createStrategy(Class c) {
+    RewardStrategy product = null;
+    try {
+      product = (RewardStrategy) Class.forName(c.getName()).newInstance();
+    } catch (Exception e) {}
+    return product;
+  }
+}
+
+public class RewardContext {
+  private RewardStrategy strategy;
+  public RewardContext(RewardStrategy strategy) {
+    this.strategy = strategy;
+  }
+  public void doStrategy(long userId) {
+    int rewardMoney = strategy.reward(userId);
+    insertRewardAndSettlement(long userId, int reward) {
+      insertReward(userId, rewardMoney);
+      settlement(userId);
+    }
+  }
+}
+
+public class InviteRewardImpl {
+//返奖主流程
+public void sendReward(long userId) {
+    FactorRewardStrategyFactory strategyFactory = new FactorRewardStrategyFactory();  //创建工厂
+    Invitee invitee = getInviteeByUserId(userId);  //根据用户id查询用户信息
+    if (invitee.userType == UserTypeEnum.NEW_USER) {  //新用户返奖策略
+        NewUserBasicReward newUserBasicReward = (NewUserBasicReward) strategyFactory.createStrategy(NewUserBasicReward.class);
+        RewardContext rewardContext = new RewardContext(newUserBasicReward);
+        rewardContext.doStrategy(userId); //执行返奖策略
+    }if(invitee.userType == UserTypeEnum.OLD_USER){}  //老用户返奖策略，... 
+  }
+}
+</code></pre><p>通过这两个模式的组合，当我们系统需要增加一种返奖策略时，只需要实现RewardStrategy接口即可，无需考虑其他的改动。</p>
+<h3 id="返奖流程和设计模式实践"><a href="#返奖流程和设计模式实践" class="headerlink" title="返奖流程和设计模式实践"></a>返奖流程和设计模式实践</h3><p>当受邀人在下单后，返奖后台接收到下单记录，此时邀请人进入返奖流程。</p>
+<ul>
+<li>在接收到订单消息后，用户进入带校验状态，此时对订单进行返奖规则校验； （是否使用红包，红包是否在有效期，订单是否满足一定金额）</li>
+<li>若校验通过，用户进入预返奖状态，并放入延迟队列。若校验未通过，用户进入不返奖状态，结束流程；</li>
+<li>T+N天后，处理延迟消息，若用户没有对订单进行退款，则进入待返奖状态。若用户退款，则进入不返奖状态，结束流程；</li>
+<li>执行返奖，若成功进入完成状态，结束流程。反之，进入待补偿状态；</li>
+<li>待补偿状态的用户会由任务定期触发补偿机制，直到返奖成功，进入完成状态，保障流程结束。</li>
+</ul>
+<p>状态模式：当一个对象内在状态改变时，允许其改变行为，这个对象看起来像是改变了类。</p>
+<pre><code>//定义一个抽象的状态类
+public abstract class State {
+  Context context;
+  public void setContext(Context context) {
+    this.context = context;
+  }
+  public abstract void handle1();
+  public abstract void handle2();
+}
+//定义状态A
+public class ConcreteStateA extends State{
+  @Override
+  public void handle1() {} //本状态下必须要处理的事情
+  @Override
+  public void handle2() {
+    super.context.setCurrentState(Context.ConcreteStateB); //切换到状态B
+    super.context.handle2()；// 执行状态B的任务
+  }
+}
+//定义状态B
+public class ConcreteStateA extends State{
+  @Override
+  public void handle2() {} //本状态下必须要处理的事情
+  @Override
+  public void handle1() {
+    super.context.setCurrentState(Context.ConcreteStateA); //切换到状态A
+    super.context.handle1()；// 执行状态A的任务
+  }
+}
+//定义一个上下文管理环境
+public class Context {
+  public final static ConcrestateA concreteStateA = new ConcreteStateA();
+  public final static ConcreStateB concreteStateB = new ConcreateStateB();
+
+  private state currentState;
+  public state getCurrentState(){return currentState;}
+
+  public void setCurrentState(State currentState){
+    this.currentState = currentState;
+    this.currentState.setContext(this);
+  }
+  public void handle1() { this.currentState.handle1();}
+  public void handle2() { this.currentState.handle2();}
+}
+//定义client执行
+public class Client {
+  public static void main(String[] args) {
+    Context context = new Context();
+    context.setCurrentState(new ConcrestateA());
+    context.handle1();
+    context.handle2();
+  }
+}
+</code></pre><p>工程实践：</p>
+<pre><code>//返奖状态执行的上下文
+public class RewardStateContext {
+  private RewardState rewardState;
+
+  public void setRewardState(RewardState currentState) {this.rewardState = currentState;}
+  public RewardState getRewardState() {return rewardState;}
+  public void echo(RewardStateContext context, Request request) {
+      rewardState.doReward(context, request);
+  }
+}
+public abstract class RewardState {
+  abstract void doReward(RewardStateContext context, Request request);
+}
+//待校验状态
+public class OrderCheckState extends RewardState {
+  @Override
+  public void doReward(RewardStateContext context, Request request) {
+    orderCheck(context, request);  //对进来的订单进行校验，判断是否用券，是否满足优惠条件等等
+  }
+}
+//待补偿状态
+public class CompensateRewardState extends RewardState {
+  @Override
+  public void doReward(RewardStateContext context, Request request) {
+    compensateReward(context, request);  //返奖失败，需要对用户进行返奖补偿
+  }
+}
+//预返奖状态，待返奖状态，成功状态，失败状态(此处逻辑省略)
+//..
+public class InviteRewardServiceImpl {
+  public boolean sendRewardForInvtee(long userId, long orderId) {
+    Request request = new Request(userId, orderId);
+    RewardStateContext rewardContext = new RewardStateContext();
+    rewardContext.setRewardState(new OrderCheckState());
+    rewardContext.echo(rewardContext, request);  //开始返奖，订单校验
+    //此处的if-else逻辑只是为了表达状态的转换过程，并非实际的业务逻辑
+    if (rewardContext.isResultFlag()) {  //如果订单校验成功，进入预返奖状态
+      rewardContext.setRewardState(new BeforeRewardCheckState());
+      rewardContext.echo(rewardContext, request);
+    } else {//如果订单校验失败，进入返奖失败流程，...
+      rewardContext.setRewardState(new RewardFailedState());
+      rewardContext.echo(rewardContext, request);
+      return false;
+    }
+    if (rewardContext.isResultFlag()) {//预返奖检查成功，进入待返奖流程，...
+      rewardContext.setRewardState(new SendRewardState());
+      rewardContext.echo(rewardContext, request);
+    } else {  //如果预返奖检查失败，进入返奖失败流程，...
+      rewardContext.setRewardState(new RewardFailedState());
+      rewardContext.echo(rewardContext, request);
+      return false;
+    }
+    if (rewardContext.isResultFlag()) {  //返奖成功，进入返奖结束流程，...
+      rewardContext.setRewardState(new RewardSuccessState());
+      rewardContext.echo(rewardContext, request);
+    } else {  //返奖失败，进入返奖补偿阶段，...
+      rewardContext.setRewardState(new CompensateRewardState());
+      rewardContext.echo(rewardContext, request);
+    }
+    if (rewardContext.isResultFlag()) {  //补偿成功，进入返奖完成阶段，...
+      rewardContext.setRewardState(new RewardSuccessState());
+      rewardContext.echo(rewardContext, request);
+    } else {  //补偿失败，仍然停留在当前态，直至补偿成功（或多次补偿失败后人工介入处理）
+      rewardContext.setRewardState(new CompensateRewardState());
+      rewardContext.echo(rewardContext, request);
+    }
+    return true;
+  }
+}
+</code></pre><h2 id="投放系统中的设计模式"><a href="#投放系统中的设计模式" class="headerlink" title="投放系统中的设计模式"></a>投放系统中的设计模式</h2><p>投放业务就是要在资源位中展示符合当前用户的资源。首先运营人员会配置需要展示的资源，以及对资源进行过滤的规则。</p>
+<p>为了实现对过滤规则的解耦，对单个规则值对象修改封闭，对规则集合组成的过滤链开放。在资源位过滤时引入责任链模式。</p>
+<p>责任链模式：多个对象都有机会处理请求，避免了请求的发送者和接受者之间的耦合。将这些对象连成一条链，并沿着传递该请求，直到有对象处理它为止。</p>
+<pre><code>//定义一个抽象的handler
+public abstract class Handler {
+  private Handler nextHandler;
+  private int level;
+  public Handler(int level) {
+    this.level = level;
+  }
+  public setNextHandler(Handler handler) {
+    this.nextHandler = handler;
+  }
+  public final void handleMessage(Request request) {
+    if (level == request.getRequestLevel()) {
+      this.echo(request);
+    } else {
+      if (this.nextHandler != null) {
+        this.nextHandler.handleMessage(request);
+      } else {
+        System.out.Println(&quot;end&quot;);
+      }
+    }
+  }
+  public abstract void echo(Request request);
+}
+//定义一个具体handlerA
+public class HandlerA extends Handler {
+  public Handler(int level) {
+    super(level);
+  }
+  @Override
+  public void echo(Request request) {
+    System.out.println(&quot;我是处理者1,我正在处理A规则&quot;);
+  }
+}
+...
+//客户端实现
+class Client {
+  public static void main(String[] args) {
+    HandleRuleA handleRuleA = new HandleRuleA(1);
+    HandleRuleB handleRuleB = new HandleRuleB(2);
+    handleRuleA.setNextHandler(handleRuleB);  //这是重点，将handleA和handleB串起来
+    handleRuleA.echo(new Request());
+  }
+}
+</code></pre><p>工程实践：</p>
+<pre><code>//定义一个抽象的规则
+public abstract class BasicRule&lt;CORE_ITEM, T extends RuleContext&lt;CORE_ITEM&gt;&gt;{
+  //有两个方法，evaluate用于判断是否经过规则执行，execute用于执行具体的规则内容。
+  public abstract boolean evaluate(T context);
+  public abstract void execute(T context) {
+}
+
+//定义所有的规则具体实现
+//规则1：判断服务可用性
+public class ServiceAvailableRule extends BasicRule&lt;UserPortrait, UserPortraitRuleContext&gt; {
+  @Override
+  public boolean evaluate(UserPortraitRuleContext context) {
+    TakeawayUserPortraitBasicInfo basicInfo = context.getBasicInfo();
+    if (basicInfo.isServiceFail()) {
+      return false;
+    }
+    return true;
+  }
+  @Override
+  public void execute(UserPortraitRuleContext context) {}
+}
+//规则2：判断当前用户属性是否符合当前资源位投放的用户属性要求
+public class UserGroupRule extends BasicRule&lt;UserPortrait, UserPortraitRuleContext&gt; {
+  @Override
+  public boolean evaluate(UserPortraitRuleContext context) {}
+
+  @Override
+  public void execute(UserPortraitRuleContext context) {
+    UserPortrait userPortraitPO = context.getData();
+    if(userPortraitPO.getUserGroup() == context.getBasicInfo().getUserGroup().code) {
+      context.setValid(true);
+    } else {
+      context.setValid(false);
+    }
+  }
+}
+//规则3：判断当前用户是否在投放城市，具体逻辑省略
+public class CityInfoRule extends BasicRule&lt;UserPortrait, UserPortraitRuleContext&gt; {}
+//规则4：根据用户的活跃度进行资源过滤，具体逻辑省略
+public class UserPortraitRule extends BasicRule&lt;UserPortrait, UserPortraitRuleContext&gt; {} 
+
+//我们通过spring将这些规则串起来组成一个一个请求链
+&lt;bean name=&quot;serviceAvailableRule&quot; class=&quot;com.dianping.takeaway.ServiceAvailableRule&quot;/&gt;
+&lt;bean name=&quot;userGroupValidRule&quot; class=&quot;com.dianping.takeaway.UserGroupRule&quot;/&gt;
+&lt;bean name=&quot;cityInfoValidRule&quot; class=&quot;com.dianping.takeaway.CityInfoRule&quot;/&gt;
+&lt;bean name=&quot;userPortraitRule&quot; class=&quot;com.dianping.takeaway.UserPortraitRule&quot;/&gt;
+
+&lt;util:list id=&quot;userPortraitRuleChain&quot; value-type=&quot;com.dianping.takeaway.Rule&quot;&gt;
+    &lt;ref bean=&quot;serviceAvailableRule&quot;/&gt;
+    &lt;ref bean=&quot;userGroupValidRule&quot;/&gt;
+    &lt;ref bean=&quot;cityInfoValidRule&quot;/&gt;
+    &lt;ref bean=&quot;userPortraitRule&quot;/&gt;
+&lt;/util:list&gt;
+
+//规则执行
+public class DefaultRuleEngine{
+  @Autowired
+  List&lt;BasicRule&gt; userPortraitRuleChain;
+  public void invokeAll(RuleContext ruleContext) {
+    for(Rule rule : userPortraitRuleChain) {
+      rule.evaluate(ruleContext)
+    }
+  }
+}
+</code></pre><p>责任链模式最重要的优点就是解耦，将客户端与处理者分开，客户端不需要了解是哪个处理者对事件进行处理，处理者也不需要知道处理的整个流程。在我们的系统中，后台的过滤规则会经常变动，规则和规则之间可能也会存在传递关系，通过责任链模式，我们将规则与规则分开，将规则与规则之间的传递关系通过Spring注入到List中，形成一个链的关系。当增加一个规则时，只需要实现BasicRule接口，然后将新增的规则按照顺序加入Spring中即可。当删除时，只需删除相关规则即可，不需要考虑代码的其他逻辑。从而显著地提高了代码的灵活性，提高了代码的开发效率，同时也保证了系统的稳定性。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/设计模式之美/" rel="tag">#设计模式之美</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/04/10/吃透MQ系列/" rel="next" title="MQ相关学习">
+                <i class="fa fa-chevron-left"></i> MQ相关学习
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">47</span>
+              <span class="site-state-item-name">Artikel</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">Tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计分布式ID生成器"><span class="nav-number">1.</span> <span class="nav-text">设计分布式ID生成器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计短网址服务"><span class="nav-number">2.</span> <span class="nav-text">设计短网址服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定时任务调度器"><span class="nav-number">3.</span> <span class="nav-text">定时任务调度器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#priorityBlockingQueue-Polling"><span class="nav-number">3.1.</span> <span class="nav-text">priorityBlockingQueue+Polling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PriorityBlockingQueue-时间差"><span class="nav-number">3.2.</span> <span class="nav-text">PriorityBlockingQueue+时间差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DelayQueue"><span class="nav-number">3.3.</span> <span class="nav-text">DelayQueue</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#时间轮-HashedWheelTimer"><span class="nav-number">3.4.</span> <span class="nav-text">时间轮 HashedWheelTimer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计模式在外卖业务的应用"><span class="nav-number">4.</span> <span class="nav-text">设计模式在外卖业务的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖规则和设计模式实践"><span class="nav-number">4.1.</span> <span class="nav-text">返奖规则和设计模式实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖流程和设计模式实践"><span class="nav-number">4.2.</span> <span class="nav-text">返奖流程和设计模式实践</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#投放系统中的设计模式"><span class="nav-number">5.</span> <span class="nav-text">投放系统中的设计模式</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

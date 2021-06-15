@@ -1,0 +1,620 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="中间件," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="基础篇消息队列本质：一发一存一消费。
+最原始模型包含两个关键词：消息和队列。生产者将消息传递给队列的容器，然后再从容器中取出消息，转发给消费者。
+常用的消息队列产品都在最原始模型上做了扩展，同时提出新名词：topic，partition，queue等
+
+队列模型：允许多个生产者往同一队列发送消息，但是如果有多个消费者，实际上是竞争关系，一条消息只能被一个消费者接收，读完即删除。
+
+发布-订阅模型：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MQ相关学习">
+<meta property="og:url" content="http://xiaozhazi.github.io/2021/04/10/吃透MQ系列/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="基础篇消息队列本质：一发一存一消费。
+最原始模型包含两个关键词：消息和队列。生产者将消息传递给队列的容器，然后再从容器中取出消息，转发给消费者。
+常用的消息队列产品都在最原始模型上做了扩展，同时提出新名词：topic，partition，queue等
+
+队列模型：允许多个生产者往同一队列发送消息，但是如果有多个消费者，实际上是竞争关系，一条消息只能被一个消费者接收，读完即删除。
+
+发布-订阅模型：">
+<meta property="og:updated_time" content="2021-06-15T00:43:46.770Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MQ相关学习">
+<meta name="twitter:description" content="基础篇消息队列本质：一发一存一消费。
+最原始模型包含两个关键词：消息和队列。生产者将消息传递给队列的容器，然后再从容器中取出消息，转发给消费者。
+常用的消息队列产品都在最原始模型上做了扩展，同时提出新名词：topic，partition，queue等
+
+队列模型：允许多个生产者往同一队列发送消息，但是如果有多个消费者，实际上是竞争关系，一条消息只能被一个消费者接收，读完即删除。
+
+发布-订阅模型：">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2021/04/10/吃透MQ系列/"/>
+
+  <title> MQ相关学习 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Startseite
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archiv
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                MQ相关学习
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-04-10T22:00:00+08:00" content="2021-04-10">
+              2021-04-10
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="基础篇"><a href="#基础篇" class="headerlink" title="基础篇"></a>基础篇</h2><p>消息队列本质：一发一存一消费。</p>
+<p>最原始模型包含两个关键词：消息和队列。生产者将消息传递给队列的容器，然后再从容器中取出消息，转发给消费者。</p>
+<p>常用的消息队列产品都在最原始模型上做了扩展，同时提出新名词：topic，partition，queue等</p>
+<ul>
+<li><p>队列模型：允许多个生产者往同一队列发送消息，但是如果有多个消费者，实际上是竞争关系，一条消息只能被一个消费者接收，读完即删除。</p>
+</li>
+<li><p>发布-订阅模型：如果需要一份消息数据分发给多个消费者，每个消费者都要求收到全量消息。可行的方案是为每个消费者创建单独的队列，让生产者发送多份。同一数据复制多份浪费空间。为解决此问题就演化出发布订阅模型。存放消息的容器变为topic主题，订阅者在接收消息之前需要先订阅主题。每个订阅者都可以收到同一topic下的全量消息。和队列模型不同在于消息是否可以被多次消费。</p>
+</li>
+</ul>
+<p>MQ应用场景：系统解耦，异步通信，流量削峰。初次之外还可以延迟通知，最终一致性保证，顺序消息和流式处理等。</p>
+<p>引入MQ之后之前一次RPC变成两次，生产者只和队列耦合，无需知道消费者的存在。多了中间节点队列进行消息转储，将同步变成异步。</p>
+<p>如电商中订单业务中订单支付场景：支付成功后，需要更新订单状态，更新用户积分，通知商家新订单，更新推荐系统中用户画像等。 引入MQ之后只需要关注其最主要的流程：更新订单状态。其他全部交给MQ来通知。</p>
+<ul>
+<li>系统解耦：后续业务再扩展也不涉及核心流程的稳定性，降低维护成本；</li>
+<li>异步通信：其他步骤变成异步执行，减少订单支付的整体耗时，提升订单系统吞吐量；</li>
+<li>流量削峰：队列转储消息，对于超负载场景可以使用MQ作为漏斗进行限流；</li>
+<li>顺序投递，延时消费：利用队列本身的顺序性满足顺序消费场景，叠加定时任务完成消息的延时消费；</li>
+</ul>
+<p>如何设计MQ：</p>
+<ul>
+<li>简单版：两次RPC+消息转储。利用成熟的RPC框架Dubbo或Thrift实现发消息和读消息接口；消息放在本地内存中，利用jdk自带的ArrayBlockingQueue</li>
+<li>适用生产环境：如何满足高性能、高可靠等非功能性需求。<ul>
+<li>RPC通信：直接利用成熟的RPC框架，不需要考虑服务注册与发现、负载均衡、通信协议、序列化方式等；也可以基于netty做底层通信，用zookeeper、Euraka等做注册中心，然后自定义通信协议，或者基于AMQP标准化的MQ协议来实现。后者定制化能力和优化空间更大。</li>
+<li>高可用：Broker高可用只需要保证可水平扩展集群部署，通过服务自动注册与发现、负载均衡、超时重试机制、发送和消费消息时的ack保证；存储高可用有两个思路1）kafka的分区+多副本模式，要考虑分布式下数据复制和一致性方案，类似zab、raft协议，并实现自动故障转移;2）用主流的DB、分布式文件系统、带持久化能力的kv系统；</li>
+<li>存储设计：追加写日志文件+索引文件的方式，索引设计可以考虑稠密或稀疏，查找消息可以利用跳表、二分查找等，还可以通过OS的页缓存，zero-copy技术提升磁盘读写；</li>
+<li>消费关系管理：基于Zookeeper，Apollo等配置中心管理</li>
+<li>高性能：Reactor网络IO模型，业务线程池，生产者批量发送，broker异步刷盘，消费端批量拉取等</li>
+</ul>
+</li>
+</ul>
+<h2 id="Kafka神秘面纱"><a href="#Kafka神秘面纱" class="headerlink" title="Kafka神秘面纱"></a>Kafka神秘面纱</h2><p>Kafka是linkedin内部孵化项目，设计用于处理1）运营活动场景：记录用户的浏览、搜索、点击、活跃度等行为；2）系统运维场景：监控CPU、内存、请求耗时等性能指标。两种数据都属于日志范畴，热点是数据实时生产，数据量大。Apache Kafka 是一个开源的分布式流处理平台。</p>
+<p>演化过程：</p>
+<ul>
+<li>将一份消息分发给多个消费者，每个消费者获取全量的消息。即广播</li>
+<li>并非每个消费者都需要全部数据，MQ不理解消费语义无法分类投递。将难题抛给生产者，发送消息时进行逻辑分类，即利用topic</li>
+<li>多个消费者都对同一个topic感兴趣，如果采用传统的队列模式，取出消息后立即删除，另一个消费者就拿不到。很自然想到当topic增加消费者时复制数据队列。但是复制成本会导致性能问题。</li>
+<li>将所有消息进行持久化存储，由消费者自己各取所需，只需要传递一个消息的offset即可。将复杂的消费问题转嫁给消费者，使得kafka本身复杂度降低，为高性能和高扩展性打下基础。</li>
+</ul>
+<h2 id="kafka架构设计"><a href="#kafka架构设计" class="headerlink" title="kafka架构设计"></a>kafka架构设计</h2><p>海量消息存储问题就是kafka架构设计中最大的难点。容易想到方案：对数据进行分片存储。</p>
+<p>常见分片存储场景：1）数据库中分库分表；2）缓存设计中分片集群架构；类似拆分思想在HDFS，ES中都能看到。</p>
+<p>kafka也采用partition分区进行水平拆分。分区路由可以简单理解为hash函数。分区规则设定合理可以将消息均匀分配到不同分区中。</p>
+<p>消费者和partition相结合做到并行处理需要满足两个基本诉求：1）广播消费能力：同一个topic可以被多个消费者订阅，一条消息可以被消费多次；2）集群消费能力：当消费者本身也是集群时，每条消息只能发送给集群中一个消费者进行处理。</p>
+<p>kafka引入消费组的概念，组间进行广播消费，组内进行集群消费。并且限制每个 Partition 只能由消费组中的一个消费者进行消费。</p>
+<p>存储可扩展、消息并行处理都解决后，对于高可用设计，kafka集群利用多副本机制实现自动故障转移能力。同一分区不同副本保存相同消息，副本之间一主多从，leader负责读写请求，follower只负责和leader同步，当leader故障时有机会被选举为新的leader并对外提供服务。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/中间件/" rel="tag">#中间件</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/03/10/GO学习--调度器源码分析/" rel="next" title="GO学习--调度">
+                <i class="fa fa-chevron-left"></i> GO学习--调度
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/05/20/系统设计系列/" rel="prev" title="系统设计相关">
+                系统设计相关 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">47</span>
+              <span class="site-state-item-name">Artikel</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">Tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基础篇"><span class="nav-number">1.</span> <span class="nav-text">基础篇</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kafka神秘面纱"><span class="nav-number">2.</span> <span class="nav-text">Kafka神秘面纱</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kafka架构设计"><span class="nav-number">3.</span> <span class="nav-text">kafka架构设计</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

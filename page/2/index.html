@@ -235,6 +235,285 @@
             
               
                 
+                <a class="post-title-link" href="/2020/10/18/深入理解计算机系统第4周/" itemprop="url">
+                  《深入理解计算机系统》第4周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-10-18T22:00:00+08:00" content="2020-10-18">
+              2020-10-18
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>上周第三章已经看完，因此这周选择了加看第五章优化程序性能，通常编译器可以代替我们进行程序优化，例如循环展开、代码移动等。但是由于函数存在编译器无法感知的副作用，往往还需要程序员在编写代码时注重效率。</p>
+<p>一些看上去无足轻重的代码段可能隐藏着<strong>渐进低效率</strong>（asymptotic inefficiency），在数据量小时测试可能无法发现问题，但部署环境后代码会突然成为瓶颈。有经验的程序员工作的一部分就是避免引入这样的渐进低效率。</p>
+<p>比如在循环中止条件我们经常会用到 strlen（s）来作为循环中止条件，而strlen所需时间和字符串长度N成正比，如果每次循环迭代前都判断一次，那么循环的整体运行时间会是N<em>N。此时我们如果将字符串长度提前进行计算，再进行循环判断就会显著提升性能。书中实现对1048576字符进行测试，循环运行时间从17分钟降低到2毫秒， <em>*50W倍左右的提升</em></em>。</p>
+<p>当前GCC版本会对整数运算执行重新结合，但不是总有好的效果，通常循环展开和并行地累计在多个值中是提高程序性能的更可靠的方法。</p>
+<p><strong>CPE Cycles Per Element</strong>，作为一种表示程序性能并指导我们改进代码的度量标准。可以帮助我们在更细节的级别上理解迭代程序的循环性能。</p>
+<p>未经优化的代码通常效率比较低，简单地使用命令行选项就能显著地提高程序性能（超过两个数量级）。</p>
+<p><strong>代码移动，</strong>识别要执行多次（如循环内）但是计算结果不会改变的计算，将其移动到代码前不会多次求值的部分来提高性能。优化编译器会尝试进行代码移动，但是不能可靠地发现一个函数是否会有副作用。因此为了改进代码，程序员必须经常帮助编译器显示地完成代码移动。</p>
+<p><strong>过程调用会带来开销，而且妨碍大多数形式的程序优化。</strong></p>
+<p><strong>尽量消除代码中不必要的内存读写，用寄存器来保存中间值来提升性能</strong></p>
+<p>要进一步提高性能，必须<strong>考虑利用处理器微体系结构的优化</strong>，也就是处理器用来执行指令的底层系统设计。要想充分提高性能，需要仔细分析程序，同时代码的生成也要针对目标处理器进行调整。</p>
+<p><strong>延迟界限（latency bound）</strong>，在下一条指令开始之前，这条指令必须结束。当代码中的数据相关限制了处理器利用指令级并行的能力时，延迟界限能够限制程序性能。</p>
+<p><strong>吞吐量界限（throughput bound）</strong>，刻画了处理器功能单元的计算能力，这个界限是程序性能的终极限制。</p>
+<p><strong>整体操作：</strong> </p>
+<ul>
+<li>ICU从高速缓存中读取指令，通常会在当前正在执行的指令很早之前取指，才有足够的时间对指令进行译码并把操作发送给EU。</li>
+<li>当程序遇到分支时，通过分支预测猜测是否会执行分支，并且同时预测分支的目标地址。</li>
+<li>使用投机执行的技术，取出位于它预测的分支会调到的地方的指令，对指令进行译码，甚至在确定分支预测正确之前开始执行。</li>
+<li>如果分支预测错误的话，会将状态重新置于分支点的状态，接着往下执行。</li>
+</ul>
+<p><strong>功能单元的性能：由延迟、时间、容量来刻画。</strong></p>
+<ul>
+<li><strong>延迟</strong>latency，表示完成运算所需要的总时间；</li>
+<li><strong>发射时间</strong>issue time表示两个连续的同类型运算之间需要的最小时钟周期数；</li>
+<li><strong>capacity</strong>表示能够执行该运算功能单元的个数。 其中除法不是完全流水线化的，发射时间=延迟 即在开始一条新运算之前，除法器必须完成整个除法，使得其成为一个相对开销很大的运算。</li>
+</ul>
+<p><strong>循环展开</strong>通过增加每次迭代计算的元素数量，减少循环的迭代次数。编译器可以很容易地执行循环展开，只要优化级别设置得足够高。GCC -O3就会执行。</p>
+<p><strong>提高并行性：</strong></p>
+<p>对于可结合和可交换的合并运算来说，通过将一组合并运算分割成两路或多路，最后再合并来提高性能。</p>
+<p>重新结合变换打破顺序相关从而使性能提高到延迟界限之外的方法，减少计算中关键路径上操作的数量，更好地利用功能单元的流水线能力。 （大多数编译器不会对浮点运算重新结合，因为这些运算是不保证结合的）</p>
+<p><strong>其他一些制约程序在实际机器上性能的因素</strong>：</p>
+<ul>
+<li><strong>寄存器溢出</strong>，并行度p超过了可用的寄存器数量，编译器会溢出，将某些临时值存放在内存中。此时再进行循环展开就没有效果，甚至会导致性能变差。</li>
+<li><strong>分支预测错误处罚</strong>, 大约19个时钟周期，赌注很高。因此注意以下通用原则：<ul>
+<li>不要过分关心可预测的分支；</li>
+<li>书写适合条件传送实现的代码</li>
+</ul>
+</li>
+</ul>
+<p>总结来说，优化程序性能的基本策略如下：</p>
+<ul>
+<li><strong>高级设计：</strong> 选取合适的算法和数据结构，避免使用那些会产生渐进低效率的算法OR编码技术；</li>
+<li><strong>基本编码原则</strong>：避免限制优化的因素，使编译器产生高效地代码。</li>
+<li><strong>消除连续的函数调用</strong>：代码移动；</li>
+<li><strong>消除不必要的内存引用</strong>： 引入临时变量；</li>
+<li><strong>低级优化</strong>： 结构化代码以利用硬件功能；<ul>
+<li>循环展开</li>
+<li>累积变量、重新结合等技术，提高指令级并行</li>
+<li>功能性的风格重写条件操作，使得编译器采用条件数据传送。</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2020/10/11/深入理解计算机系统第3周/" itemprop="url">
+                  《深入理解计算机系统》第3周
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2020-10-11T22:00:00+08:00" content="2020-10-11">
+              2020-10-11
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>第三章主要是从汇编代码级来了解程序是如何运行，通过阅读汇编代码一方面可以理解编译器的优化能力帮助分析优化源码，另一方面可以了解程序存储运行控制信息的细节可以用来防御代码漏洞等。</p>
+<p>有一定的汇编基础，所以这章比上章读起来稍微轻松一些，长假期间闲时顺手翻完。</p>
+<p>主要记录了以下几个知识点：</p>
+<p><strong>首先是定义</strong></p>
+<ul>
+<li>PC,存储将要执行的下一条指令在内存中的地址</li>
+<li>整数寄存器，存储整数数据和指针，有的jicunq被用来记录某些重要的程序状态</li>
+<li>条件码，保存最近执行的算术或逻辑指令的状态信息，用来实现控制或数据流中的条件变化</li>
+<li>向量寄存器用来存放一个或多个整数或浮点数值。</li>
+<li>一个X86-64的CPU中包含一组16个64位通用目的寄存器，用来存储整数数据和指针。其中%rsp是栈指针用来指明运行时栈的结束位置。</li>
+</ul>
+<p>数据传输指令、入栈出栈数据指令、算术逻辑操作以及跳转指令之前都有一定的了解，这次补充了下乘法和除法的运算逻辑。</p>
+<p>2个64位有符号/无符号整数相乘需要128位来表示，X86-64对128位数的操作提供有限的支持。</p>
+<p>mulq（无符号数乘法）和imulq（补码乘法）都要求一个参数必须在寄存器%rax中，另一个作为指令的源操作数给出，乘积存放在寄存器%rdx（高64位）和%rax（低64位）中。</p>
+<p>除法或取模运算，由单操作数除法指令来提供，idivl将寄存器%rdx（高64位）和%rax（低64位）中的128位数作为被除数，除数作为指令操作数给出，将商存储在%rax中，余数存储在%rdx中。</p>
+<p>条件码通常不会直接读取，常用的三种方法：</p>
+<ul>
+<li>根据条件码的某种组合将一个字节设置为0/1； </li>
+<li>条件跳转到程序的其他部分；</li>
+<li>有条件地传送数据。 常用的条件码寄存器：<ul>
+<li>CF：进位标志，可用来检查无符号操作的溢出</li>
+<li>ZF：零标志位</li>
+<li>SF：符号标志</li>
+<li>OF：溢出标志，最近的操作导致一个补码溢出</li>
+</ul>
+</li>
+</ul>
+<p><strong>基于条件数据传送的代码会比基于条件控制转移的代码性能要好</strong>是因为：</p>
+<p>首先，现代处理器通过pipelining重叠连续指令的步骤来获取高性能。</p>
+<p>当机器遇到条件跳转指令时只有当分支条件求值完成后才能决定分支往哪走，分支预测逻辑可靠的情况下流水线中依旧会充满指令并行，但是当跳转错误预测时需要丢掉它为跳转指令后续所有指令已做的工作，浪费大约15-30个时钟周期，导致程序性能严重下降。</p>
+<p>同条件跳转不同，处理器不需要预测结果就可以执行条件传送，处理器只是读源值，检查条件码，然后要么更新目的寄存器要么保持不变。</p>
+<p>不过条件传送也不总是会提高代码效率，需要权衡复杂计算开销和分支预测错误开销来判断具体使用哪种。</p>
+<p><strong>过程</strong>是软件中的一种重要抽象，要提供对过程的机器级支持需要处理<strong>传递控制、传递数据、分配和释放内存</strong>等机制。</p>
+<p>C语言过程调用机制的一个关键特性在于使用了栈数据结构的后进先出的内存管理原则，每个过程在栈中都有自己的私有空间，多个未完成调用的局部变量不会相互影响。</p>
+<p>C语言对数据引用不进行任何边界检查，局部变量和状态信息都存放在栈中。这两种情况结合在一起，对越界的数组元素写操作会破坏存储在栈中的状态信息，即常见的<strong>缓冲区溢出问题</strong>。 </p>
+<p>这种问题可以被用来攻击系统安全，将攻击代码包含在输入字符串中或者将一个指向攻击代码地址的指针覆盖返回地址等。</p>
+<p>现代的编译器和操作系统实现了很多机制限制入侵者通过缓冲区溢出攻击获得系统控制。常见的机制：</p>
+<ul>
+<li>栈随机化：为了插入攻击代码，攻击者既要插入代码又要插入指向该代码的指针。这个指针也是攻击字符串的一部分，要产生这个指针需要知道字符串存放的栈地址。栈的位置在程序每次运行时都有变化使得改地址难以预测。在Linux中栈随机化已经成为标准行为，ASLR地址空间布局随机化。</li>
+<li>栈破坏检测：第二道防线是能够检测到何时栈被破坏，栈保护者机制通过canary金丝雀值是否被改变来判断，该值是程序每次运行随机产生的，如果被某个函数或操作改变那么异常中止该程序。</li>
+<li>限制可执行代码区域：消除攻击者向系统中插入可执行代码的能力。</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2020/09/27/深入理解计算机系统第2周/" itemprop="url">
                   《深入理解计算机系统》第2周
                 </a>
@@ -1776,724 +2055,6 @@ perf report
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/07/04/Linux性能优化实战第六周--网络性能篇实战/" itemprop="url">
-                  《Linux 性能优化实战》第六周--网络性能实战篇
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-07-04T17:26:55+08:00" content="2020-07-04">
-              2020-07-04
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周主要从案例分析来学习Linux网络问题如何分析与解决，这也是这个专栏四个基础模块的最后一小部分。对于网络性能评估，一般情况需要从上到下对每个协议层进行性能测试，然后根据性能测试结果结合Linux网络协议栈原理，找出导致性能瓶颈的根源。</p>
-<p>在优化网络的性能时，可以结合Linux系统的网络协议栈和网络收发流程，从应用程序、套接字、传输层、网络层再到链路层等，对每个层进行逐层优化。</p>
-<ul>
-<li>应用程序中，主要优化I/O模型、工作模型以及应用层的网络协议</li>
-<li>套接字层，主要优化套接字的缓冲区大小</li>
-<li>传输层，主要优化TCP和UDP协议</li>
-<li>网络层，主要优化路由、转发、分片以及ICMP协议</li>
-<li>链路层，主要优化网络包的收发、网络功能卸载以及网卡选项</li>
-</ul>
-<p>对于DDoS攻击，由于其分布式、大流量、难追踪等特点，目前还无法完全御防，只能设法缓解DDoS带来的影响。在实际应用中通常让Linux服务器配合专业的流量清洗以及网络防火墙设备一起来缓解该问题。</p>
-<h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><pre><code>网络流量分析：
-确认网络包的收发是否正常
-tcpdump Wireshark
-确认单次请求和并发请求时的网络延迟是否正常
-hping3，wrk
-确认路由是否正确，并查看路由中每一跳网关的延迟
-traceroute
-观察应用程序对网络套接字的调用情况是否正常
-strace
-Linux动态追踪框架
-SystemTap
-</code></pre><hr>
-<p>接下来是本周读书笔记</p>
-<hr>
-<h2 id="Lesson-37-案例篇：DNS解析时快时慢应该怎么办？"><a href="#Lesson-37-案例篇：DNS解析时快时慢应该怎么办？" class="headerlink" title="Lesson 37 案例篇：DNS解析时快时慢应该怎么办？"></a>Lesson 37 案例篇：DNS解析时快时慢应该怎么办？</h2><h3 id="域名与DNS解析"><a href="#域名与DNS解析" class="headerlink" title="域名与DNS解析"></a>域名与DNS解析</h3><pre><code>cat /etc/resolv.conf
-nameserver 8.8.8.8
-</code></pre><p>除了nslookup之外，另一个常用的DNS解析工具dig，还提供了trace功能，可以展示递归查询的整个过程。</p>
-<pre><code>dig +trace +ndnssec xiaozhazi.github.io #nodnssec表示禁止DNS安全扩展
-</code></pre><h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><h4 id="DNS解析失败"><a href="#DNS解析失败" class="headerlink" title="DNS解析失败"></a>DNS解析失败</h4><pre><code>sudo docker run -it --rm -v $(mktemp):/etc/resolv.conf feisky/dnsutils bash 
-nslookup xiaozhazi.github.io  
-#connection timeout, no servers could be reached
-ping -c3 8.8.8.8 # works normally
-
-nslookup -debug xiaozhazi.github.io 
-</code></pre><p>发现并没有连接DNS服务器而是连接环回地址，此时猜测可能容器内部没有配置DNS服务器。 在resolv.conf文件中添加即可。</p>
-<h4 id="DNS解析不稳定"><a href="#DNS解析不稳定" class="headerlink" title="DNS解析不稳定"></a>DNS解析不稳定</h4><pre><code>sudo docker run -it --rm --cap-add=NET_ADMIN --dns 8.8.8.8 feisky/dnsutils bash 
-time nslookup time.geekbang.org  # real time=10s
-ping -c3 8.8.8.8  #latency=140ms
-ping -c3 114.114.114.114 #latency=31ms， change dnsserver
-#rerun nslookup now timecost=64ms
-#此时重复执行仍会出现1s延时的情况，说明容器内没有使用DNS缓存
-
-/etc/init.d/dnsmasq start 
-然后修改resolv.conf文件，将DNS服务器改为dnsmasq的监听地址
-此时再重复执行nslookup除第一次运行外，都只需10ms左右
-</code></pre><p>DNS解析结果不稳定，可能存在以下几种情况：</p>
-<ul>
-<li>DNS服务器本身有问题，响应慢且不稳定</li>
-<li>客户端到DNS服务器的网络延迟较大</li>
-<li>DNS请求或响应包，在某些情况下被链路中的网络设备弄丢了</li>
-</ul>
-<p>几种常见的DNS优化方法：</p>
-<ul>
-<li>对DNS解析的结果进行缓存</li>
-<li>对DNS解析的结果进行预取</li>
-<li>使用HTTPDNS取代常规的DNS解析，使用HTTP协议栈绕过链路中的DNS服务器，可以避免域名被劫持的问题</li>
-<li>基于DNS的全局负载均衡GSLB，根据用户的位置返回距离最近的IP地址</li>
-</ul>
-<h2 id="Lesson-38-案例篇：怎么使用tcpdump和Wireshark分析网络流量"><a href="#Lesson-38-案例篇：怎么使用tcpdump和Wireshark分析网络流量" class="headerlink" title="Lesson 38 案例篇：怎么使用tcpdump和Wireshark分析网络流量"></a>Lesson 38 案例篇：怎么使用tcpdump和Wireshark分析网络流量</h2><p>我们通常使用ping来测试服务延迟，不过有时候ping本身也会出现意想不到的问题，此时就需要我们抓取ping命令执行时收发的网络包，然后分析这些网络包，进而找出问题根源。</p>
-<ul>
-<li>tcmdump仅支持命令行格式使用，常用在服务器中抓取和分析网络包</li>
-<li>Wireshark还提供了图形界面和汇总分析工具，在分析复杂的网络场景是比较实用</li>
-</ul>
-<h3 id="实验分析"><a href="#实验分析" class="headerlink" title="实验分析"></a>实验分析</h3><pre><code>#禁止接收从DNS服务器中发送过来并包含googleusercontent的包
-iptables -I INPUT -p udp --sport 53 -m string --string googleusercontent --algo bm -j DROP
-ping -c3 geektime.org
-
-#此时三次请求都得到了响应，每次延迟30ms左右，没有丢包。但是总时间却超过了11s
-#是不是DNS解析慢的原因呢？发现ping的输出中三次都是用的IP地址，说明ping只需要在最开始运行时解析一次得到IP
-#用nslookup验证了下不存在域名解析慢的问题
-
-tcpdump -nn udp port 53 or host XXX(geektime.org ip)
-#另一个终端执行ping指令 
-</code></pre><p>逐条分析tcpdump输出，发现有两条反向地址解析PTR请求，只看到了请求包没有应答包。而且每条记录都执行了5s才出现下一个网络包。</p>
-<p>因此这里的ping缓慢是因为两次PTR请求超时导致的， 在ping执行时禁掉PTR即可</p>
-<pre><code>ping -n -c3 geektime.org
-</code></pre><h3 id="tcpdump"><a href="#tcpdump" class="headerlink" title="tcpdump"></a>tcpdump</h3><p>tcpdump 基于libpcap，利用内核中的AF_PACKET套接字，抓取网络接口中传输的网络包，并提供了请打的过滤规则，从大量的网络包中挑出最想关注的信息。</p>
-<pre><code>-i   #tcpdump -i eth0  指定网络接口
--nn  #tcpdump -nn   不解析IP地址和端口号的名称 
--c   #tcpdump -c5   限制要抓取网络包的个数
--A   #tcpdump -A    以ASSCII格式显示网络包内容
--w   #tcpdump -w file.pcap  保存到文件中，通常以pcap作为后缀
--e   #tcpdump -e    输出链路层的头部信息
-</code></pre><h2 id="Lesson-39-案例篇：怎么缓解DDoS攻击带来的性能下降问题？"><a href="#Lesson-39-案例篇：怎么缓解DDoS攻击带来的性能下降问题？" class="headerlink" title="Lesson 39 案例篇：怎么缓解DDoS攻击带来的性能下降问题？"></a>Lesson 39 案例篇：怎么缓解DDoS攻击带来的性能下降问题？</h2><h3 id="DDoS简介"><a href="#DDoS简介" class="headerlink" title="DDoS简介"></a>DDoS简介</h3><p>DDoS， Distributed Denial of Service。 前身是DoS，即拒绝服务攻击，指利用大量的合理请求，来占用过多的目标资源，从而使得目标服务无法响应正常请求。</p>
-<p>DDoS则是采用的分布式架构，利用多台主机同时攻击目标主机。这样，即使目标服务部署了网络防御设备，面对大量网络请求时还是无力应对。目前已知的最大流量攻击正是Github遭受的DDoS攻击，峰值流量达到了1.35Tbps，PPS更是超过了1.2亿。</p>
-<p>从攻击原理来看，DDoS分为：</p>
-<ul>
-<li>耗尽带宽。无论是服务器还是路由器、交换机等网络设备，带宽都有固定的上限。带宽耗尽后就会发生网络拥堵，无法传输其他正常的网络报文。</li>
-<li>耗尽操作系统资源。例如CPU、内存等物理资源，以及连接表等软件资源。</li>
-<li>消耗应用程序的运行资源。应用程序的运行，通常要和其他的资源或系统交互，如果程序一直忙于处理无效请求，也会导致正常请求的处理变慢甚至无法响应</li>
-</ul>
-<h3 id="实验-1"><a href="#实验-1" class="headerlink" title="实验"></a>实验</h3><p>通过hping3命令模拟DoS攻击：</p>
-<pre><code>hping3 -S -p 80 -i u10 XXX.XXX.XXX.XXX
-#-S表示设置TCP协议的SYN
-</code></pre><p>用Sar来观察，可以看到网络接收的PPS（每秒收发的报文数）已经达到了2w多，但是BPS（每秒收发的字节数）只有1174KB，即每个包只有54B。全是小包 </p>
-<pre><code>sar -n DEV 1
-</code></pre><p>继续通过tcpdump抓取eth0网卡的包</p>
-<pre><code>tcpdump -i eth0 -n tcp port 80
-</code></pre><p>Flag[S]表示是SYN包，大量的SYN包表明，这是一个SYN Flood攻击。通过Wireshark可以更直观的输出SYN Flood的过程。</p>
-<p>其原理是：</p>
-<ul>
-<li>客户端构造大量的SYN包，请求建立TCP连接</li>
-<li>服务器收到包后，向源IP发送SYN+ACK报文，并等待三次握手的最后一次ACK报文，直到超时</li>
-</ul>
-<p>这种等待状态的TCP连接，通常称为半开连接。由于连接表的大小有限，大量的半开连接就会导致连接表迅速占满，从而无法建立新的TCP连接。</p>
-<pre><code>netstat -n -p | grep SYN_REC #定位半开连接的IP
-iptables -I INPUT -s XXX.XXX.XXX.XXX -p tcp -j REJECT
-</code></pre><p>如果遇到多台服务器同时发送SYN Flood攻击，这种方法可能就无效了。因为很可能无法SSH到机器上，因此提前要对系统做一些TCP，限制半开连接的数量/减少连接失败内核重启次数。</p>
-<pre><code># /etc/sysctl.conf
-sysctl -w net.ipv4.tcp_max_syn_backlog=1024
-sysctl -w net.ipv4.tcp_synack_retries=1
-</code></pre><p>还可以启用TCP SYN Cookies来防御SYN Flood攻击。</p>
-<pre><code>sysctl -w net.ipv4.tcp_syncookies=1
-</code></pre><h3 id="DDoS到底该如何防御"><a href="#DDoS到底该如何防御" class="headerlink" title="DDoS到底该如何防御"></a>DDoS到底该如何防御</h3><ul>
-<li>可以用XDP或者DPDK构建DDoS方案，在内核网络协议栈前，或者跳过内核协议栈来识别并丢弃DDoS报文</li>
-<li>对于流量型的DDoS，当服务器的带宽被耗尽时，服务器内部处理就无能为力了。此时只能在服务器外部的网络设备中增加专业的入侵检测和防御设备，配置流量清洗设备阻断恶意流量等。</li>
-<li>对于慢速请求，响应流量很大时使得应用程序会耗费大量的资源处理，此时需要应用程序考虑识别，并尽早拒绝掉这些恶意流量。比如合理利用缓存，增加WAF(Web Application Firewall),使用CDN等。</li>
-</ul>
-<h2 id="Lesson-40-案例篇：网络请求延迟变大了，该怎么办？"><a href="#Lesson-40-案例篇：网络请求延迟变大了，该怎么办？" class="headerlink" title="Lesson 40 案例篇：网络请求延迟变大了，该怎么办？"></a>Lesson 40 案例篇：网络请求延迟变大了，该怎么办？</h2><h3 id="网络延迟"><a href="#网络延迟" class="headerlink" title="网络延迟"></a>网络延迟</h3><p><strong>网络延迟</strong> 网络数据传输所用的时间，这个时间可能单向也可以指双向的。 双向的往返通道延迟，RTT Round-Trip Time</p>
-<p><strong>应用程序延迟</strong> 从应用程序接收请求到发回响应全程所用的时间。</p>
-<p>通常用ping来测试网络延迟，但是ping基于ICMP通过计算ICMP回显响应报文和回显请求报文的时间差，来获得延时。这个过程不需要特殊认证，通常会被很多网络攻击利用。为了避免被攻击，很多网络服务会把ICMP禁掉。此时可以借助traceroute和hping3工具。</p>
-<pre><code>hping3 -c 3 -S -p 80 baidu.com
-# -c表示发送3次，-S设置TCPSYN，-p端口号
-traceroute --tcp -p 80 -n baidu.com
-# -n表示不对结果中的IP地址执行反向域名解析
-</code></pre><h3 id="实验分析-1"><a href="#实验分析-1" class="headerlink" title="实验分析"></a>实验分析</h3><p>设计了对比实验，在80端口运行官方Nginx容器，在8080端口运行案例Nginx容器</p>
-<pre><code>sudo docker run --network=host --name=good -itd nginx
-sudo docker run --network=host --name=nginx -itd feisky/nginx:latency
-</code></pre><p>通过hping3命令分别测试其延迟时，发现差不多都是7ms。</p>
-<p>再用wrk测试并发请求下的延迟，分别测试机器并发100时两个端口的性能</p>
-<pre><code>wrk --latency -c 100 -t 2 --timeout 2 http://IP:Port
-</code></pre><p>此时官方Nginx的延迟在9ms左右，而案例应用则是44ms左右。 此时我们首先想到的是通过tcpdump抓取8080端口的网络包，并保存文件到nginx.pcap</p>
-<pre><code>tcpdump -nn tcp port 8080 -w nginx.pcap
-wrk --latency -c 100 -t 2 --timeout 2 htto://IP:Port 
-</code></pre><p>再把抓取到的nginx.pcap文件复制到装有Wireshark的机器中进行分析，此时只过滤除TCP Stream的。 通过输出界面可以看出三次握手和第一次请求和响应都挺快，但是第二次请求就比较慢，40ms之后才发送ACK响应。</p>
-<p>而TCP延迟确认（Delayed ACK）的最小超时时间就是40ms。 <strong>延迟确认</strong>是针对TCP ACK机制的一种优化，不用每次请求都发送一个ACK，而是等一会看看有没有其他包需要发送，捎带着ACK一起发送过去。如果等不到就在超时后单独发送ACK。</p>
-<p>man TCP，发现TCP可以设置TCP_QUICKACK开启快速确认模式，否则默认采用延迟确认机制。</p>
-<p>为了验证猜想，用strace观察wrk为套接字设置了哪些TCP选项,证明确实没有TCP_QUICKACK</p>
-<pre><code>strace -f wrk --latency -c 100 -t 2 --timeout 2 http://IP:Port
-&apos;&apos;&apos;
-setsockopt(52,SOL_TCP,TCP_NODELAY,[1],4)=0
-&apos;&apos;&apos;
-</code></pre><p>但是这只是客户端的行为，按理说Nginx服务器不应该受此影响，再回过去分析网络包，重新观察Wireshark输出。发现第二个分组是等到客户端第一个分组的ACK后才发送的，有点类似延迟确认，不过此时不是ACK包，而是发送数据。</p>
-<p>此时考虑<strong>Nagle算法</strong>，纳格算法，是TCP协议中用于减少小包发送数量的一种优化算法，目的是为了提高实际带宽利用率。算法规定一个TCP连接上，最多只能有一个未确认的未完成分组，在收到这个分组的ACK之前，不发送其他分组。这些小分组会被组合起来，并在收到ACK后，用同一个分组发送出去。</p>
-<p>Nagle算法和Linux默认的延迟确认机制一起使用后，网络延迟会非常明显。 TCP可以设置TCP_NODELAY来禁用掉Nagle算法。</p>
-<pre><code>sudo docker exec nginx cat /etc/nginx/nginx.conf | grep tcp_nodelay
-    tcp_nodelay off;
-</code></pre><p>将其设置为on即可。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>遇到网络延迟增大问题时，可以通过以下工具来定位网络中的潜在问题：</p>
-<ul>
-<li>hping3，wrk确认单次请求和并发请求时的网络延迟是否正常</li>
-<li>traceroute 确认路由是否正确，并查看路由中每一跳网关的延迟</li>
-<li>tcpdump和Wireshark 确认网络包的收发是否正常</li>
-<li>strace观察应用程序对网络套接字的调用情况是否正常</li>
-</ul>
-<h2 id="Lesson-41-42-如何优化NAT性能？"><a href="#Lesson-41-42-如何优化NAT性能？" class="headerlink" title="Lesson 41/42 如何优化NAT性能？"></a>Lesson 41/42 如何优化NAT性能？</h2><h3 id="NAT原理"><a href="#NAT原理" class="headerlink" title="NAT原理"></a>NAT原理</h3><p>NAT，Network Address Tranlation，可以重写IP数据包的源IP或者目的IP，被普遍用来解决公网IP地址短缺的问题。原理是，网络中的多台主机通过共享一个公网IP地址，来访问外网资源。</p>
-<ul>
-<li>静态NAT，内网IP和公网IP一对一永久映射关系</li>
-<li>动态NAT，内网IP从公网IP池中动态选择一个进行映射</li>
-<li>网络地址端口转换NAPT，Network Address and Port Translation，即把内网IP映射到公网IP的不同端口上，让多个内网IP可以共享同一个公网地址</li>
-</ul>
-<p>NAPT是目前最流行的NAT类型，根据转换方式又分为三类：</p>
-<ul>
-<li>源地址转换SNAT，目的地址不变只替换源IP或者源端口</li>
-<li>目的地址转换DNAT，源IP保持不变只替换目的IP或目的端口</li>
-<li>双向地址转换，当接收网络包时执行DNAT，将目的地址转换为内网IP，发送网络包时执行SNAT，把源IP替换为外部IP</li>
-</ul>
-<p>比如，本地服务器IP为192.168.0.2，NAT网关IP为100.100.100，目的服务器baidu.com地址为123.125.115.110</p>
-<ul>
-<li>服务器访问baidu.com时，NAT地址会把源地址从本地服务器IP替换为网关IP，然后才发送给baidu.com</li>
-<li>baidu.com发回响应包时，NAT网关又把目的地址替换为本地服务器IP，然后发送给目的服务器</li>
-</ul>
-<h3 id="iptables与NAT"><a href="#iptables与NAT" class="headerlink" title="iptables与NAT"></a>iptables与NAT</h3><p>Linux内核提供的Netfiler框架，允许对网络数据包进行修改和过滤。 以及iptables、ip6tables、ebtables等工具。</p>
-<p>NAT表中内置了三个链：</p>
-<ul>
-<li>PREROUTING，路由判断前所执行的规则，比如，对接收到的数据包进行DNAT</li>
-<li>POSTROUTING，路由判断后所执行的规则，比如，对发送或转发的数据包进行SNAT或MASQUERADE</li>
-<li>OUTPUT，类似于PREROUTING，但只处理从本机发送出去的包</li>
-</ul>
-<p>SNAT配置需要在NAT表中的POSTROUTING链中配置： </p>
-<ul>
-<li><ol>
-<li>为一个子网统一配置SNAT，并由Linux选择默认的出口IP，即MASQUERAGE      <em>iptables -t nat -A POSTROUTING -s 192.168.0.0/16 -j MASQUERADE</em></li>
-</ol>
-</li>
-<li><ol>
-<li>为具体的IP地址配置SNAT，并制定转换后的源地址<br> <em>iptables -t nat -A POSTROUTING -s 192.168.0.2 -j SNAT –to-source 100.100.100.100</em>    </li>
-</ol>
-</li>
-</ul>
-<p>DNAT配置需要在NAT表中的PREROUTING或OUTPUT链中配置，其中前者更常用<br><em>iptables -t nat -A PREROUTING -d 100.100.100.100 -j DNAT –to-destination 192.168.0.2</em></p>
-<p>在使用iptables配置NAT规则后，Linux需要转发来自其他IP的网络包，要确保开启Linux的IP转发功能</p>
-<pre><code>sysctl -w net.ipv4.ip_forward=1
-</code></pre><h3 id="实验-2"><a href="#实验-2" class="headerlink" title="实验"></a>实验</h3><p>主要使用了SystemTap工具，Linux的一种动态追踪框架，把用户提供的脚本转换为内核模块来执行，用来监测和跟踪内核的行为。</p>
-<p>先运行一个不用NAT的Nginx服务，用ab测试其性能作为基准性能。然后运行使用DNAT的Nginx容器</p>
-<pre><code>sudo docker run --name nginx --priviledged -p 8080:8080 -itd feisky/nginx:nat
-iptables -nL -t nat  #ensure DNAT rules are created
-</code></pre><p>再用ab测试时发现连接超时错误，将超时时间延长后减少总测试次数发现延迟比基准值相差太多。</p>
-<p>因为我们已经知道根源时NAT，因此不需要tcpdump再抓包分析来源。此时用SystemTap工具来测试，先写一个dropwatch.stp脚本</p>
-<pre><code>#! /usr/bin/env stop
-global locations
-
-probe begin {printf &quot;Monitoring for dropped packets\n&quot;}
-probe end {printf &quot;Stopping dropped packet monitor \n&quot;}
-
-probe kernel.trace(&quot;kfree_skb&quot;) { locations[$location] &lt;&lt;&lt; 1 }
-
-probe timer.sec(5)
-{
-  printf(&quot;\n&quot;)
-  foreach ( l in locations-) {
-    printf(&quot;%d packets dropped at %s\n&quot;,@count(locations[l]),sysname(l))
-  }
-  delete locations
-}
----------
-stap --all-modules dropwatch.stp
-</code></pre><p>当probebegin输出后执行ab测试，观察stap命令输出，发现大量丢包发生在nf_hook_slow位置。再用perf report来查看nf_hook_slow的调用位置，主要来自于三个地方。分别是ipv4——conntrack_in，br_nf_pre_routing以及iptable_nat_ipv4_in。即nf_hook_slow主要在执行三个动作：</p>
-<ul>
-<li>接收网络包时，在连接跟踪表中查找连接，并为新连接分配跟踪对象</li>
-<li>Linux网桥中转发包，因为实验中容器网络通过网桥实现</li>
-<li>接收网络包时，执行DNAT将8080端口的包转发给容器</li>
-</ul>
-<p>此时要优化只有从内核着手，DNAT的基础时conntrack，因此主要针对其参数进行优化</p>
-<pre><code>sysctl -a | grep conntrack
-
-net.netfilter.nf_conntrack_count
-net.netfilter.nf_conntrack_max 
-net.netfilter.nf_conntrack_buckets
-net.netfilter.nf_conntrack_tcp_timout_syn_recv
-net.netfilter.nf_conntrack_tcp_timeout_syn_sent
-net.netfilter.nf_conntrack_tcp_timeout_time_wait
-</code></pre><h2 id="Lesson-44-44-套路篇：网络性能优化的几个思路"><a href="#Lesson-44-44-套路篇：网络性能优化的几个思路" class="headerlink" title="Lesson 44/44 套路篇：网络性能优化的几个思路"></a>Lesson 44/44 套路篇：网络性能优化的几个思路</h2><p>网络性能优化首先要获得网络基准测试报告，然后通过相关性能工具，定位出网络性能瓶颈，再进行优化。可以从应用程序、套接字、传输层、网络层以及链路层分别来看</p>
-<h3 id="应用程序"><a href="#应用程序" class="headerlink" title="应用程序"></a>应用程序</h3><p>应用程序通过套接字接口进行网络操作，主要对网络I/O和进程自身的工作模型进行优化。<br>除了之前C10K的多路复用技术之外，应用层也有一些网络协议优化可以考虑：</p>
-<ul>
-<li>长连接代替短连接，显著降低TCP建立连接的成本</li>
-<li>使用内存方式来缓存不常变化的数据，降低网络I/O次数，同时加快应用程序的响应速度</li>
-<li>使用Protocol Buffer等序列化的方式，压缩网络I/O的数据了，可以提高应用程序的吞吐</li>
-<li>使用DNS缓存、预取、HTTPDNS等方式，减少DNS解析的延迟，也可以提升网络IO的整体速度</li>
-</ul>
-<h3 id="套接字"><a href="#套接字" class="headerlink" title="套接字"></a>套接字</h3><p>每个套接字都有一个读写缓冲区，为了提高网络吞吐量，通常需要调整这些缓冲区的大小</p>
-<ul>
-<li>读缓冲区，缓存了远端发来的数据。</li>
-<li><p>写缓冲区，缓存了要发出去的数据。</p>
-<pre><code>net.core.optmem_max
-net.core.rmem_max net.core.wmem_max
-net.ipv4.tcp_rmem net.ipv4.tcp_wmem
-</code></pre></li>
-</ul>
-<h3 id="传输层"><a href="#传输层" class="headerlink" title="传输层"></a>传输层</h3><h4 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h4><ul>
-<li>请求数大的场景下，大量处于TIME_WAIT状态的连接，会占用大量内存和端口资源。这种场景下可以优化与TIME_WAIRT相关的内核选项。<ul>
-<li>增加处于TIME_WAIT状态的连接数量net.ipv4.tcp_max_tw_buckets，并增大连接跟踪表的大小net,netfilter.nf_conntrack_max;</li>
-<li>减少net.ipv4.tcp_fin_timeout,net.netfilter.nf_conntrack_tcp_timeout_time_wait,让系统尽快释放它们占用的资源</li>
-<li>开启端口复用net.ipv4.tcp_tw_reuse，这样被TIME_WAIT状态占用的端口还能用于新建的连接中</li>
-<li>增大本地端口的范围net.ipv4.ip_local_port_range，支持更多的连接，提高整体的并发能力</li>
-<li>增加最大文件描述符的数量 </li>
-</ul>
-</li>
-<li>缓解SYN FLOOD等攻击，可以优化与SYN状态相关的内核选项<ul>
-<li>增大TCP半连接的最大数量，或者开启TCP SYN Cookies来绕开半开连接数量限制</li>
-<li>减少SYN_RECV的重传SYN+ACK次数</li>
-</ul>
-</li>
-<li>在长连接场景中，通常使用Keepalive来检测TCP连接的状态，以便对端连接断开后可以自动回收。系统默认的Keepalive探测间隔和重试次数一般都无法满足应用程序的性能要求。考虑优化与Keepalive相关的内核选项。<ul>
-<li>缩短最后一次数据包到Keepalive的探测包间隔时间</li>
-<li>缩短发送Keepalive探测包的间隔时间</li>
-<li>减少探测失败后一直到通知应用程序前的重试次数</li>
-</ul>
-</li>
-</ul>
-<h4 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h4><ul>
-<li>增大套接字缓冲区大小以及UDP缓冲区范围</li>
-<li>增大本地端口号的范围</li>
-<li>根据MTU大小，调整UDP数据包的大小，减少或避免分片的发生</li>
-</ul>
-<p>###网络层<br>网络层主要对路由、IP分片以及ICMP等进行优化。</p>
-<ul>
-<li>从路由和转发的角度出发<ul>
-<li>在需要转发的服务器中，开启IP转发。 net.ipv4.ip_forward=1</li>
-<li>调整数据包的生存周期TTL net.ipv4.ip_default_ttl</li>
-<li>开启数据包的反向地址校验，防止IP欺骗，减少伪造IP带来的DDoS问题， net.ipv4.conf.eth0.rp_filter=1</li>
-</ul>
-</li>
-<li>从分片的角度出发，调整MTU的大小</li>
-<li>从ICMP的角度出发，为了避免ICMP主机探测，ICMP Flood等问题，限制ICMP的行为<ul>
-<li>禁用ICMP</li>
-<li>禁止广播ICMP</li>
-</ul>
-</li>
-</ul>
-<p>###链路层</p>
-<p>网卡收包后调用的中断处理程序，需要消耗大量的CPU，可以将这些中断处理程序调度到不同的CPU上执行，提高网络吞吐量。</p>
-<ul>
-<li>为网卡硬中断配置CPU亲和性，或者开启irqbalance服务</li>
-<li>开启RPS(Receive Packet Steering)和RFS(Receive Flow Steering)，将应用程序和软中断的处理调度到相同的CPU上。增加CPU缓存命中率，减少网络延迟</li>
-<li>将原来在内核中通过软件处理的功能，卸载到网卡中通过硬件执行<ul>
-<li>TSO (TCP Segmentation Offload), UFO (UDP Fragmentation Offload) </li>
-<li>GSO (Generic Segmentation Offload)</li>
-<li>LRO (Large Receive Offload)</li>
-<li>GRO (Generic Receive Offload)</li>
-<li>RSS (Receive Side Scaling)</li>
-<li>VXLAN卸载</li>
-</ul>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/06/27/Linux性能优化实战第五周--网络性能篇/" itemprop="url">
-                  《Linux 性能优化实战》第五周--网络性能篇
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2020-06-27T15:26:55+08:00" content="2020-06-27">
-              2020-06-27
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="个人感悟"><a href="#个人感悟" class="headerlink" title="个人感悟"></a>个人感悟</h2><p>本周的学习首先了解了Linux网络的工作原理，<strong>OSI七层网络模型</strong>，<strong>TCP/IP模型</strong>以及<strong>网络包的收发流程</strong>。应用程序通过Socket接口发送数据包时先要在网络协议栈从上到下逐层处理最终到网卡上发送，接收也要经过网络协议栈从下到上逐层解析，最后送到应用程序。以及网络传输相关性能指标和响应的查看工具。</p>
-<p>并且学习了经典的C10K问题，以及延伸的C1000K和C10M问题。这个印象中研究生毕业面试B家的时候被问到过。C10K问题的根源一方面在于系统有限的资源，另一方面，同步阻塞I/O模型以及轮询的套接字接口限制了网络事件的处理效率。目前高性能网络方法都基于epoll。从10K到100K，增加物理资源就能解决，但是到1000K时就需要多方面的优化工作，从硬件中断处理和网络功能卸载、到网络协议栈的文件描述符数量、连接状态跟踪、缓存队列等内核的优化，再到应用程序的工作模型优化，都需要考虑。</p>
-<p>再进一步实现10M，就需要用XDP的方式，在内核协议栈之前处理网络包；或者用DPDK直接跳过网络协议栈在用户空间通过轮询的方式直接处理网络包。其中DPDK时目前最主流的高性能网络解决方案，但是需要能支持DPDK的网卡配合使用。</p>
-<h3 id="新工具GET"><a href="#新工具GET" class="headerlink" title="新工具GET"></a>新工具GET</h3><pre><code>查看网络配置
-ifconfig/ip
-套接字信息/协议栈统计信息
-netstat/ss
-网络吞吐量和PPS
-sar
-带宽
-ethtool
-连通性和延时
-ping
-应用层性能
-wrk/jmeter
-传输层性能
-iperf
-转发性能
-pktgen
-</code></pre><h3 id="捞评论GET"><a href="#捞评论GET" class="headerlink" title="捞评论GET"></a>捞评论GET</h3><p>1、客户端的网络环境复杂，出现网络抖动如何分析解决？</p>
-<p>在第一个网络出入口记录每次收发消息的内容和具体时间戳(精确到ms)，遇到玩家反馈时根据id及发生的大致时间在日志中查找响应记录，看是服务器响应慢还是客户端到服务器的线路慢。可以考虑更多的接入点、专线、CDN等优化公网的链路延迟问题。</p>
-<hr>
-<p>接下来是本周读书笔记</p>
-<hr>
-<h2 id="Lesson-33-34-关于网络，你必须知道这些"><a href="#Lesson-33-34-关于网络，你必须知道这些" class="headerlink" title="Lesson 33/34 关于网络，你必须知道这些"></a>Lesson 33/34 关于网络，你必须知道这些</h2><h3 id="网络模型"><a href="#网络模型" class="headerlink" title="网络模型"></a>网络模型</h3><p>开放式系统互联通信参考模型（Open System Interconnection Reference Model），简称<strong>OSI网络模型</strong></p>
-<p>为了解决网络互联中异构设备的兼容性，并解耦复杂的网络包处理流程，OSI模型把网络互联的框架分为应用层、表示层、会话层、传输层、网络层、数据链路层以及物理层等七层。</p>
-<ul>
-<li>应用层，负责为应用程序提供统一的接口</li>
-<li>表示层，负责把数据转换成兼容接收系统的格式</li>
-<li>会话层，负责维护计算机之间的通信连接</li>
-<li>传输层，负责为数据加上传输表头，形成数据包</li>
-<li>网络层，负责数据的路由和转发</li>
-<li>数据链路层，负责MAC寻址，错误侦测和改错</li>
-<li>物理层，负责在物理网络中传输数据帧</li>
-</ul>
-<p>在Linux中我们实际上使用的是一个更实用的四层模型，即TCP/IP网络模型。</p>
-<p>TCP/IP模型把网络互联的框架分为应用层、传输层、网络层、网络接口层等四层。</p>
-<ul>
-<li>应用层，负责向用户提供一组应用程序，如HTTP，FTP，DNS等</li>
-<li>传输层，负责端到端的通信，如TCP，UDP</li>
-<li>网络层，负责网络包的封装、寻址和路由，如IP，ICMP</li>
-<li>网络接口层，负责网络包在物理网络中的传输，比如MAC寻址、错误侦测以及通过网卡传输网络帧等</li>
-</ul>
-<h3 id="Linux网络栈"><a href="#Linux网络栈" class="headerlink" title="Linux网络栈"></a>Linux网络栈</h3><ul>
-<li>传输层在应用数据前面增加了TCP头</li>
-<li>网络层在TCP数据包前增加了IP头</li>
-<li>网络接口层在IP数据包前后分别增加了帧头和帧尾</li>
-</ul>
-<p>网络接口配置的最大传输单元MTU规定了最大的IP包大小，以太网中MTU默认时1500</p>
-<h3 id="Linux网络收发流程"><a href="#Linux网络收发流程" class="headerlink" title="Linux网络收发流程"></a>Linux网络收发流程</h3><h4 id="网络包的接收流程"><a href="#网络包的接收流程" class="headerlink" title="网络包的接收流程"></a>网络包的接收流程</h4><ul>
-<li>当一个网络帧到达网卡后，网卡通过DMA方式，把网络包放到收包队列中；然后通过硬中断告诉中断处理程序已经接收到了网络包。</li>
-<li>网卡中断处理程序为网络帧分配内核数据结构sk_buff，并将其拷贝到sk_buff缓冲区中；再通过软中断通知内核接收到了新的网络帧。</li>
-<li>内核协议栈从缓冲区中取出网络帧，并通过网络协议，从上到下处理这个网络帧<ul>
-<li>链路层检查报文合法性，找出上层协议的类型（IPv4 or IPv6），再去掉帧头和帧尾，交给网络层；</li>
-<li>网络层取出IP头，判断网络包的下一步走向，比如是交给上层处理还是转发。当网络层确认这个包发送本机后，取出上层协议的类型（TCP or UDP），去掉IP头再交给传输层处理。</li>
-<li>传输层取出TCP/UDP头之后根据&lt;源IP，源端口，目的IP，目的端口&gt;四元组作为标识，找出对应的Socket，并把数据拷贝到Socket接收缓存中</li>
-</ul>
-</li>
-<li>应用程序使用Socket接口读取到新收到的数据</li>
-</ul>
-<h4 id="网络包的发送流程"><a href="#网络包的发送流程" class="headerlink" title="网络包的发送流程"></a>网络包的发送流程</h4><ul>
-<li>应用程序通过调用Socket API发送网络包</li>
-<li>由于这是系统调用，会陷入内核态的套接字层中。套接字层把数据包放到Socket发送缓冲区中</li>
-<li>网络协议栈从Socket发送缓冲区中取出数据包，再按照TCP/IP栈，从上到下逐层处理</li>
-<li>分片后的网络包再发送到网络接口层，进行物理地址寻址，找到下一跳的MAC地址，然后添加帧头和帧尾，放到发包队列中。这一切完成后会有软中断通知驱动程序</li>
-<li>驱动程序通过DMA从发包队列中读出网络帧，并通过物理网卡发送出去</li>
-</ul>
-<h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><ul>
-<li>带宽， 表示链路的最大传输速率，单位b/s</li>
-<li>吞吐量，表示单位时间内成功传输的数据量，单位b/s或者B/s 吞吐量/带宽=网络使用率</li>
-<li>延时，表示从网络请求发出后，一直到收到远端响应，所需要的时间延迟。<ul>
-<li>建立连接需要的时间， TCP握手延时</li>
-<li>一个数据包往返所需的时间，RTT</li>
-</ul>
-</li>
-<li>PPS，Packet Per Second，表示以网络包为单位的传输速率。通常用来评估网络的转发能力</li>
-</ul>
-<p>此外，<strong>网络的可用性、并发连接数、丢包率、重传率</strong>也是常用的性能指标。</p>
-<h3 id="网络配置"><a href="#网络配置" class="headerlink" title="网络配置"></a>网络配置</h3><pre><code>ifconfig eth0
-ip -s addr show dev eth0
-</code></pre><ul>
-<li>网络接口的状态标志， ifconfig输出中的RUNNING，ip输出中的LOWER_UP，都表示物理网络是联通的</li>
-<li>MTU大小</li>
-<li>网络接口的IP地址、子网、以及MAC地址</li>
-<li>网络收发的字节数、包数、错误数以及丢包情况，特别是TX和RX部分的errors、dropped、overruns、carrier以及collisions等指标不为0时，通常表示出现了网络I/O问题<ul>
-<li><strong>errors</strong>表示发生错误的数据包数，比如校验错误、帧同步错误等</li>
-<li><strong>dropped</strong>表示丢弃的数据包数，即数据包已经收到了Ring Buffer，但是因为内存不足等原因丢包</li>
-<li><strong>overruns</strong>表示超限数据包数，即网络I/O速度过快，导致RingBuffer中的数据包来不及处理导致的丢包</li>
-<li><strong>carrier</strong>表示发生carrier错误的数据包数，比如双工模式不匹配、物理电缆出问题</li>
-<li><strong>collisions</strong>表示碰撞数据包数</li>
-</ul>
-</li>
-</ul>
-<h3 id="套接字信息"><a href="#套接字信息" class="headerlink" title="套接字信息"></a>套接字信息</h3><pre><code>netstat -nlp | head -n 3
-ss -ltnp | head -n 3
-</code></pre><p>netstat和ss用来查看套接字、网络栈、网络接口以及路由表的信息。其中Recv-Q和Send-Q信息需要特别关注，如果不是0的话说明有网络包的堆积发生。</p>
-<p>当Socket处于Established时，Recv-Q表示套接字缓冲中还没有被应用取走的字节数，Send-Q表示还没有被远端主机确认的字节数。<br>当Socket处于Listening时，Recv-Q表示全连接队列的长度，Send-Q表示全连接队列的最大长度。</p>
-<h3 id="协议栈统计信息"><a href="#协议栈统计信息" class="headerlink" title="协议栈统计信息"></a>协议栈统计信息</h3><pre><code>netstat -s 
-ss -s
-</code></pre><h3 id="吞吐量和PPS"><a href="#吞吐量和PPS" class="headerlink" title="吞吐量和PPS"></a>吞吐量和PPS</h3><pre><code>sar -n DEV 1 
-</code></pre><p>带宽可以用ethtool来查询</p>
-<pre><code>ethtool eth0 | grep Speed
-</code></pre><h3 id="连通性和延时"><a href="#连通性和延时" class="headerlink" title="连通性和延时"></a>连通性和延时</h3><pre><code>ping -c3 XXX.XXX.XXX.XXX
-</code></pre><h2 id="Lesson-35-基础篇：C10K和C1000K回顾"><a href="#Lesson-35-基础篇：C10K和C1000K回顾" class="headerlink" title="Lesson 35 基础篇：C10K和C1000K回顾"></a>Lesson 35 基础篇：C10K和C1000K回顾</h2><p>C10K问题最早由Dan Kegel在1999年提出，那是服务器还是32位系统，运行Linux2.2版本，只配置的很少的内存(2G)和千兆网卡。怎样在这样的系统中支持并发1万的请求？</p>
-<p>从资源上说，2G内存和千兆网卡服务器，同时处理1w请求，只要每个请求处理占用不超200KB内存和100Kbit的网络带宽就可以。所以物理资源充足，接下来时软件的问题。</p>
-<p>如果每个请求分配一个进程/线程，1w个请求会涉及1w个进程/线程的调度、上下文切换乃至它们占用的内存都会成为瓶颈。</p>
-<ul>
-<li>怎样在一个线程内处理多个请求？非阻塞I/O或者异步I/O？</li>
-<li>怎么更节省资源地处理用户请求？用最少的线程来服务这些请求？</li>
-</ul>
-<h3 id="I-O模型优化"><a href="#I-O模型优化" class="headerlink" title="I/O模型优化"></a>I/O模型优化</h3><p>I/O事件的通知方式：</p>
-<ul>
-<li><strong>水平触发</strong>：只要文件描述符可以非阻塞的执行I/O，就会触发通知 </li>
-<li><strong>边缘出发</strong>：只有在文件描述符发生改变时(I/O请求到达时)，才发送一次通知。</li>
-</ul>
-<p>I/O多路复用的方法：</p>
-<ul>
-<li><strong>使用非阻塞I/O和水平触发通知，比如使用select和poll</strong><ul>
-<li>select和 poll从文件描述符列表中，找出哪些可以执行IO，然后进行真正的网络I/O读写。由于I/O是非阻塞的，一个线程中就可以同时监控一批套接字的文件描述符，达到了单线程处理多请求的目的。 </li>
-<li>优点：对程序友好，API简单。</li>
-<li>缺点：需要对文件描述符列表轮询，请求多时较为耗时，且select和poll还有一些限制。以及应用程序每次调用select和poll时还需要把文件描述符的集合从用户空间传入内核空间，由内核修改后再传回用户空间。增加了处理成本。</li>
-</ul>
-</li>
-<li><strong>使用非阻塞I/O和边缘触发通知，如epoll</strong><ul>
-<li>epoll使用红黑树在内核中管理文件描述符的集合，使用事件驱动的机制，只关注有I/O事件发生的文件描述符，不需要轮询整个集合</li>
-<li>epoll在Linux2.6之后提供，由于边缘触发只在文件描述符可读或可写事件发生时才通知，应用程序需要尽可能多地执行I/O并要处理更多的异常事件</li>
-</ul>
-</li>
-<li><strong>使用异步I/O</strong><ul>
-<li>异步I/O也是在Linux2.6后提供，和直观逻辑不太一样，使用时要小心设计，难度较高</li>
-</ul>
-</li>
-</ul>
-<h3 id="工作模型优化"><a href="#工作模型优化" class="headerlink" title="工作模型优化"></a>工作模型优化</h3><ul>
-<li>主进程+多个worker子进程<ul>
-<li>主进程执行bind()+listen()后创建多个子进程</li>
-<li>每个子进程中都通过accept()和epoll_wait（）来处理相同的套接字</li>
-<li>Nginx就是采取这种模式，主进程用来初始化套接字并管理子进程的生命周期，worker进程用来负责实际的请求处理</li>
-<li>accept和epoll_wait调用存在一个惊群问题，当网络I/O事件发生时多个进程被同时唤醒，但实际上只有一个进程来响应事件，其他被唤醒的进程都会重新休眠。<ul>
-<li>accept惊群问题在Linux2.6中解决了</li>
-<li>epoll_wait到Linux4.5才通过EPOLLEXCLUSIVE解决</li>
-<li>nginx通过在worker进程中增加一个全局锁来解决，worker进程首先要竞争到锁，然后才加入到epoll中，确保只有一个worker子进程被唤醒</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>监听相同端口的多进程模型<ul>
-<li>所有进程都监听相同的接口，并且开启SO_REUSEPORT选项，由内核将请求负载均衡到这些监听进程中</li>
-<li>不会存在惊群问题，Nginx1.9.1中支持该模式，SO_REUSEPORT选项在Linux3.9以上版本才有</li>
-</ul>
-</li>
-</ul>
-<h3 id="C1000K"><a href="#C1000K" class="headerlink" title="C1000K"></a>C1000K</h3><p>基于I/O多路复用和请求处理的优化，C10K问题很容易解决，那么C1000K呢？</p>
-<p>100万个请求需要大量的系统资源</p>
-<ul>
-<li>假设一个请求16KB，需要15GB内存</li>
-<li>带宽上来看，假设只有20%的活跃连接，即使每个连接只需要1KB/s的吞吐量，总共也需要1.6Gb/s的吞吐量。因此还需要配置万兆网卡，或者基于多网卡bonding承载更大的吞吐量。</li>
-</ul>
-<p>C1000K的解决方法，本质上还是构建在epoll的非阻塞I/O模型上，只不过除了I/O模型外还需要从应用程序到Linux内核，再到CPU、内存和网络各个层次的深度优化，特别是需要借助硬件来卸载哪些通过软件处理的大量功能。</p>
-<h3 id="C10M"><a href="#C10M" class="headerlink" title="C10M"></a>C10M</h3><p>同时处理1000w条请求呢？在C1000K时各种软件硬件的优化可能已经做到极致了，此时无论怎么优化应用程序和内核中各种网络参数，想实现1000万请求的并发都是及其困难的。</p>
-<p>究其根本，还是Linux内核协议栈做了太多太多繁重的工作，从网卡中断带来的硬中断处理程序开始到软中断中的各层网络协议处理，最后再到应用程序，这个路径太长导致网络包的处理优化到一定程度后就无法再进一步。</p>
-<p>要解决这个问题，就要跳过内核协议栈的冗长路径，把网络包直接发送到要处理的应用程序那里。</p>
-<ul>
-<li>DPDK，用户态网络的标准，跳过内核协议栈直接由用户进程通过轮询方式处理网络接收。 还通过大页、CPU绑定、内存对齐、流水线并发等多种机制，优化网络包的处理效率。</li>
-<li>XDP，Linux内核提供的一种高性能网络数据路径。它允许网络包在进入内核协议栈之前就进行处理，也可以带来更高的性能。XDP底层也是基于Linux内核的eBPF机制实现的。</li>
-</ul>
-<h2 id="Lesson-36-套路篇：怎么评估系统的网络性能？"><a href="#Lesson-36-套路篇：怎么评估系统的网络性能？" class="headerlink" title="Lesson 36 套路篇：怎么评估系统的网络性能？"></a>Lesson 36 套路篇：怎么评估系统的网络性能？</h2><h3 id="各协议层的性能测试"><a href="#各协议层的性能测试" class="headerlink" title="各协议层的性能测试"></a>各协议层的性能测试</h3><h4 id="转发性能"><a href="#转发性能" class="headerlink" title="转发性能"></a>转发性能</h4><p>网络接口和网络层，主要负责网络包的封装、寻址、路由以及发送和接收。在这两个网络协议中，每秒可处理的网络包数PPS就是最重要的性能指标。特别是64B小包的处理能力，值得我们特别关注。如何来测试网络包的处理能力呢？</p>
-<p>Linux内核自带的高性能网络测试工具pktgen,但是并不能直接找到pktgen命令，需要加载pktgen内核模块后，再通过/proc文件系统来交互</p>
-<pre><code>modprobe pktgen
-ps -ef | grep pktgen | grep -v grep
-ls /proc/net/pktgen/
-</code></pre><h3 id="TCP-UDP性能"><a href="#TCP-UDP性能" class="headerlink" title="TCP/UDP性能"></a>TCP/UDP性能</h3><pre><code>iperf
-netperf
-</code></pre><h3 id="HTTP性能"><a href="#HTTP性能" class="headerlink" title="HTTP性能"></a>HTTP性能</h3><p>在应用层，有的应用程序会直接基于TCP或UDP构建服务，也有大量的应用基于应用层的协议来构建服务。HTTP就是一个最常用的应用层协议，要测试HTTP性能可以通过ab、webbench等。</p>
-<pre><code>ab
-webbench
-</code></pre><h3 id="应用负载性能"><a href="#应用负载性能" class="headerlink" title="应用负载性能"></a>应用负载性能</h3><pre><code>wrk
-TCPCopy
-Jmeter
-</code></pre><hr>
-<h2 id="Lesson-36-套路篇：怎么评估系统的网络性能"><a href="#Lesson-36-套路篇：怎么评估系统的网络性能" class="headerlink" title="Lesson 36 套路篇：怎么评估系统的网络性能"></a>Lesson 36 套路篇：怎么评估系统的网络性能</h2><p>上节课学习了C10M的解决方案，不过在大多数场景下，我们并不需要单机并发1000万请求。通过调整系统架构，把请求分发到多台服务器中并行处理，才是更简单、扩展性更好的方案。</p>
-<p>这就需要我们评估系统的网络性能，以便考察系统的处理能力，并为容量规划提供基准数据。</p>
-<h3 id="性能指标回顾"><a href="#性能指标回顾" class="headerlink" title="性能指标回顾"></a>性能指标回顾</h3><p><strong>带宽、吞吐量、延时、PPS</strong>，这四个性能指标中带宽跟物理网卡配置直接关联；Linux服务器的网络吞吐量一般会比带宽小，交换机等专门的网络设备吞吐量一般接近带宽；PPS以网络包为单位的网络传输速率，通常用在需要大量转发的场景中；对于TCP或者Web服务来说通常会用并发连接数和每秒请求数QPS等指标。</p>
-<h3 id="网络基准测试"><a href="#网络基准测试" class="headerlink" title="网络基准测试"></a>网络基准测试</h3><p>在测试之前需要弄清楚需要测试的应用程序基于协议栈的哪一层？</p>
-<ul>
-<li>基于HTTP和HTTPS的Web应用程序，属于应用层，需要测试HTTP/HTTPS的性能；</li>
-<li>大多数游戏服务器，为了支持更大的在线人数。通常会基于TCP/UDP与客户端交互，需要测试TCP/UDP性能</li>
-<li>还有一些场景将Linux作为一个软交换机或者路由器来使用，此时要更关注网络包的处理能力。即PPS，关注网络层的转发能力。</li>
-</ul>
-<h3 id="各协议层性能测试"><a href="#各协议层性能测试" class="headerlink" title="各协议层性能测试"></a>各协议层性能测试</h3><h4 id="转发性能-1"><a href="#转发性能-1" class="headerlink" title="转发性能"></a>转发性能</h4><p>网络接口层和网络层，主要负责网络包的封装、寻址、路由以及发送和接收。这里最重要的性能指标就是PPS每秒可处理的网络包数。</p>
-<p>可以用hping3或者pktgen来测试网络包处理能力。其中pktgen作为一个Linux内核自带的高性能网络测试工具，需要加载pktgen内核模块后再通过/proc文件系统交互。</p>
-<pre><code>modprobe pktgen
-ls /proc/net/pktgen
-</code></pre><p>在测试时，需要先给每个内核线程kpktgend_X以及测试网卡，配置pktgen选项。再通过pgctrl启动测试。</p>
-<p>假设发包及其使用网卡eth0，目标机器的IP为192.168.0.30， MAC地址为11:11:11:11:11:11</p>
-<pre><code>#define function for test options
-function pgset() {
-    local result
-    echo $1 &gt; $PGDEV
-    result=`cat $PGDEV | fgrep &quot;Result: OK:&quot;`
-
-    if [ &quot;$result&quot; = &quot;&quot; ]; then 
-        cat $PGDEV | fgrep Result:
-    fi
-} 
-
-#bind eth0 for thread 0
-PGDEV=/proc/net/pktgen/eht0
-pgset &quot;count 1000000&quot; #total packages
-pgset &quot;delay 5000&quot;
-pgset &quot;clone_skb 0&quot;
-pgset &quot;pkt_size 64&quot;
-pgset &quot;dst 192.168.0.30&quot;
-pgset &quot;dst_mac 11.11.11.11.11.11&quot;
-
-#Start test
-PGDEV=/proc/net/pktgen/pgctrl
-pgset &quot;start&quot;
-
-#Check result
-cat /proc/net/pktgen/eth0
-</code></pre><h4 id="TCP-UDP性能-1"><a href="#TCP-UDP性能-1" class="headerlink" title="TCP/UDP性能"></a>TCP/UDP性能</h4><pre><code>iperf
-netperf
-</code></pre><h4 id="HTTP性能-1"><a href="#HTTP性能-1" class="headerlink" title="HTTP性能"></a>HTTP性能</h4><pre><code>ab -c 1000 -n 10000 http://www.baidu.com
-webbench
-</code></pre><h4 id="应用负载性能-1"><a href="#应用负载性能-1" class="headerlink" title="应用负载性能"></a>应用负载性能</h4><pre><code>wrk TCPCopy Jmeter LoadRunner
-工作中用过Jmeter进行测试
-</code></pre>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2539,7 +2100,7 @@ webbench
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">45</span>
+              <span class="site-state-item-count">47</span>
               <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
@@ -2549,7 +2110,7 @@ webbench
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">Tags</span>
               </a>
             </div>
