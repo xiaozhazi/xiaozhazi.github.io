@@ -94,7 +94,7 @@ ID要尽可能短来节省内存，同时使得索引效率更高。基本上64�
 <meta property="og:description" content="本文主要收录关于系统设计相关的问题学习笔记。
 设计分布式ID生成器现实中很多业务都有生成唯一ID的需求，如用户、微博、订单等，这些ID往往会作为数据库的主键要保证全局唯一。数据库会在该字段上做聚集索引，即此字段会影响各条数据在物理存储上的顺序。
 ID要尽可能短来节省内存，同时使得索引效率更高。基本上64位能满足绝大多数场景。但通常并不需要这么多，可以根据业务需求预估ID最大值，然后选取合适的bit">
-<meta property="og:updated_time" content="2021-06-15T02:19:05.588Z">
+<meta property="og:updated_time" content="2021-06-16T00:41:04.830Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="系统设计相关">
 <meta name="twitter:description" content="本文主要收录关于系统设计相关的问题学习笔记。
@@ -320,8 +320,40 @@ ID要尽可能短来节省内存，同时使得索引效率更高。基本上64�
 <p>为了避免多个消费者竞争，采用leader/follower模式，当一个线程时leader时它只需要一个时间差，其它follower无限等待。多个消费线程用take方法取任务，内部先加锁然后每个线程去peek头结点，如果leader不为空说明已经有线程在取，当前消费者无限等待。如果leader为空则设置leader为当前消费者并让其等待指定的时间。</p>
 <p>需要注意的是take方法中会释放first=null，为了避免内存泄漏。如线程A获取first然后设置leader为A并让A等待一段时间；线程B同时进来获取first进入阻塞无限期等待，此时B持有first引用。A等待一定时间被唤醒后获得对象成功，出队后该对象应该被GC。但是此时B仍然持有此对象GC链路可达所以无法回收。极端情况下B无限休眠那么本该回收的对象就不能被GC销毁从而导致内存泄漏。</p>
 <p>JDK中的ScheduledThreadPoolExecutor类似</p>
-<h3 id="时间轮-HashedWheelTimer"><a href="#时间轮-HashedWheelTimer" class="headerlink" title="时间轮 HashedWheelTimer"></a>时间轮 HashedWheelTimer</h3><p>循环队列，每个任务都需要一个字段记录圈数，每转一圈就-1，减到0就立刻取出。 Netty中已经有实现，性能高，插入和删除都是O（1），Linux内核定时器就是采用这种方案。</p>
+<h3 id="时间轮-HashedWheelTimer"><a href="#时间轮-HashedWheelTimer" class="headerlink" title="时间轮 HashedWheelTimer"></a>时间轮 HashedWheelTimer</h3><p>循环队列，每时间轮精度走一格。每个任务都需要一个字段记录圈数，每转一圈就-1，减到0就立刻取出。 Netty中已经有实现，性能高，插入和删除都是O（1），Linux内核定时器就是采用这种方案。</p>
 <p>分布式定时任务调度器可以采用Redis的Zset和RabbitMQ等</p>
+<h2 id="设计一个线程安全的hashmap"><a href="#设计一个线程安全的hashmap" class="headerlink" title="设计一个线程安全的hashmap"></a>设计一个线程安全的hashmap</h2><p>hashmap有两种解决冲突的方案：开放地址法和链表法。</p>
+<ul>
+<li>开放地址法，所有元素都在一个一维数组中，遇到冲突后按照一定规则向后探测。<ul>
+<li>线性探测法：冲突后向后依次遍历，优点是计算速度快对CPU缓存友好，缺点是探测过程中会产生clustering现象，扎堆导致效率低下；</li>
+<li>二次探测法：通过一个i的二次函数计算，性能介于线性和双哈希之间；</li>
+<li>双哈希法：偏移量di由另外一个哈希函数计算</li>
+</ul>
+</li>
+<li>链表法，开放一个定长数组，每个格子指向一个桶，对每个元素计算出哈希并取模，找到对应的桶并插入该桶。发生冲突的元素会处于同一个桶中。</li>
+</ul>
+<p>JDK7和JDK8中的java.util.HashMap采用了链表法，将其改为线程安全有几下几个方案：</p>
+<ul>
+<li>所有public方法都加上synchronized，相当于一把全局锁，所有操作都要先获得锁。HashTable就是这样做的，性能低；</li>
+<li>由于每个桶逻辑上都是独立的，将每个桶加一把锁，如果两个线程访问不同的桶就不需要争抢一把锁。这个方案并发性比前者好，不过锁的个数太多也会有很大开销；</li>
+<li>锁分离技术，假设有1w个桶第二种方法就不适合，新建1w个ReetrantLock实例开销很大。可以将所有的桶均匀的划分为16个部分，每一部分成为一个segment，每个段上有一把锁。JDK7中的concurrentHashMap就是这个思路。</li>
+<li>JDK8中concurrentHashMap的实现又有很大变化，在锁分离的基础上，大量利用了CAS指令。并在底层存储有一个小优化，在链表长度太长&gt;8时，链表就转换为红黑树。增删改查效率提升，该hashmap的实现代码从jdk7的1500行增长到6000+行</li>
+</ul>
+<h2 id="最近一个小时内访问频率最高的10个IP"><a href="#最近一个小时内访问频率最高的10个IP" class="headerlink" title="最近一个小时内访问频率最高的10个IP"></a>最近一个小时内访问频率最高的10个IP</h2><ul>
+<li>实时输出</li>
+<li>当前小时向前1小时</li>
+<li>QPS可能会达到10w/s</li>
+</ul>
+<p>类似TopK，但是不需要Lossy Count或者Count-Min Sketch之类的算法。</p>
+<p>QPS 10w/s，一小时大概有2^28.4个请求，可以在内存中建立3600个HashMap<int,int>,放在一个数组中，每秒对应一个hashMap。IP为key出现的次数为Value，这样一小时最多有2^29个KV对，每个KV对占8字节，总内存大概时2^32字节，即4GB，单机可以储存。</int,int></p>
+<p>同时建立一个大小为10的小根堆，用于存放当前出现次数最大的IP，堆顶是10个IP里频率最小的。每次新来一个请求将该秒中hashMap里对应的IP计数器增加1，并查询IP是否在堆里存在：</p>
+<ul>
+<li>不存在则把该IP在3600个HashMap的计数器加起来，与堆顶出现次数进行比较。大于则替换</li>
+<li>如果已经存在，把堆内该IP的计数器+1，并相应调整</li>
+</ul>
+<p>此外需要一个后台常驻线程，每过1s就把最旧的那个HashMap销毁，并为当前1s新建一个HashMap，以此来维持一个一小时窗口</p>
+<p>每次查询top 10 IP就把堆内元素返回即可。</p>
+<p>为什么不用IP+时间作为key，单个HashMap存储？ 答：这样无法淘汰1小时前的数据，只能全量扫描删除；另外key字符串内存占用远大于int，导致单机无法满足。</p>
 <h2 id="设计模式在外卖业务的应用"><a href="#设计模式在外卖业务的应用" class="headerlink" title="设计模式在外卖业务的应用"></a>设计模式在外卖业务的应用</h2><p><a href="https://tech.meituan.com/2020/03/19/design-pattern-practice-in-marketing.html" target="_blank" rel="external">设计模式在外面业务中的实践</a></p>
 <ul>
 <li><p>面向对象设计模式七大基本原则</p>
@@ -812,7 +844,7 @@ public class DefaultRuleEngine{
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计分布式ID生成器"><span class="nav-number">1.</span> <span class="nav-text">设计分布式ID生成器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计短网址服务"><span class="nav-number">2.</span> <span class="nav-text">设计短网址服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定时任务调度器"><span class="nav-number">3.</span> <span class="nav-text">定时任务调度器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#priorityBlockingQueue-Polling"><span class="nav-number">3.1.</span> <span class="nav-text">priorityBlockingQueue+Polling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PriorityBlockingQueue-时间差"><span class="nav-number">3.2.</span> <span class="nav-text">PriorityBlockingQueue+时间差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DelayQueue"><span class="nav-number">3.3.</span> <span class="nav-text">DelayQueue</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#时间轮-HashedWheelTimer"><span class="nav-number">3.4.</span> <span class="nav-text">时间轮 HashedWheelTimer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计模式在外卖业务的应用"><span class="nav-number">4.</span> <span class="nav-text">设计模式在外卖业务的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖规则和设计模式实践"><span class="nav-number">4.1.</span> <span class="nav-text">返奖规则和设计模式实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖流程和设计模式实践"><span class="nav-number">4.2.</span> <span class="nav-text">返奖流程和设计模式实践</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#投放系统中的设计模式"><span class="nav-number">5.</span> <span class="nav-text">投放系统中的设计模式</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计分布式ID生成器"><span class="nav-number">1.</span> <span class="nav-text">设计分布式ID生成器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计短网址服务"><span class="nav-number">2.</span> <span class="nav-text">设计短网址服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定时任务调度器"><span class="nav-number">3.</span> <span class="nav-text">定时任务调度器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#priorityBlockingQueue-Polling"><span class="nav-number">3.1.</span> <span class="nav-text">priorityBlockingQueue+Polling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PriorityBlockingQueue-时间差"><span class="nav-number">3.2.</span> <span class="nav-text">PriorityBlockingQueue+时间差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DelayQueue"><span class="nav-number">3.3.</span> <span class="nav-text">DelayQueue</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#时间轮-HashedWheelTimer"><span class="nav-number">3.4.</span> <span class="nav-text">时间轮 HashedWheelTimer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计一个线程安全的hashmap"><span class="nav-number">4.</span> <span class="nav-text">设计一个线程安全的hashmap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最近一个小时内访问频率最高的10个IP"><span class="nav-number">5.</span> <span class="nav-text">最近一个小时内访问频率最高的10个IP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计模式在外卖业务的应用"><span class="nav-number">6.</span> <span class="nav-text">设计模式在外卖业务的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖规则和设计模式实践"><span class="nav-number">6.1.</span> <span class="nav-text">返奖规则和设计模式实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖流程和设计模式实践"><span class="nav-number">6.2.</span> <span class="nav-text">返奖流程和设计模式实践</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#投放系统中的设计模式"><span class="nav-number">7.</span> <span class="nav-text">投放系统中的设计模式</span></a></li></ol></div>
             
           </div>
         </section>
