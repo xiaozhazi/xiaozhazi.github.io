@@ -94,7 +94,7 @@ ID要尽可能短来节省内存，同时使得索引效率更高。基本上64�
 <meta property="og:description" content="本文主要收录关于系统设计相关的问题学习笔记。
 设计分布式ID生成器现实中很多业务都有生成唯一ID的需求，如用户、微博、订单等，这些ID往往会作为数据库的主键要保证全局唯一。数据库会在该字段上做聚集索引，即此字段会影响各条数据在物理存储上的顺序。
 ID要尽可能短来节省内存，同时使得索引效率更高。基本上64位能满足绝大多数场景。但通常并不需要这么多，可以根据业务需求预估ID最大值，然后选取合适的bit">
-<meta property="og:updated_time" content="2021-06-16T00:41:04.830Z">
+<meta property="og:updated_time" content="2021-07-07T14:35:49.451Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="系统设计相关">
 <meta name="twitter:description" content="本文主要收录关于系统设计相关的问题学习笔记。
@@ -180,7 +180,7 @@ ID要尽可能短来节省内存，同时使得索引效率更高。基本上64�
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Startseite
+            Home
           </a>
         </li>
       
@@ -190,7 +190,7 @@ ID要尽可能短来节省内存，同时使得索引效率更高。基本上64�
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archiv
+            Archives
           </a>
         </li>
       
@@ -253,7 +253,7 @@ ID要尽可能短来节省内存，同时使得索引效率更高。基本上64�
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <span class="post-meta-item-text">Posted on</span>
             <time itemprop="dateCreated" datetime="2021-05-20T22:00:00+08:00" content="2021-05-20">
               2021-05-20
             </time>
@@ -354,6 +354,84 @@ ID要尽可能短来节省内存，同时使得索引效率更高。基本上64�
 <p>此外需要一个后台常驻线程，每过1s就把最旧的那个HashMap销毁，并为当前1s新建一个HashMap，以此来维持一个一小时窗口</p>
 <p>每次查询top 10 IP就把堆内元素返回即可。</p>
 <p>为什么不用IP+时间作为key，单个HashMap存储？ 答：这样无法淘汰1小时前的数据，只能全量扫描删除；另外key字符串内存占用远大于int，导致单机无法满足。</p>
+<h2 id="KV存储引擎"><a href="#KV存储引擎" class="headerlink" title="KV存储引擎"></a>KV存储引擎</h2><p><em>LevelDB整体结构</em></p>
+<p><em>内存随机读写甚至比硬盘的顺序读要慢，因此要尽量避免随机读写。</em> LevelDB采用一种SSTable的数据结构来实现，SSTable是一组按照key排序好的KV对，key和value都是字节数组。SSTable既可以存储在内存，也可以在硬盘，底层使用LSM Tree来存放有序的KV对。</p>
+<ul>
+<li>MemTable。内存中的SSTable，新数据先写入此处，然后批量写入磁盘。</li>
+<li>Log文件，写Memtable之前先写Log文件，用WAL方式，可以用来恢复数据。</li>
+<li>Immutable MemTable，内存中的MemTable达到一定大小后就不再接收新的数据，产生新的memtable来接收。Immutable memTable随后会写入硬盘变成SST文件。</li>
+<li>SSTable文件，文件尾部追加一块索引，记录key-&gt;offset,提高随机读的效率。有多层组成，每层中单个文件的容量成倍增长。</li>
+<li>Manifest文件，记录SST文件不同level的分布，以及元信息</li>
+<li>Current文件，当前manifest的文件名。</li>
+</ul>
+<p>SST文件末尾的索引都要放在内存中，减少读索引时的一次IO；</p>
+<p>所有读都要先看memtable，没有再查看内存中的索引。所有写都只能写到memtable，sst文件不可修改。定期把immutable memtable写入硬盘成为sst文件。定期对sst文件进行合并。删除通过追加tombstone值表示删除key，在定期合并sst时丢弃。更新通过追加新的kv到文件末尾，读取文件时新数据最先被读到。</p>
+<p>memtable里的数据时按照key有序的，因此插入新数据时需要把kv插入到合适的位置来保证key的有序性。其底层核心数据是一个跳表。</p>
+<h2 id="数据流采样"><a href="#数据流采样" class="headerlink" title="数据流采样"></a>数据流采样</h2><p>当有一个无限的整数数据流，如何随机的从中抽取k个整数来？</p>
+<p>k=1时只需要随机抽取一个样本出来：1）第一个整数到来时保存这个数；2）第2个整数到达时以1/2的概率使用这个整数替换第一个数；3）第i个整数到来时以1/i的概率使用第i个整数替换被选中的数。</p>
+<p>当K&gt;1时，需要随机采样多个样本，方法跟上面类似，把1变成K即可。</p>
+<h2 id="基数估计（Cardinality-Estimation）"><a href="#基数估计（Cardinality-Estimation）" class="headerlink" title="基数估计（Cardinality Estimation）"></a>基数估计（Cardinality Estimation）</h2><p>独立访客UniqueVisitor等数据流中不同元素个数的统计是基数估计问题。</p>
+<ul>
+<li>HashSet，存在大数据场景下单机内存不足问题。</li>
+<li>通过bitmap不存储元素本身，假设知道不同元素的个数上限为N，开一个长度为N的bit数组，此方法缺点是bitmap的长度和实际基数无关而是与基数的上限有关，假设存在1亿基数需要12.5M的bitmap。</li>
+<li>LinearCounting,选择一个哈希函数h结果服从均匀分布，开一个长度为m的bitmap初始化为0，数据流每来一个元素计算其哈希值并对m取模然后将该位置置1.查询时如果还有u个bit为0，则总数近似为-mlog（u/m），其中m由基数大小和容许误差决定，假设基数大约为n，允许误差为e，m&gt;(e^t-t-1)/(et)^2,其中t=n/m</li>
+<li>LogLog Counting， 均匀随机化，选取一个哈希函数h应用于所有元素，然后对哈希值进行基数估计。对每个哈希值从高到低找到第一个1出现的位置，取这个位置的最大值设为p，基数约为2^p。（通过分桶平均的思想来降低误差，相当于多次求平均）缺点是基数不大的情况下该计算方法误差很大。<ul>
+<li>哈希碰撞可以忽略不计，即尽量避免冲突    * h结果均匀分布</li>
+<li>哈希后的结果是固定长度    </li>
+</ul>
+</li>
+<li>HyperLogLog Counting，在LLC基础上进行优化，通过使用调和平均数替代几何平均数降低离群值的干扰，并加入分段偏差纠正。</li>
+</ul>
+<h2 id="频率估计"><a href="#频率估计" class="headerlink" title="频率估计"></a>频率估计</h2><p>如何计算数据流中任意元素的频率？Frequency Estimation问题。</p>
+<ul>
+<li>hashMap，存在单机内存无法存在的问题；</li>
+<li>数据分片+hashmap，通过多台机器来满足内存需求；</li>
+<li>Count-Min Sketch，和布隆过滤器类似，优点是节约内存，缺点是对于出现次数较少的元素准确性较差；<ul>
+<li>选定d个hash函数，开一个d*m的二维数组作为哈希表；</li>
+<li>对于每个元素，分别使用d个hash计算hash值，然后对m取余，在对应位置上增1。二维数组上的每个整数称为sketch；</li>
+<li>要查询某个元素的频率，只需要取出d个sketch，返回最小的那个。</li>
+</ul>
+</li>
+<li>Count-Mean-Min Sketch，进行了如下改进显著改善在长尾数据上的精确度。<ul>
+<li>来一个查询，首先按照count-min sketch正常流程取出d个sketch；</li>
+<li>对每个hash函数，估算出一个噪音，噪音等于该行所有整数的平均值（除了被查询的元素）</li>
+<li>用该行的sketch-该行的噪音作为真正的sketch</li>
+<li>返回d个sketch的中位数</li>
+</ul>
+</li>
+</ul>
+<h2 id="TopK-频繁项"><a href="#TopK-频繁项" class="headerlink" title="TopK 频繁项"></a>TopK 频繁项</h2><p>寻找数据流中最频繁出现的k个元素，如微博热搜榜，访问网站次数最多的前10个IP地址等。</p>
+<ul>
+<li>hashMap+Heap，用hashMap存放所有元素出现的次数，用小根堆存放目前出现过的最频繁的k个元素。数据量大时存在内存不足的情况。<ul>
+<li>每次从数据流进来一个元素，如果hashmap中存在则把对应计数器+1，不存在则插入；</li>
+<li>在堆中查找该元素，如果找到则把堆中计数器+1并调整堆。反之将元素的次数和堆顶元素比较，如果大于则替换堆顶元素并调整堆。     </li>
+</ul>
+</li>
+<li>多机hashMap+Heap，hash分配，每个节点独立计算后再合并。</li>
+<li>Count-Min Sketch + Heap，使用Count-Min Sketch代替hashmap保证内存使用。</li>
+<li>Lossy Counting，近似算法，思想是出现频率高的元素不太可能-1后变为0，低频元素不断被清理出去，这样内存占用会保持在一个很低的水平。<ul>
+<li>建立一个hashmap，用于存放每个元素的出现次数；</li>
+<li>建立一个窗口；</li>
+<li>等待数据流不断流进这个窗口，直到窗口满后统计每个元素出现的频率，统计结束后每个元素的频率-1，然后将出现次数为0的元素从hashmap中删除</li>
+<li>返回建立窗口循环执行 </li>
+</ul>
+</li>
+</ul>
+<h2 id="成员查询"><a href="#成员查询" class="headerlink" title="成员查询"></a>成员查询</h2><p>给定一个无限的数据流和一个有限的集合，如何判断数据流中的元素是否在这个集合？</p>
+<p>布隆过滤器：</p>
+<ul>
+<li>解决redis缓存穿透</li>
+<li>爬虫时过滤已经获取的网址</li>
+<li>垃圾邮件过滤 </li>
+</ul>
+<p>经过k个哈希函数计算该数据，返回K个计算出的hash值；将k个hash值映射到对应的K个二进制的数组下标；把数据下表对应位置置1。</p>
+<p>查询时同样利用k个哈希函数计算数据对应的k个hash值，找到对应下标。如果存在一处元素值为0，说明该数据不在。反之则认为数据存在。</p>
+<p>优点：1）存储二进制数据占用空间小；2）插入和查询速度快；3）保密性好，不存在原始数据。<br>缺点：1）两个不同数据计算的hash值相同存在误判可能。2）删除困难。</p>
+<p>Guava实现的布隆过滤器将数据放在了本地，分布式场景不适合。此时可以使用redis封装好的Redisson。</p>
+<h2 id="范围查询"><a href="#范围查询" class="headerlink" title="范围查询"></a>范围查询</h2><p>给定一个无限的整数数据流，如何查询在某个范围内的元素出现的总次数？如select count(key) where key &gt;=left and key &lt;= right;</p>
+<p>可以利用计算频率时的方法Count-Min Sketch计算每个元素的频率，将指定范围内所有元素的sketch加起来就是范围内的元素总数了。 但是因为每个sketch都是近似值，多个近似值相加误差被放大。</p>
+<p>解决方法就是使用不同分辨率的Count-Min sketch，第一个sketch每个格子存放单个元素的频率，第二个sketch每个格子存放两个元素的频率（把元素的hash值最低位bit去掉，即&gt;&gt;1），依次类推。</p>
+<p>查找范围时，从粗粒度到细粒度找多个区间，不重不漏的完整覆盖区间，把相应的值加起来即可。</p>
 <h2 id="设计模式在外卖业务的应用"><a href="#设计模式在外卖业务的应用" class="headerlink" title="设计模式在外卖业务的应用"></a>设计模式在外卖业务的应用</h2><p><a href="https://tech.meituan.com/2020/03/19/design-pattern-practice-in-marketing.html" target="_blank" rel="external">设计模式在外面业务中的实践</a></p>
 <ul>
 <li><p>面向对象设计模式七大基本原则</p>
@@ -786,10 +864,10 @@ public class DefaultRuleEngine{
       
         <ul class="sidebar-nav motion-element">
           <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
-            Inhaltsverzeichnis
+            Table of Contents
           </li>
           <li class="sidebar-nav-overview" data-target="site-overview">
-            Übersicht
+            Overview
           </li>
         </ul>
       
@@ -806,7 +884,7 @@ public class DefaultRuleEngine{
           <div class="site-state-item site-state-posts">
             <a href="/archives">
               <span class="site-state-item-count">47</span>
-              <span class="site-state-item-name">Artikel</span>
+              <span class="site-state-item-name">posts</span>
             </a>
           </div>
 
@@ -816,7 +894,7 @@ public class DefaultRuleEngine{
             <div class="site-state-item site-state-tags">
               <a href="/tags">
                 <span class="site-state-item-count">13</span>
-                <span class="site-state-item-name">Tags</span>
+                <span class="site-state-item-name">tags</span>
               </a>
             </div>
           
@@ -844,7 +922,7 @@ public class DefaultRuleEngine{
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计分布式ID生成器"><span class="nav-number">1.</span> <span class="nav-text">设计分布式ID生成器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计短网址服务"><span class="nav-number">2.</span> <span class="nav-text">设计短网址服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定时任务调度器"><span class="nav-number">3.</span> <span class="nav-text">定时任务调度器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#priorityBlockingQueue-Polling"><span class="nav-number">3.1.</span> <span class="nav-text">priorityBlockingQueue+Polling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PriorityBlockingQueue-时间差"><span class="nav-number">3.2.</span> <span class="nav-text">PriorityBlockingQueue+时间差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DelayQueue"><span class="nav-number">3.3.</span> <span class="nav-text">DelayQueue</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#时间轮-HashedWheelTimer"><span class="nav-number">3.4.</span> <span class="nav-text">时间轮 HashedWheelTimer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计一个线程安全的hashmap"><span class="nav-number">4.</span> <span class="nav-text">设计一个线程安全的hashmap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最近一个小时内访问频率最高的10个IP"><span class="nav-number">5.</span> <span class="nav-text">最近一个小时内访问频率最高的10个IP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计模式在外卖业务的应用"><span class="nav-number">6.</span> <span class="nav-text">设计模式在外卖业务的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖规则和设计模式实践"><span class="nav-number">6.1.</span> <span class="nav-text">返奖规则和设计模式实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖流程和设计模式实践"><span class="nav-number">6.2.</span> <span class="nav-text">返奖流程和设计模式实践</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#投放系统中的设计模式"><span class="nav-number">7.</span> <span class="nav-text">投放系统中的设计模式</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#设计分布式ID生成器"><span class="nav-number">1.</span> <span class="nav-text">设计分布式ID生成器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计短网址服务"><span class="nav-number">2.</span> <span class="nav-text">设计短网址服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定时任务调度器"><span class="nav-number">3.</span> <span class="nav-text">定时任务调度器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#priorityBlockingQueue-Polling"><span class="nav-number">3.1.</span> <span class="nav-text">priorityBlockingQueue+Polling</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PriorityBlockingQueue-时间差"><span class="nav-number">3.2.</span> <span class="nav-text">PriorityBlockingQueue+时间差</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DelayQueue"><span class="nav-number">3.3.</span> <span class="nav-text">DelayQueue</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#时间轮-HashedWheelTimer"><span class="nav-number">3.4.</span> <span class="nav-text">时间轮 HashedWheelTimer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计一个线程安全的hashmap"><span class="nav-number">4.</span> <span class="nav-text">设计一个线程安全的hashmap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最近一个小时内访问频率最高的10个IP"><span class="nav-number">5.</span> <span class="nav-text">最近一个小时内访问频率最高的10个IP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#KV存储引擎"><span class="nav-number">6.</span> <span class="nav-text">KV存储引擎</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据流采样"><span class="nav-number">7.</span> <span class="nav-text">数据流采样</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基数估计（Cardinality-Estimation）"><span class="nav-number">8.</span> <span class="nav-text">基数估计（Cardinality Estimation）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#频率估计"><span class="nav-number">9.</span> <span class="nav-text">频率估计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TopK-频繁项"><span class="nav-number">10.</span> <span class="nav-text">TopK 频繁项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#成员查询"><span class="nav-number">11.</span> <span class="nav-text">成员查询</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#范围查询"><span class="nav-number">12.</span> <span class="nav-text">范围查询</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计模式在外卖业务的应用"><span class="nav-number">13.</span> <span class="nav-text">设计模式在外卖业务的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖规则和设计模式实践"><span class="nav-number">13.1.</span> <span class="nav-text">返奖规则和设计模式实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#返奖流程和设计模式实践"><span class="nav-number">13.2.</span> <span class="nav-text">返奖流程和设计模式实践</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#投放系统中的设计模式"><span class="nav-number">14.</span> <span class="nav-text">投放系统中的设计模式</span></a></li></ol></div>
             
           </div>
         </section>
@@ -871,7 +949,7 @@ public class DefaultRuleEngine{
 </div>
 
 <div class="powered-by">
-  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">
