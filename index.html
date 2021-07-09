@@ -172,7 +172,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -182,7 +182,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -235,6 +235,210 @@
             
               
                 
+                <a class="post-title-link" href="/2021/06/25/为什么设计系列文章学习总结/" itemprop="url">
+                  为什么设计系列文章学习总结
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-06-25T22:00:00+08:00" content="2021-06-25">
+              2021-06-25
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>之前也有订阅draveness的博客跟着学习，这次抽时间把为什么设计系列文章再温习总结一遍，知识点常读常新吶！</p>
+<h2 id="为什么TCP需要三次握手"><a href="#为什么TCP需要三次握手" class="headerlink" title="为什么TCP需要三次握手"></a>为什么TCP需要三次握手</h2><p>RFC793-Trannsmission Control Protocol文档中定义的TCP连接：用于保证可靠性和流控制机制的信息，包括socket、序列号及窗口大小。</p>
+<p>The raliability and flow control mechanisms described above require that TCPs initialize and maintain certain status information for each data stream. The combination of this information, including sockets,sequence numbers, and windows sizes, is called a connection.</p>
+<p>所以建立TCP连接就是要对上述的三种信息达成共识，连接中的socket是由互联网地址标志符和端口号组成，窗口大小主要用来做流量控制，最后的序列号是用来追踪通信发送的数据包序号，接收方可以通过序列号向发送方确认某个数据包成功接收。</p>
+<p>因此问题转换成，为什么需要通过三次握手才可以初始化socket、sequenceNum、windowSize？</p>
+<ul>
+<li>通过三次握手才能阻止重复历史连接的初始化；</li>
+<li>通过三次握手才能对通信双方的初始序列号进行初始化；</li>
+</ul>
+<h3 id="历史连接"><a href="#历史连接" class="headerlink" title="历史连接"></a>历史连接</h3><p>假设只有两次握手，发送方一旦发出建立连接的请求后就没法撤回请求，如果网络较差时，发送方多次连续发出建立连接请求。如果只通信两次那么接收方只能选择接受或拒绝，它并不清楚这一次请求是由于网络拥堵而早就过期的连接。</p>
+<p>因此TCP选择三次握手来建立连接，并在连接中引入RST这一控制信息，接收方收到请求会将发送方发送的SEQ+1发送给对方，这时由发送方判断当前连接是否是历史连接：</p>
+<ul>
+<li>如果是历史连接，即SEQ过期超时，那么发送方会直接发送RST控制消息终止这一次连接；</li>
+<li>反之，发送方就会发送ACK控制消息，通信双方成功建立连接； </li>
+</ul>
+<h3 id="初始序列号"><a href="#初始序列号" class="headerlink" title="初始序列号"></a>初始序列号</h3><p>TCP需要在不稳定的网络构建一个可靠的传输层，在不稳定网络下可能存在：1）数据包被发送方多次重复发送；2）数据包在传输中被路由或者节点丢失；3）数据包到达接收方的顺序不正确。</p>
+<p>为了解决这些问题，TCP协议在数据包中加入了序列号字段，支持：1）接收端去重；2）发送方在对应数据包未被ACK时重发；3）接收方根据序列号对数据包重排序。</p>
+<p>TCP连接双方要获取初始序列号，需要向对方发送SYN控制消息并携带自己期望的初始化SEQ，对方收到后通过ACK控制消息一次SEQ+1来确认。 </p>
+<p>A-&gt; SYN,SEQ=n-&gt;B ; B-&gt;ACK,SEQ=n+1-&gt;A; B-&gt;SYN,SEQ=m-&gt;A; A-&gt;ACK,SEQ=m+1-&gt;B。 其中中间两次可以将ACK+SYN合并发送，将四次减少为三次通信。</p>
+<p>使用更多的通信次数交换相同的信息是可以实现的，三次是满足建立连接所需的最小次数。</p>
+<h2 id="为什么DNS使用UDP"><a href="#为什么DNS使用UDP" class="headerlink" title="为什么DNS使用UDP"></a>为什么DNS使用UDP</h2><p>实际上DNS不仅使用了UDP还使用了TCP，DNS查询类型不仅包含A记录、CNAME记录等常见查询，还有AXFR类型的特殊查询，这种特殊查询需要用于DNS区域传输，其作用是在多个命名服务器之间快速迁移记录，对数据准确性由有强烈的要求，由于查询返回的响应比较大，所以会使用TCP传递数据包。</p>
+<p>UDP协议在过去的几十年都是DNS主要使用的协议，每次DNS查询都会直接向命名服务器发送UDP数据包。常见的DNS查询数据包都非常小，如果使用TCP的话建立连接需要三次通信，传输～130字节的数据，销毁连接需要4次通信，传输～160字节的数据。再考虑到实际场景中DNS解析可能会递归地与多个命名服务器通信，加倍放大了TCP协议在额外开销上的劣势。</p>
+<p>现在网络设计中，我们不仅遇到了IPV4即将无法分配的情况，还需要引入DNSSEC等机制保证DNS查询和请求的完整性以及传输安全。导致DNS需要处理的数据包越来越大，理论上一个UDP数据包大小最多可达64KB，实际生产环境下数据包大于MTU（1500字节）时，数据包就会被分片传输、丢弃，部分网络甚至会拒绝处理包含EDNS选项的请求。导致UDP协议的DNS不稳定。</p>
+<p>此时TCP可以非常好的解决这个问题，通过序列号和重传机制保证消息不重不漏，且建立连接和销毁连接的额外开销在大数据包面前可忽略不计。</p>
+<h2 id="为什么TCP协议有性能问题"><a href="#为什么TCP协议有性能问题" class="headerlink" title="为什么TCP协议有性能问题"></a>为什么TCP协议有性能问题</h2><p>TCP在设计之初没有考虑到现今复杂的网络环境，在地铁或火车上信号断断续续其实本质就是TCP协议造成的。</p>
+<p>底层数据传输协议在设计时必须要对带宽利用率和通信延迟进行权衡和取舍，TCP选择了充分利用带宽，为流量而设计，期望在尽可能短的时间内传输更多的数据。</p>
+<p>网络通信中，从发送方发出数据到收到来自接收方的确认，总时长称为往返时延。 RTT，Round-Trip Time。</p>
+<p>弱网环境下影响TCP性能有以下几个因素：</p>
+<ul>
+<li>TCP拥塞控制算法会在丢包时主动降低吞吐量；（首要原因）</li>
+<li>TCP三次握手增加了数据传输的延迟和额外开销；</li>
+<li>TCP的累计应答机制导致了数据段的传输；</li>
+</ul>
+<p>每个TCP连接都会维护一个拥塞控制窗口CongestionWindow，决定了一次并发发送多少数据包。除了cwnd之外TCP连接双方都有一个rwnd接收窗口。在TCP连接开始时双方都不知道对方的rwnd大小，需要动态的估算机制改变传输的速度。</p>
+<p>客户端能同时最大传输的数量时min（swnd，rwnd），初始大小时TCP_INIT_CWND。通过慢启动阈值slow start threshold（ssthresh）来决定：</p>
+<ul>
+<li>&lt; ssthresh, 使用慢启动，发送方每收到一个响应ACK，拥塞窗口大小就+1（即每个RTT时间内加倍）</li>
+<li><blockquote>
+<p>ssthresh, 使用拥塞避免算法，每收到一个ACK，拥塞窗口大小就+1，当丢包时ssthresh设置为拥塞窗口的一半</p>
+</blockquote>
+</li>
+</ul>
+<p><em>重传机制</em>： TCP传输可靠性时通过序列号和接收方的ACK来保证的，当TCP传输一个数据段时，它会将该数据段的副本放到重传队列并开启计时器。1）如果发送方收到ACK响应，从重传队列中删除；2）如果在计时器到期之间都没收到ACK则会重发该数据段。</p>
+<p>TCP ACK的意思是指当前数据段之前的所有数据段都已经被接收和处理。一旦之前有一个数据包没有接收，之后的所有数据段即使接收到了也不会响应，超时时都会重传，在弱网环境下会导致大量的带宽浪费。</p>
+<p>为了缓解上述问题，快重传技术当接收方收到乱序的数据段后，就会立刻连续发送三个ACK触发发送方的重传。</p>
+<h2 id="为什么UDP头只有8个字节"><a href="#为什么UDP头只有8个字节" class="headerlink" title="为什么UDP头只有8个字节"></a>为什么UDP头只有8个字节</h2><p>UDP协议头中只包含四个字段：源端口、目的端口、长度、校验码，其中每个字段16bit，所以总共8字节。其中长度是协议头和数据长度的总和，校验码使用IP首部、UDP首部和数据报中数据进行计算，接收方可以通过校验码进行验证数据的准确性。</p>
+<p>UDP协议底层IP网际协议负责数据包在主机间的传输；UDP协议的首部端口号用于定位处理数据的具体进行并转发数据。UDP本质只起到定位具体进程的作用。</p>
+<p>虽然UDP和TCP都有端口号概念，但两者不在一个命名空间，因为可以同时使用相同的端口号。</p>
+<h2 id="为什么TCP-IP协议会拆分数据"><a href="#为什么TCP-IP协议会拆分数据" class="headerlink" title="为什么TCP/IP协议会拆分数据"></a>为什么TCP/IP协议会拆分数据</h2><ul>
+<li>IP协议分片传输过大的数据包Packet，避免物理设备限制</li>
+<li>TCP协议分段传输过大的数据段Segment，保证传输性能</li>
+</ul>
+<p>在IP协议层不同的设备传输数据前会先确定一个IP数据包大小上限，即最大传输单元MTU Maximum transmission Unit。由整个链路上MTU最小的物理设备决定。（一般1500字节）</p>
+<p>Path MTU Discovery算法：</p>
+<ul>
+<li>向目的主机发送IP头带DF控制位=1的数据包，Don’t Fragment不分片</li>
+<li>路径上的网络设备根据数据包大小和自己的MTU做不同的决定：<ul>
+<li>数据包 &gt; MTU，就会丢弃数据包，并返回一个包含该设备MTU的ICMP消息</li>
+<li>数据包 &lt; MTU，就会继续向目的主机传递数据    </li>
+</ul>
+</li>
+<li>源主机收到ICMP消息后，不断使用新的MTU发送IP数据，直到数据包到达目的主机。</li>
+</ul>
+<p>数据包分片时第一个数据包中包含UDP协议的相关信息，后续的都不包含，因此如果丢包整个UDP数据都无法组装。</p>
+<p>TCP协议中引入了最大分段大小Max Segment Size，MSS，即TCP数据段能够携带的数据上限。正常情况下MSS=MTU-40，是操作系统内核层面的限制，通信双方会在三次握手时确定。</p>
+<p>TCP协议之所以能够不重不漏按序传输，因为它会通过IP协议的MTU计算出MSS，并根据MSS分段避免IP协议对数据包进行分片。</p>
+<h2 id="为什么流媒体直播延迟高"><a href="#为什么流媒体直播延迟高" class="headerlink" title="为什么流媒体直播延迟高"></a>为什么流媒体直播延迟高</h2><p>流媒体直播从音视频的采集和编码到解码和播放设计了非常长的链路，需要途径主播端、流媒体服务器、观众端。在冗长的采集和分发流程中，不同过程都会通过一系列的技术保证直播的质量，为了保证可靠性、降低系统带宽而使用的手段共同造成了直播高延迟的问题。</p>
+<ul>
+<li>音视频使用的编码格式决定了客户端只能从特定帧开始解码；</li>
+<li>音视频传输使用的网络协议切片大小决定了客户端接收数据的间隔</li>
+<li>服务器和客户端为了保证用户体验和直播质量预留缓存</li>
+</ul>
+<h2 id="为什么HTTPS需要7次握手-9倍延迟"><a href="#为什么HTTPS需要7次握手-9倍延迟" class="headerlink" title="为什么HTTPS需要7次握手+9倍延迟"></a>为什么HTTPS需要7次握手+9倍延迟</h2><p>Netscape在1994年设计了HTTPS协议，使用安全套接字层SocketLayer，SSL，保证数据传输的安全。随着传输层安全协议TransportLayerSecurity TLS的发展，目前已经使用TLS取代了废弃的SSL协议。</p>
+<p>HTTPS从发送方发出到接收响应需要经过4.5 RTT：</p>
+<ul>
+<li>TCP协议三次握手建立TCP连接；（TCP快启策略使用存储在客户端的TFO cookie快速建立连接，可以减少通信次数）</li>
+<li>TLS协议四次握手建立TLS连接；</li>
+<li>HTTP协议，客户端发出请求，服务端发回响应。</li>
+</ul>
+<p>其中TLS1.2建立过程如下：（1.3通过优化协议降低到1RTT）</p>
+<ul>
+<li>客户端向服务器发送client hello消息，携带客户端支持的协议版本、加密算法、压缩算法和一个客户端生成的随机数；</li>
+<li>服务端收到客户端的信息后；<ul>
+<li>向客户端发送server hello消息，携带选择特定的协议版本，加密方法，会话ID，服务端生成的随机数；</li>
+<li>向客户端发送certificate消息，包含证书支持的域名、发送方和有效期信息；</li>
+<li>向客户端发送server key Exchange消息，传递公钥及签名信息；</li>
+<li>向客户端发送可选的certificateRequest，验证客户端证书；</li>
+<li>向客户端发送server hello done消息，通知服务器已经发送了全部消息；</li>
+</ul>
+</li>
+<li>客户端收到消息后，验证证书<ul>
+<li>向服务器端发送client key exchange消息，包含使用服务端公钥加密后的随机字符串</li>
+<li>向服务器发送change cipher spec消息，通知服务器后面的数据段要加密；</li>
+<li>向服务器发送finish消息，包含加密后的握手信息；</li>
+</ul>
+</li>
+<li>服务器端收到消息后<ul>
+<li>向客户端发送change cipher spec消息，通知客户端后面的数据段会加密传输</li>
+<li>向客户端发送finish消息，验证客户端的finish消息并完成TLS握手<br>HTTP3使用基于UDP和QUIC协议进行握手，将TCP和TLS握手过程结合起来，把7次握手减少到了3次。</li>
+</ul>
+</li>
+</ul>
+<h2 id="为什么TCP有粘包问题"><a href="#为什么TCP有粘包问题" class="headerlink" title="为什么TCP有粘包问题"></a>为什么TCP有粘包问题</h2><p>粘包并不是TCP协议造成的，而是因为应用层协议设计者对TCP协议的错误理解，忽略TCP协议的定义并且缺乏设计应用层协议的经验。</p>
+<ul>
+<li>TCP协议是面向字节流的协议，它可能会组合或者拆分应用层协议的数据</li>
+<li>应用层协议没有定义消息的边界，导致数据的接收方无法拼接</li>
+</ul>
+<p>Nagle算法：通过减少数据包的方式提高TCP传输性能的算法，因为网络带宽有限，它不会降小的数据块直接发送到目的主机，而是会在本地缓冲区中等待更多待发送的数据，这种批量发送数据的策略虽然会影响实时性和网络延迟，但是能降低网络拥堵并减少额外开销。</p>
+<p>当应用层使用TCP协议传输数据时，实际待发送的数据先写到了TCP协议的缓冲区，如果用户开启了Nagle算法，那么协议会等待缓冲区数据超过MSS最大数据段，或者上一个数据段被ACK时才会发送。</p>
+<p>这样导致应用层多次写入的协议被合并或拆分发送，当接收方接收后应用层无法拆分和重组。 为了解决此问题，可以通过在应用层协议中基于长度或者终结符进行处理，或者基于特定的规则，如JSON数据。</p>
+<p>UDP消息是有边界的，上限的65536，但一半都会被路径MTU限制。所以不会出现粘包问题。</p>
+<h2 id="为什么TCP协议有TIME-WAIT状态"><a href="#为什么TCP协议有TIME-WAIT状态" class="headerlink" title="为什么TCP协议有TIME_WAIT状态"></a>为什么TCP协议有TIME_WAIT状态</h2>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2021/05/20/系统设计系列/" itemprop="url">
                   系统设计相关
                 </a>
@@ -248,7 +452,7 @@
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2021-05-20T22:00:00+08:00" content="2021-05-20">
               2021-05-20
             </time>
@@ -837,7 +1041,7 @@ public class DefaultRuleEngine{
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2021-04-10T22:00:00+08:00" content="2021-04-10">
               2021-04-10
             </time>
@@ -974,7 +1178,7 @@ public class DefaultRuleEngine{
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2021-03-10T22:00:00+08:00" content="2021-03-10">
               2021-03-10
             </time>
@@ -1380,7 +1584,7 @@ func execute() {
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2021-02-23T22:00:00+08:00" content="2021-02-23">
               2021-02-23
             </time>
@@ -1669,7 +1873,7 @@ func keepalloc2(){
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2021-02-06T22:00:00+08:00" content="2021-02-06">
               2021-02-06
             </time>
@@ -1860,7 +2064,7 @@ func keepalloc2(){
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-12-25T22:00:00+08:00" content="2020-12-25">
               2020-12-25
             </time>
@@ -2058,7 +2262,7 @@ func keepalloc2(){
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-12-13T22:00:00+08:00" content="2020-12-13">
               2020-12-13
             </time>
@@ -2252,7 +2456,7 @@ for c := range in {
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-11-14T22:00:00+08:00" content="2020-11-14">
               2020-11-14
             </time>
@@ -2379,7 +2583,7 @@ for c := range in {
             <span class="post-meta-item-icon">
               <i class="fa fa-calendar-o"></i>
             </span>
-            <span class="post-meta-item-text">Posted on</span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
             <time itemprop="dateCreated" datetime="2020-11-06T22:00:00+08:00" content="2020-11-06">
               2020-11-06
             </time>
@@ -2468,147 +2672,6 @@ for c := range in {
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/10/25/深入理解计算机系统第5周/" itemprop="url">
-                  《深入理解计算机系统》第5周
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Posted on</span>
-            <time itemprop="dateCreated" datetime="2020-10-25T22:00:00+08:00" content="2020-10-25">
-              2020-10-25
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>作为开发者需要理解存储器层次结构，以及了解系统是如何将数据在存储器层次结构中移动，这样在编写程序时可以利用这些特性来提升性能。其中最主要的就是局部性原理，具有良好局部性的程序会更倾向于从较高层次访问数据，减少CPU访问时间。</p>
-<ul>
-<li>将注意力集中在内循环上，大部分计算和内存访问都发生在这里；</li>
-<li>通过按照数据对象存储在内存中的顺序，以步长为1的来读取数据，使得程序空间局部性最大；</li>
-<li>一旦从存储器中读入了一个数据对象，就尽可能多地使用它，从而使得程序中的时间局部性最大；</li>
-</ul>
-<p>这一章我是结合和CMU的课程视频来学习的，相比前几章来说，在看书之前已经了解了哪些重点概念需要关注，个人感觉效果还不错。</p>
-<p>首先从基本的存储技术学习：</p>
-<p><strong>RAM 随机访问存储器：</strong></p>
-<ul>
-<li><strong>SRAM，</strong>静态随机访问存储器，常用来做高速缓存，可以在CPU芯片上也可以在片下。将每个位都存储在一个双稳态存储器单元里，每个单元由一个六晶体管电路实现。只要有电就会永远保持它的值，即使有干扰来扰乱电压，消除后也会立即恢复到稳定值。</li>
-<li><strong>DRAM，</strong>动态随机访问存储器，常用来作为主存以及图形系统的帧缓冲。每个位存储为对一个电容的充电，对干扰非常敏感，当电容的电压被扰乱后就永远不会恢复了。<ul>
-<li>两者相比，只要供电SRAM就会保持不变，与DRAM不同，不需要刷新。SRAM的存取也比DRAM快得多，但是SRAM比DRAM单元使用更多的晶体管，因此密集度低，更贵且功耗更大。<br>传统DRAM，二维阵列，读取时先RAS（Row Access Strobe）请求再CAS（Column Access Strobe）请求。</li>
-</ul>
-</li>
-<li><strong>内存模块，</strong>DRAM芯片封装在内存模块中，插入主板的扩展槽，以64位为块传送数据到呢欧村控制器和从内存控制器传出数据。</li>
-<li><strong>增强的DRAM：</strong><ul>
-<li>快页模式，允许对同一行连续地访问可以直接从行缓冲区得到服务。</li>
-<li>扩展数据输出DRAM，允许各个CAS信号在时间上靠得更紧密一些。</li>
-<li>同步DRAM，能够比一部的存储器更快输出单元内容。</li>
-<li>双倍数据速率同步DRAM，常见的DDR2 DDR4 DDR8等</li>
-<li>视频RAM，用在图形系统的帧缓冲区中。<ul>
-<li>1）VRAM输出是通过依次对内部缓冲区的整个内容移位得到；</li>
-<li>2）VRAM允许对内存并行读写。</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><strong>非易失性存储器，</strong> 断电后依然能保存数据。 ROM, PROM, EPROM,flash memory等<br>访问主存，通过总线的共享电子电路在处理器和DRAM主存之间传递数据。</li>
-</ul>
-<p><strong>磁盘存储器：</strong>从磁盘上读取数据时间为ms级，比DRAM慢10万倍，比SRAM慢100万倍。<br>磁盘的构造相关内容CMU的课程视频上讲解的比较清晰，所以看书时主要关注在于磁盘的访问。</p>
-<p>CPU通过内存映射I/O技术来发送命令，磁盘接受到命令后，将逻辑块号翻译成扇区地址，读取该扇区内容。然后将内容直接传到主存，不需要CPU的干涉，即DMA传送。当传送完成后，磁盘控制器通过给CPU发送一个中断信号来通知。</p>
-<p><strong>SSD固态硬盘，</strong>由半导体存储器构成，没有移动的部件，因而随意访问时间比旋转磁盘快，能耗更低且结实。不过缺点是反复写后，闪存块会磨损，通过平均磨损逻辑来将擦除平均到所有块上来最大化每块的寿命。</p>
-<p><strong>然后是局部性原理：</strong>空间局部性和时间局部性。现代计算机系统各个层次都有利用到局部性原理，如高速缓存等（CPU芯片、操作系统、分布式文件系统和万维网中都使用了缓存）。</p>
-<p><strong>最后是高速缓存相关，</strong>其结构可以用四元组（S,E,B,m）来描述，容量大小C=SEB。其结构使得它能够通过简单地检查地址位，找到请求字（类似哈希表）。1）组选择；2）行匹配；3）字抽取。 </p>
-<p>按照类型可以分为<strong>直接映射高速缓存、组相联高速缓存、全相联高速缓存</strong>。</p>
-<p>需要注意的是，即使程序具备良好的空间局部性，高速缓存中也有足够的空间存放块，但是还可能因为映射到相同组产生抖动现象，即高速缓存反复地加载和驱逐相同的高速缓存块的组。 此时可以通过数据填充将其映射到不同的组来消除<strong>抖动冲突不命中</strong>。</p>
-<p>高速缓存写操作：</p>
-<ul>
-<li>命中时，向更低一层写时分为两种：<strong>直写和写回</strong>。直写简单但是每次写都会引起总线流量；写回尽可能推迟更新，只有当替换算法驱逐该块时才写，由于局部性显著减少总线流量，但增加了复杂性。</li>
-<li>不命中时，有<strong>写分配和非写分配</strong>两种。写分配需要加载相应第一层的块到高速缓存中，然后更新，试图利用局部性原理。非写分配避开高速缓存，直接把这个字写入到下一层。直写高速缓存通常是非写分配的，写回高速缓存是写分配的。</li>
-</ul>
-<p>对开发者来说，在设计程序时可以心里默认采用使用写回合写分配的高速缓存模型，在高层次开发程序展示良好的空间和时间局部性。原因：</p>
-<ul>
-<li>通常较长的传送时间，存储器层次结构中较低的缓存更可能使用写回；</li>
-<li>逻辑电路密度提高，写回的高复杂性也越来越不成阻碍；</li>
-<li>写回写分配试图利用局部性，和处理读的方式对称；</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2654,8 +2717,8 @@ for c := range in {
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">47</span>
-              <span class="site-state-item-name">posts</span>
+              <span class="site-state-item-count">48</span>
+              <span class="site-state-item-name">Artikel</span>
             </a>
           </div>
 
@@ -2664,8 +2727,8 @@ for c := range in {
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">13</span>
-                <span class="site-state-item-name">tags</span>
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">Tags</span>
               </a>
             </div>
           
@@ -2709,7 +2772,7 @@ for c := range in {
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
 </div>
 
 <div class="theme-info">

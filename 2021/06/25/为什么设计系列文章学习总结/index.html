@@ -1,0 +1,671 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="draveness大神带飞系列," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="之前也有订阅draveness的博客跟着学习，这次抽时间把为什么设计系列文章再温习总结一遍，知识点常读常新吶！
+为什么TCP需要三次握手RFC793-Trannsmission Control Protocol文档中定义的TCP连接：用于保证可靠性和流控制机制的信息，包括socket、序列号及窗口大小。
+The raliability and flow control mechanisms des">
+<meta property="og:type" content="article">
+<meta property="og:title" content="为什么设计系列文章学习总结">
+<meta property="og:url" content="http://xiaozhazi.github.io/2021/06/25/为什么设计系列文章学习总结/index.html">
+<meta property="og:site_name" content="Frances Hu's Blog">
+<meta property="og:description" content="之前也有订阅draveness的博客跟着学习，这次抽时间把为什么设计系列文章再温习总结一遍，知识点常读常新吶！
+为什么TCP需要三次握手RFC793-Trannsmission Control Protocol文档中定义的TCP连接：用于保证可靠性和流控制机制的信息，包括socket、序列号及窗口大小。
+The raliability and flow control mechanisms des">
+<meta property="og:updated_time" content="2021-07-09T16:33:39.174Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="为什么设计系列文章学习总结">
+<meta name="twitter:description" content="之前也有订阅draveness的博客跟着学习，这次抽时间把为什么设计系列文章再温习总结一遍，知识点常读常新吶！
+为什么TCP需要三次握手RFC793-Trannsmission Control Protocol文档中定义的TCP连接：用于保证可靠性和流控制机制的信息，包括socket、序列号及窗口大小。
+The raliability and flow control mechanisms des">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: 'Author'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://xiaozhazi.github.io/2021/06/25/为什么设计系列文章学习总结/"/>
+
+  <title> 为什么设计系列文章学习总结 | Frances Hu's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Frances Hu's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Born to be wild!</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Startseite
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archiv
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                为什么设计系列文章学习总结
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">Veröffentlicht am</span>
+            <time itemprop="dateCreated" datetime="2021-06-25T22:00:00+08:00" content="2021-06-25">
+              2021-06-25
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>之前也有订阅draveness的博客跟着学习，这次抽时间把为什么设计系列文章再温习总结一遍，知识点常读常新吶！</p>
+<h2 id="为什么TCP需要三次握手"><a href="#为什么TCP需要三次握手" class="headerlink" title="为什么TCP需要三次握手"></a>为什么TCP需要三次握手</h2><p>RFC793-Trannsmission Control Protocol文档中定义的TCP连接：用于保证可靠性和流控制机制的信息，包括socket、序列号及窗口大小。</p>
+<p>The raliability and flow control mechanisms described above require that TCPs initialize and maintain certain status information for each data stream. The combination of this information, including sockets,sequence numbers, and windows sizes, is called a connection.</p>
+<p>所以建立TCP连接就是要对上述的三种信息达成共识，连接中的socket是由互联网地址标志符和端口号组成，窗口大小主要用来做流量控制，最后的序列号是用来追踪通信发送的数据包序号，接收方可以通过序列号向发送方确认某个数据包成功接收。</p>
+<p>因此问题转换成，为什么需要通过三次握手才可以初始化socket、sequenceNum、windowSize？</p>
+<ul>
+<li>通过三次握手才能阻止重复历史连接的初始化；</li>
+<li>通过三次握手才能对通信双方的初始序列号进行初始化；</li>
+</ul>
+<h3 id="历史连接"><a href="#历史连接" class="headerlink" title="历史连接"></a>历史连接</h3><p>假设只有两次握手，发送方一旦发出建立连接的请求后就没法撤回请求，如果网络较差时，发送方多次连续发出建立连接请求。如果只通信两次那么接收方只能选择接受或拒绝，它并不清楚这一次请求是由于网络拥堵而早就过期的连接。</p>
+<p>因此TCP选择三次握手来建立连接，并在连接中引入RST这一控制信息，接收方收到请求会将发送方发送的SEQ+1发送给对方，这时由发送方判断当前连接是否是历史连接：</p>
+<ul>
+<li>如果是历史连接，即SEQ过期超时，那么发送方会直接发送RST控制消息终止这一次连接；</li>
+<li>反之，发送方就会发送ACK控制消息，通信双方成功建立连接； </li>
+</ul>
+<h3 id="初始序列号"><a href="#初始序列号" class="headerlink" title="初始序列号"></a>初始序列号</h3><p>TCP需要在不稳定的网络构建一个可靠的传输层，在不稳定网络下可能存在：1）数据包被发送方多次重复发送；2）数据包在传输中被路由或者节点丢失；3）数据包到达接收方的顺序不正确。</p>
+<p>为了解决这些问题，TCP协议在数据包中加入了序列号字段，支持：1）接收端去重；2）发送方在对应数据包未被ACK时重发；3）接收方根据序列号对数据包重排序。</p>
+<p>TCP连接双方要获取初始序列号，需要向对方发送SYN控制消息并携带自己期望的初始化SEQ，对方收到后通过ACK控制消息一次SEQ+1来确认。 </p>
+<p>A-&gt; SYN,SEQ=n-&gt;B ; B-&gt;ACK,SEQ=n+1-&gt;A; B-&gt;SYN,SEQ=m-&gt;A; A-&gt;ACK,SEQ=m+1-&gt;B。 其中中间两次可以将ACK+SYN合并发送，将四次减少为三次通信。</p>
+<p>使用更多的通信次数交换相同的信息是可以实现的，三次是满足建立连接所需的最小次数。</p>
+<h2 id="为什么DNS使用UDP"><a href="#为什么DNS使用UDP" class="headerlink" title="为什么DNS使用UDP"></a>为什么DNS使用UDP</h2><p>实际上DNS不仅使用了UDP还使用了TCP，DNS查询类型不仅包含A记录、CNAME记录等常见查询，还有AXFR类型的特殊查询，这种特殊查询需要用于DNS区域传输，其作用是在多个命名服务器之间快速迁移记录，对数据准确性由有强烈的要求，由于查询返回的响应比较大，所以会使用TCP传递数据包。</p>
+<p>UDP协议在过去的几十年都是DNS主要使用的协议，每次DNS查询都会直接向命名服务器发送UDP数据包。常见的DNS查询数据包都非常小，如果使用TCP的话建立连接需要三次通信，传输～130字节的数据，销毁连接需要4次通信，传输～160字节的数据。再考虑到实际场景中DNS解析可能会递归地与多个命名服务器通信，加倍放大了TCP协议在额外开销上的劣势。</p>
+<p>现在网络设计中，我们不仅遇到了IPV4即将无法分配的情况，还需要引入DNSSEC等机制保证DNS查询和请求的完整性以及传输安全。导致DNS需要处理的数据包越来越大，理论上一个UDP数据包大小最多可达64KB，实际生产环境下数据包大于MTU（1500字节）时，数据包就会被分片传输、丢弃，部分网络甚至会拒绝处理包含EDNS选项的请求。导致UDP协议的DNS不稳定。</p>
+<p>此时TCP可以非常好的解决这个问题，通过序列号和重传机制保证消息不重不漏，且建立连接和销毁连接的额外开销在大数据包面前可忽略不计。</p>
+<h2 id="为什么TCP协议有性能问题"><a href="#为什么TCP协议有性能问题" class="headerlink" title="为什么TCP协议有性能问题"></a>为什么TCP协议有性能问题</h2><p>TCP在设计之初没有考虑到现今复杂的网络环境，在地铁或火车上信号断断续续其实本质就是TCP协议造成的。</p>
+<p>底层数据传输协议在设计时必须要对带宽利用率和通信延迟进行权衡和取舍，TCP选择了充分利用带宽，为流量而设计，期望在尽可能短的时间内传输更多的数据。</p>
+<p>网络通信中，从发送方发出数据到收到来自接收方的确认，总时长称为往返时延。 RTT，Round-Trip Time。</p>
+<p>弱网环境下影响TCP性能有以下几个因素：</p>
+<ul>
+<li>TCP拥塞控制算法会在丢包时主动降低吞吐量；（首要原因）</li>
+<li>TCP三次握手增加了数据传输的延迟和额外开销；</li>
+<li>TCP的累计应答机制导致了数据段的传输；</li>
+</ul>
+<p>每个TCP连接都会维护一个拥塞控制窗口CongestionWindow，决定了一次并发发送多少数据包。除了cwnd之外TCP连接双方都有一个rwnd接收窗口。在TCP连接开始时双方都不知道对方的rwnd大小，需要动态的估算机制改变传输的速度。</p>
+<p>客户端能同时最大传输的数量时min（swnd，rwnd），初始大小时TCP_INIT_CWND。通过慢启动阈值slow start threshold（ssthresh）来决定：</p>
+<ul>
+<li>&lt; ssthresh, 使用慢启动，发送方每收到一个响应ACK，拥塞窗口大小就+1（即每个RTT时间内加倍）</li>
+<li><blockquote>
+<p>ssthresh, 使用拥塞避免算法，每收到一个ACK，拥塞窗口大小就+1，当丢包时ssthresh设置为拥塞窗口的一半</p>
+</blockquote>
+</li>
+</ul>
+<p><em>重传机制</em>： TCP传输可靠性时通过序列号和接收方的ACK来保证的，当TCP传输一个数据段时，它会将该数据段的副本放到重传队列并开启计时器。1）如果发送方收到ACK响应，从重传队列中删除；2）如果在计时器到期之间都没收到ACK则会重发该数据段。</p>
+<p>TCP ACK的意思是指当前数据段之前的所有数据段都已经被接收和处理。一旦之前有一个数据包没有接收，之后的所有数据段即使接收到了也不会响应，超时时都会重传，在弱网环境下会导致大量的带宽浪费。</p>
+<p>为了缓解上述问题，快重传技术当接收方收到乱序的数据段后，就会立刻连续发送三个ACK触发发送方的重传。</p>
+<h2 id="为什么UDP头只有8个字节"><a href="#为什么UDP头只有8个字节" class="headerlink" title="为什么UDP头只有8个字节"></a>为什么UDP头只有8个字节</h2><p>UDP协议头中只包含四个字段：源端口、目的端口、长度、校验码，其中每个字段16bit，所以总共8字节。其中长度是协议头和数据长度的总和，校验码使用IP首部、UDP首部和数据报中数据进行计算，接收方可以通过校验码进行验证数据的准确性。</p>
+<p>UDP协议底层IP网际协议负责数据包在主机间的传输；UDP协议的首部端口号用于定位处理数据的具体进行并转发数据。UDP本质只起到定位具体进程的作用。</p>
+<p>虽然UDP和TCP都有端口号概念，但两者不在一个命名空间，因为可以同时使用相同的端口号。</p>
+<h2 id="为什么TCP-IP协议会拆分数据"><a href="#为什么TCP-IP协议会拆分数据" class="headerlink" title="为什么TCP/IP协议会拆分数据"></a>为什么TCP/IP协议会拆分数据</h2><ul>
+<li>IP协议分片传输过大的数据包Packet，避免物理设备限制</li>
+<li>TCP协议分段传输过大的数据段Segment，保证传输性能</li>
+</ul>
+<p>在IP协议层不同的设备传输数据前会先确定一个IP数据包大小上限，即最大传输单元MTU Maximum transmission Unit。由整个链路上MTU最小的物理设备决定。（一般1500字节）</p>
+<p>Path MTU Discovery算法：</p>
+<ul>
+<li>向目的主机发送IP头带DF控制位=1的数据包，Don’t Fragment不分片</li>
+<li>路径上的网络设备根据数据包大小和自己的MTU做不同的决定：<ul>
+<li>数据包 &gt; MTU，就会丢弃数据包，并返回一个包含该设备MTU的ICMP消息</li>
+<li>数据包 &lt; MTU，就会继续向目的主机传递数据    </li>
+</ul>
+</li>
+<li>源主机收到ICMP消息后，不断使用新的MTU发送IP数据，直到数据包到达目的主机。</li>
+</ul>
+<p>数据包分片时第一个数据包中包含UDP协议的相关信息，后续的都不包含，因此如果丢包整个UDP数据都无法组装。</p>
+<p>TCP协议中引入了最大分段大小Max Segment Size，MSS，即TCP数据段能够携带的数据上限。正常情况下MSS=MTU-40，是操作系统内核层面的限制，通信双方会在三次握手时确定。</p>
+<p>TCP协议之所以能够不重不漏按序传输，因为它会通过IP协议的MTU计算出MSS，并根据MSS分段避免IP协议对数据包进行分片。</p>
+<h2 id="为什么流媒体直播延迟高"><a href="#为什么流媒体直播延迟高" class="headerlink" title="为什么流媒体直播延迟高"></a>为什么流媒体直播延迟高</h2><p>流媒体直播从音视频的采集和编码到解码和播放设计了非常长的链路，需要途径主播端、流媒体服务器、观众端。在冗长的采集和分发流程中，不同过程都会通过一系列的技术保证直播的质量，为了保证可靠性、降低系统带宽而使用的手段共同造成了直播高延迟的问题。</p>
+<ul>
+<li>音视频使用的编码格式决定了客户端只能从特定帧开始解码；</li>
+<li>音视频传输使用的网络协议切片大小决定了客户端接收数据的间隔</li>
+<li>服务器和客户端为了保证用户体验和直播质量预留缓存</li>
+</ul>
+<h2 id="为什么HTTPS需要7次握手-9倍延迟"><a href="#为什么HTTPS需要7次握手-9倍延迟" class="headerlink" title="为什么HTTPS需要7次握手+9倍延迟"></a>为什么HTTPS需要7次握手+9倍延迟</h2><p>Netscape在1994年设计了HTTPS协议，使用安全套接字层SocketLayer，SSL，保证数据传输的安全。随着传输层安全协议TransportLayerSecurity TLS的发展，目前已经使用TLS取代了废弃的SSL协议。</p>
+<p>HTTPS从发送方发出到接收响应需要经过4.5 RTT：</p>
+<ul>
+<li>TCP协议三次握手建立TCP连接；（TCP快启策略使用存储在客户端的TFO cookie快速建立连接，可以减少通信次数）</li>
+<li>TLS协议四次握手建立TLS连接；</li>
+<li>HTTP协议，客户端发出请求，服务端发回响应。</li>
+</ul>
+<p>其中TLS1.2建立过程如下：（1.3通过优化协议降低到1RTT）</p>
+<ul>
+<li>客户端向服务器发送client hello消息，携带客户端支持的协议版本、加密算法、压缩算法和一个客户端生成的随机数；</li>
+<li>服务端收到客户端的信息后；<ul>
+<li>向客户端发送server hello消息，携带选择特定的协议版本，加密方法，会话ID，服务端生成的随机数；</li>
+<li>向客户端发送certificate消息，包含证书支持的域名、发送方和有效期信息；</li>
+<li>向客户端发送server key Exchange消息，传递公钥及签名信息；</li>
+<li>向客户端发送可选的certificateRequest，验证客户端证书；</li>
+<li>向客户端发送server hello done消息，通知服务器已经发送了全部消息；</li>
+</ul>
+</li>
+<li>客户端收到消息后，验证证书<ul>
+<li>向服务器端发送client key exchange消息，包含使用服务端公钥加密后的随机字符串</li>
+<li>向服务器发送change cipher spec消息，通知服务器后面的数据段要加密；</li>
+<li>向服务器发送finish消息，包含加密后的握手信息；</li>
+</ul>
+</li>
+<li>服务器端收到消息后<ul>
+<li>向客户端发送change cipher spec消息，通知客户端后面的数据段会加密传输</li>
+<li>向客户端发送finish消息，验证客户端的finish消息并完成TLS握手<br>HTTP3使用基于UDP和QUIC协议进行握手，将TCP和TLS握手过程结合起来，把7次握手减少到了3次。</li>
+</ul>
+</li>
+</ul>
+<h2 id="为什么TCP有粘包问题"><a href="#为什么TCP有粘包问题" class="headerlink" title="为什么TCP有粘包问题"></a>为什么TCP有粘包问题</h2><p>粘包并不是TCP协议造成的，而是因为应用层协议设计者对TCP协议的错误理解，忽略TCP协议的定义并且缺乏设计应用层协议的经验。</p>
+<ul>
+<li>TCP协议是面向字节流的协议，它可能会组合或者拆分应用层协议的数据</li>
+<li>应用层协议没有定义消息的边界，导致数据的接收方无法拼接</li>
+</ul>
+<p>Nagle算法：通过减少数据包的方式提高TCP传输性能的算法，因为网络带宽有限，它不会降小的数据块直接发送到目的主机，而是会在本地缓冲区中等待更多待发送的数据，这种批量发送数据的策略虽然会影响实时性和网络延迟，但是能降低网络拥堵并减少额外开销。</p>
+<p>当应用层使用TCP协议传输数据时，实际待发送的数据先写到了TCP协议的缓冲区，如果用户开启了Nagle算法，那么协议会等待缓冲区数据超过MSS最大数据段，或者上一个数据段被ACK时才会发送。</p>
+<p>这样导致应用层多次写入的协议被合并或拆分发送，当接收方接收后应用层无法拆分和重组。 为了解决此问题，可以通过在应用层协议中基于长度或者终结符进行处理，或者基于特定的规则，如JSON数据。</p>
+<p>UDP消息是有边界的，上限的65536，但一半都会被路径MTU限制。所以不会出现粘包问题。</p>
+<h2 id="为什么TCP协议有TIME-WAIT状态"><a href="#为什么TCP协议有TIME-WAIT状态" class="headerlink" title="为什么TCP协议有TIME_WAIT状态"></a>为什么TCP协议有TIME_WAIT状态</h2>
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/draveness大神带飞系列/" rel="tag">#draveness大神带飞系列</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/05/20/系统设计系列/" rel="next" title="系统设计相关">
+                <i class="fa fa-chevron-left"></i> 系统设计相关
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Frances Hu" />
+          <p class="site-author-name" itemprop="name">Frances Hu</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">48</span>
+              <span class="site-state-item-name">Artikel</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">Tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP需要三次握手"><span class="nav-number">1.</span> <span class="nav-text">为什么TCP需要三次握手</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#历史连接"><span class="nav-number">1.1.</span> <span class="nav-text">历史连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#初始序列号"><span class="nav-number">1.2.</span> <span class="nav-text">初始序列号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么DNS使用UDP"><span class="nav-number">2.</span> <span class="nav-text">为什么DNS使用UDP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有性能问题"><span class="nav-number">3.</span> <span class="nav-text">为什么TCP协议有性能问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么UDP头只有8个字节"><span class="nav-number">4.</span> <span class="nav-text">为什么UDP头只有8个字节</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP-IP协议会拆分数据"><span class="nav-number">5.</span> <span class="nav-text">为什么TCP/IP协议会拆分数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么流媒体直播延迟高"><span class="nav-number">6.</span> <span class="nav-text">为什么流媒体直播延迟高</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么HTTPS需要7次握手-9倍延迟"><span class="nav-number">7.</span> <span class="nav-text">为什么HTTPS需要7次握手+9倍延迟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP有粘包问题"><span class="nav-number">8.</span> <span class="nav-text">为什么TCP有粘包问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有TIME-WAIT状态"><span class="nav-number">9.</span> <span class="nav-text">为什么TCP协议有TIME_WAIT状态</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Frances Hu</span>
+</div>
+
+<div class="powered-by">
+  Erstellt mit  <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
