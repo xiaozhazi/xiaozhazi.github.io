@@ -94,7 +94,7 @@ The raliability and flow control mechanisms des">
 <meta property="og:description" content="之前也有订阅draveness的博客跟着学习，这次抽时间把为什么设计系列文章再温习总结一遍，知识点常读常新吶！
 为什么TCP需要三次握手RFC793-Trannsmission Control Protocol文档中定义的TCP连接：用于保证可靠性和流控制机制的信息，包括socket、序列号及窗口大小。
 The raliability and flow control mechanisms des">
-<meta property="og:updated_time" content="2021-07-09T16:33:39.174Z">
+<meta property="og:updated_time" content="2021-07-11T16:05:44.115Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="为什么设计系列文章学习总结">
 <meta name="twitter:description" content="之前也有订阅draveness的博客跟着学习，这次抽时间把为什么设计系列文章再温习总结一遍，知识点常读常新吶！
@@ -393,7 +393,87 @@ The raliability and flow control mechanisms des">
 <p>当应用层使用TCP协议传输数据时，实际待发送的数据先写到了TCP协议的缓冲区，如果用户开启了Nagle算法，那么协议会等待缓冲区数据超过MSS最大数据段，或者上一个数据段被ACK时才会发送。</p>
 <p>这样导致应用层多次写入的协议被合并或拆分发送，当接收方接收后应用层无法拆分和重组。 为了解决此问题，可以通过在应用层协议中基于长度或者终结符进行处理，或者基于特定的规则，如JSON数据。</p>
 <p>UDP消息是有边界的，上限的65536，但一半都会被路径MTU限制。所以不会出现粘包问题。</p>
-<h2 id="为什么TCP协议有TIME-WAIT状态"><a href="#为什么TCP协议有TIME-WAIT状态" class="headerlink" title="为什么TCP协议有TIME_WAIT状态"></a>为什么TCP协议有TIME_WAIT状态</h2>
+<h2 id="为什么TCP协议有TIME-WAIT状态"><a href="#为什么TCP协议有TIME-WAIT状态" class="headerlink" title="为什么TCP协议有TIME_WAIT状态"></a>为什么TCP协议有TIME_WAIT状态</h2><p>TCP常见的关闭连接过程：</p>
+<ul>
+<li>当客户端没有待发送数据时，会想服务器端发送FIN消息，之后自己进入FIN_WAIT_1状态；</li>
+<li>服务器端收到客户端的FIN消息后，会进入到CLOSE_WAIT状态，并向客户端发送ACK消息。客户端收到ACK消息后会进入到FIN_WAIT_2状态；</li>
+<li>当服务器端没有待发送的消息后，服务器端会向客户端发送FIN消息；</li>
+<li>客户端接收到FIN消息后，进入TIME_WAIT状态并向服务器端发送ACK消息，服务器收到后进入CLOSED状态；</li>
+<li>客户端等待两个最大数据段生命周期的时间后也进入CLOSED状态。 MaxSegmentLifetime，MSL</li>
+</ul>
+<p>TIME_WAIT仅在主动断开连接的一方出现，被动断开连接的一方会主动进入CLOSED状态。TCP需要TIME_WAIT状态和需要等待2MSL再CLOSED的原因一样：</p>
+<ul>
+<li>防止延迟的数据段被其他使用相同源地址、源端口号、目的地址、目的端口号的TCP连接收到；</li>
+<li>保证TCP连接的远程被正确关闭，即等待被动关闭的连接的一方收到FIN对应的ACK消息</li>
+</ul>
+<p><em>阻止延迟数据段</em> ： 每个TCP数据都包含唯一的序列号，这个序列号保证TCP协议的可靠性和顺序性。为了保证新TCP连接的数据段不会和还在网络中传输的重复，TCP在分配新数据号之前需要至少静默1MSL。</p>
+<p>TIME_WAIT等待2MSL是考虑到网络中可能存在来自发起方的数据段，这些数据段被服务器处理后又要返回响应给客户端。</p>
+<p><em>保持连接关闭</em> ： 如果客户端等待时间不长，当服务器端还没有接收到ACK消息时，客户端就与服务器重新建立连接，客户端重新发送的SYN请求会收到服务器端RST消息，连接建立被终止。</p>
+<p>如果客户端等待足够时间：1）服务器正常收到了ACK消息并关闭当前连接；2）服务器没收到ACK消息，重新发送FIN关闭连接并等待新的ACK。 所以只要客户端等2MSL时间，连接就会正常关闭，保证了数据传输的可靠性。</p>
+<p>在某些场景下60s的等待时间难以接受，高并发场景下可能会产生大量的TIME_WAIT状态的TCP连接。可以通过使用net.ipv4.tcp_tw_reuse选项，通过TCP的时间戳选项允许内核重用处于TIME_WAIT状态的TCP连接。</p>
+<h2 id="为什么MAC地址不需要全球唯一"><a href="#为什么MAC地址不需要全球唯一" class="headerlink" title="为什么MAC地址不需要全球唯一"></a>为什么MAC地址不需要全球唯一</h2><p>MAC：Media Access Control address，是分配给网络接口控制器的唯一标志符，它会在网络段中充当网络地址使用。 48位一般前半部分是组织标志符，后面是地址，需要在IEEE官方购买。</p>
+<p>机构分发地址段并由设备商保证地址唯一的方式就是为了保证全世界所有硬件的网络地址唯一，但实际操作中是无法严格保证的，而且我们也不需要：</p>
+<ul>
+<li>不同操作系统上，我们都可以通过软件直接修改网卡的MAC地址；</li>
+<li>只需要保证一个局域网内的MAC地址不重复，网络就可以正常工作。 （因为交换机可以从数据帧的源地址学次到设备的MAC地址并插入本地缓存，跨局域网需要网络层的IP协议所以链路层地址重复影响不大）</li>
+</ul>
+<h2 id="为什么IPV6难以取代IPV4"><a href="#为什么IPV6难以取代IPV4" class="headerlink" title="为什么IPV6难以取代IPV4"></a>为什么IPV6难以取代IPV4</h2><ul>
+<li>NAT技术很大程度上缓解IPV4地址短缺问题；</li>
+<li>IPV6协议并没有在设计时考虑和IPV4兼容问题；</li>
+<li>更细粒度的管控IPV4地址并回收闲置资源；</li>
+</ul>
+<h2 id="为什么集群需要Overlay网络"><a href="#为什么集群需要Overlay网络" class="headerlink" title="为什么集群需要Overlay网络"></a>为什么集群需要Overlay网络</h2><ul>
+<li>云计算集群内、跨集群或者数据中心间的虚拟机和实例的迁移比较常见；</li>
+<li>单个集群中的虚拟机规模可能非常大，大量MAC地址和ARP请求会为网络设备带来巨大的压力；</li>
+<li>传统的网络隔离技术VLAN只能建立4096个虚拟网络，公有云以及大规模的虚拟化集群需要更多的虚拟网络才能满足网络隔离的需求。</li>
+</ul>
+<p>目前K8S官方支持最大集群为5000节点，如果每个节点都只包含一个容器，这对于内部的网络设备其实没有太大的压力。但是在实际情况下集群中可能包含几万甚至几十万个容器，当某个容器向集群中发送ARP请求时，所有容器都会收到带来极高的网络负载。</p>
+<p>使用VxLan搭建的Overlay网络中，网络会将虚拟机发送的数据重新封装成IP数据包，这样网络之需要知道不同VTEP的MAC地址，可以将MAC地址表项中的几十万条数据降低到几千条，ARP请求也只会在集群的VTEP之间扩散，远端的VTEP将数据拆包后也仅会在本地广播，不影响其他VTEP。大大降低了核心网络设备的压力。</p>
+<p><em>网络隔离</em>：同一个物理集群可能会被拆分成多个小块分配给不同的租户tenant，因为二层网络的数据帧会进行广播，出于安全考虑需要将这些不同的租户进行隔离。传统的网络隔离会使用虚拟局域网技术VLAN，其使用12位bit表示虚拟网络ID，上限是4096个。对于大规模集群来说远远不够，VxLAN会使用24bit的VNI表示虚拟网络个数，1677w+个虚拟网络能满足数据中心多租户网络隔离的需求。</p>
+<h2 id="为什么Redis选择单线程模型"><a href="#为什么Redis选择单线程模型" class="headerlink" title="为什么Redis选择单线程模型"></a>为什么Redis选择单线程模型</h2><p>Redis作为一个内存服务器，需要处理很多来自外部的网络请求，它使用IO多路复用机制同时监听多个文件描述符的可读和可写状态。Redis4.0之后的版本，在执行一些命令时会使用主处理线程之外的其他线程，如UNLINK、FLUSHALL、ASYNC、FLUSHDB ASYNC等非阻塞的删除操作。</p>
+<p><em>单线程模型</em>： Redis从一开始选择单线程模型主要考虑：1）使用单线程模型可维护性高，方便开发和测试；2）使用单线程模型也能并发处理客户端的请求；3）Redis中绝大多数操作的性能瓶颈都不是CPU。</p>
+<p>Redis在删除超大键值对时并不能在几ms时间内处理完，可能需要在释放内存空间上消耗更多的时间。这样会阻塞待处理的任务影响redis可用性。释放内存空间的操作可以在后台线程异步执行，即UNLINK命令的实现原理，将键从元数据中删除，真正的删除操作会在后台异步执行。</p>
+<h2 id="为什么mysql使用B-树"><a href="#为什么mysql使用B-树" class="headerlink" title="为什么mysql使用B+树"></a>为什么mysql使用B+树</h2><p>首先MySQL和B+树没有直接关系，主要是因为mysql的默认存储引擎innodb。除了innodb之外mysql还支持多种存储引擎，如MyISAM等。</p>
+<p>对于innodb来说，无论表中的数据主键索引还是辅助索引最终都会使用B+树来存储数据，其中前者在表中会以<id, row>的方式存储，后者会以<index,id> 的方式存储。所以后者查询时往往需要回表操作。</index,id></id,></p>
+<ul>
+<li>Innodb需要支持的场景和功能需要在特定查询上拥有较强的性能；</li>
+<li>CPU将磁盘上的数据加载到内存需要花费大量的时间，B+树称为非常好的选择。</li>
+</ul>
+<p><em>和hash对比：</em>使用hash可以达到O（1）时间的查询，但是在处理范围查询或者排序时性能会非常差，只能进行全表扫描。使用B+树能够保证数据按照键的顺序进行存储，查询性能O（logN）也可接受。<br><em>和B树对比：</em> 计算机以页为单位加载内存，页大小都是4KB。当我们需要在数据库中查询数据时，CPU会发现当前数据在磁盘而不在内存中，这时就会触发IO操作将数据加载到内存中进行访问，数据的加载都是以页为单位进行加载的，将数据从磁盘读取到内存中成本非常大，普通的非SSD磁盘需要经过队列、寻道、旋转以及传输等过程，大概需要花费10ms左右时间。B树会在非叶子结点中存储数据，B+树所有数据都是存储在叶子节点中。当一个表底层是B树时，我们总是要从根节点向下遍历子树查找满足条件的数据行，这引入了大量随机IO。而B+树所有数据都存储在叶子节点，且叶子节点通过指针链接，因此可以大量节省磁盘IO时间。</p>
+<h2 id="为什么Redis快照需要子进程"><a href="#为什么Redis快照需要子进程" class="headerlink" title="为什么Redis快照需要子进程"></a>为什么Redis快照需要子进程</h2><p>RDB和AOF是Redis为我们提供的持久化工具，其中RDB就是Redis的数据快照。RDB每隔一段时间都会对Redis服务中当下的数据集进行快照，除了Redis的配置文件设置间隔之外，还可以使用SAVE、BGSAVE命令。</p>
+<ul>
+<li>SAVE在执行时会直接阻塞当前的线程，Redis是单线程的，所以SAVE命令会直接阻塞来自客户端的所有其他请求。</li>
+<li>BGSAVE在后台生成快照，即首先fork子进程，子进程会执行将内存数据保存到RDB文件这一过程，不影响Redis主线程响应客户端请求。</li>
+</ul>
+<p>通过fork生成的父子进程会共享包括内存空间在内的资源。fork函数并不会带来明显的性能开销，尤其是内存大量拷贝，是通过写时复制来完成，将真正的拷贝推迟到需要的时候。</p>
+<p>fork函数返回0时，意味当前进程是子进程；反之表明是父进程，返回的是子进程的pid。fork后的父子进程会运行在不同的内存空间中，当fork发生时两者的内存空间有着完全相同的内容，对内存的写入和修改、文件映射都是独立的，两个进程不会相互影响。</p>
+<h2 id="为什么数据库会丢失数据"><a href="#为什么数据库会丢失数据" class="headerlink" title="为什么数据库会丢失数据"></a>为什么数据库会丢失数据</h2><p><em>人为错误：</em> 造成数据丢失的首要原因，如腾讯云数据丢失事件，虽然起因是硬件故障，但最终导致数据完成性受损的还是运维人员的不当操作。1）正常数据搬迁流程默认开启数据校验，开启后可以有效发现并规避源数据异常，但运维人员为了加速搬迁任务，违规关闭了数据校验；2）正常数据搬迁后源仓库要保留24h用于异常恢复，但运维人员为了尽快降低仓库使用率违规对源仓库进行了数据回收。因此尽量将操作标准化自动化流程处理，降低人为干预带来的风险，敬畏生产环境，谨慎的在生产环境执行一切操作。</p>
+<p><em>硬件故障：</em> 磁盘硬件使用时间足够长很有可能发生损坏，因此我们需要数据冗余的方式保证磁盘在发生不可修复读错误时能够恢复磁盘数据。Redundant Array of Independent Disk， RAID独立冗余磁盘阵列时一种能够将多个物理磁盘组合成一个逻辑磁盘的数据存储虚拟化技术，增加冗余并提高性能。 </p>
+<p><em>实现复杂：</em> 除了持久化特性之外，数据库可能还需要提供ACID、BASE的保证，有些数据库还提供分片、副本、以及分布式事务等复杂功能，这些功能的引入也增加了数据库系统的复杂性。随着程序复杂性的增加，出现问题的可能性也随之增长。</p>
+<h2 id="为什么MySQL的自增主键不单调也不连续"><a href="#为什么MySQL的自增主键不单调也不连续" class="headerlink" title="为什么MySQL的自增主键不单调也不连续"></a>为什么MySQL的自增主键不单调也不连续</h2><p>MYSQL中默认的AUTO_INCREMENT属性在多数情况下可以保证主键的连续性，但是在实际使用中会遇到两个问题：1）记录的主键并不连续；2）可能会创建多个主键相同的记录。</p>
+<ul>
+<li>较早版本的MySQL将AUTO_INCREMENT存储在内存中，实例重启后会根据表中数据重置该值。（在8.0之后每次计数器的变化都会写入redo log，并在检查点存储在引擎私有的系统表中）</li>
+<li>获取AUTO_INCREMENT时不会使用事务锁，并发的插入事务可能会出现字段冲突导致插入失败。要想保证主键的连续性需要串行地执行插入语句。 （事务回滚会导致之前的id失效）</li>
+</ul>
+<h2 id="为什么Linux需要虚拟内存"><a href="#为什么Linux需要虚拟内存" class="headerlink" title="为什么Linux需要虚拟内存"></a>为什么Linux需要虚拟内存</h2><p>利用中间层对资源进行更合理地调度充分提高资源的利用率并提供统一的抽象。</p>
+<p>主存是比较稀缺的资源，虽然顺序读取只比磁盘快1个量级，但是随机读取确实磁盘的100，000倍，充分利用内存的随机访问速度是改善程序执行效率的有效方式。</p>
+<p>操作系统以页为单位访问内存，当进程发现需要的数据不在内存中，MMU（内存管理单元）会将数据以页的形式加载到内存。</p>
+<ul>
+<li>虚拟内存可以利用内存起到缓存的作用，提高进程访问磁盘的速度；</li>
+<li>虚拟内存可以为进程提供独立的内存空间，并引入多层的页表结构将虚拟内存翻译成物理内存。简化程序链接、加载过程并通过动态库共享内存；</li>
+<li>虚拟内存可以控制进程对物理内存的访问，隔离不同进程的访问权限，提高系统安全性；</li>
+</ul>
+<p>因为主内存空间有限，当主内存不包含可使用的空间时，OS会从选择合适的物理内存页驱逐回磁盘，为新的内存页让出位置。缺页中断和页面替换技术都是页面调度算法，充分利用内存资源作为磁盘的缓存以提高程序的运行效率。</p>
+<p><em>四层页表结构</em> ：实现虚拟地址到物理地址的转换。OS使用低12位（正好4K）作为页面的偏移量，剩下36位分为四组分别表示当前层级在上一层级的索引，所有虚拟地址都可以用上述的多层页表查找对应的物理地址。因为有多层的页表结构可以用来转换虚拟地址，所以多个进程可以通过虚拟内存共享物理内存。Redis的fork子进程时的写时复制就是利用了虚拟内存这一特性，fork时实际上只复制了父进程的页表。</p>
+<p>为什么每层页表结构只能负责9位虚拟地址的寻址？ 64位虚拟地址占8B的大小，所以一个页表可以有4K/8B=2^9项。</p>
+<p>64位虚拟内存在操作系统中需要多少层的页表结构才能寻址？ 12+9*5=57，因此需要5层。</p>
+<h2 id="为什么系统调用会消耗较多资源"><a href="#为什么系统调用会消耗较多资源" class="headerlink" title="为什么系统调用会消耗较多资源"></a>为什么系统调用会消耗较多资源</h2><h2 id="为什么Linux默认页是4KB"><a href="#为什么Linux默认页是4KB" class="headerlink" title="为什么Linux默认页是4KB"></a>为什么Linux默认页是4KB</h2><p>4KB时一个历史遗留问题，在上世纪80年代确定的4KB一直保持到今天，是过去在特定场景下做出的权衡：</p>
+<ul>
+<li>过小的页面大小会带来较大的页表项增加寻址时TLB的查找时间和额外开销；</li>
+<li>过大的页面会浪费内存空间，造成内存碎片，降低内存的利用率。</li>
+</ul>
+<p>除了内存利用率之外，较大的内存页也会增加内存拷贝时的额外开销，因为Linux写时复制，在多个进程共享同一块内存时，当其中一个进程修改了共享的虚拟内存会触发内存页的拷贝。这时操作系统内存页越小，写时拷贝带来的额外开销也会越小。</p>
+
       
     </div>
 
@@ -537,7 +617,7 @@ The raliability and flow control mechanisms des">
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP需要三次握手"><span class="nav-number">1.</span> <span class="nav-text">为什么TCP需要三次握手</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#历史连接"><span class="nav-number">1.1.</span> <span class="nav-text">历史连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#初始序列号"><span class="nav-number">1.2.</span> <span class="nav-text">初始序列号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么DNS使用UDP"><span class="nav-number">2.</span> <span class="nav-text">为什么DNS使用UDP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有性能问题"><span class="nav-number">3.</span> <span class="nav-text">为什么TCP协议有性能问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么UDP头只有8个字节"><span class="nav-number">4.</span> <span class="nav-text">为什么UDP头只有8个字节</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP-IP协议会拆分数据"><span class="nav-number">5.</span> <span class="nav-text">为什么TCP/IP协议会拆分数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么流媒体直播延迟高"><span class="nav-number">6.</span> <span class="nav-text">为什么流媒体直播延迟高</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么HTTPS需要7次握手-9倍延迟"><span class="nav-number">7.</span> <span class="nav-text">为什么HTTPS需要7次握手+9倍延迟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP有粘包问题"><span class="nav-number">8.</span> <span class="nav-text">为什么TCP有粘包问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有TIME-WAIT状态"><span class="nav-number">9.</span> <span class="nav-text">为什么TCP协议有TIME_WAIT状态</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP需要三次握手"><span class="nav-number">1.</span> <span class="nav-text">为什么TCP需要三次握手</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#历史连接"><span class="nav-number">1.1.</span> <span class="nav-text">历史连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#初始序列号"><span class="nav-number">1.2.</span> <span class="nav-text">初始序列号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么DNS使用UDP"><span class="nav-number">2.</span> <span class="nav-text">为什么DNS使用UDP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有性能问题"><span class="nav-number">3.</span> <span class="nav-text">为什么TCP协议有性能问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么UDP头只有8个字节"><span class="nav-number">4.</span> <span class="nav-text">为什么UDP头只有8个字节</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP-IP协议会拆分数据"><span class="nav-number">5.</span> <span class="nav-text">为什么TCP/IP协议会拆分数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么流媒体直播延迟高"><span class="nav-number">6.</span> <span class="nav-text">为什么流媒体直播延迟高</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么HTTPS需要7次握手-9倍延迟"><span class="nav-number">7.</span> <span class="nav-text">为什么HTTPS需要7次握手+9倍延迟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP有粘包问题"><span class="nav-number">8.</span> <span class="nav-text">为什么TCP有粘包问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有TIME-WAIT状态"><span class="nav-number">9.</span> <span class="nav-text">为什么TCP协议有TIME_WAIT状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么MAC地址不需要全球唯一"><span class="nav-number">10.</span> <span class="nav-text">为什么MAC地址不需要全球唯一</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么IPV6难以取代IPV4"><span class="nav-number">11.</span> <span class="nav-text">为什么IPV6难以取代IPV4</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么集群需要Overlay网络"><span class="nav-number">12.</span> <span class="nav-text">为什么集群需要Overlay网络</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Redis选择单线程模型"><span class="nav-number">13.</span> <span class="nav-text">为什么Redis选择单线程模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么mysql使用B-树"><span class="nav-number">14.</span> <span class="nav-text">为什么mysql使用B+树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Redis快照需要子进程"><span class="nav-number">15.</span> <span class="nav-text">为什么Redis快照需要子进程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么数据库会丢失数据"><span class="nav-number">16.</span> <span class="nav-text">为什么数据库会丢失数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么MySQL的自增主键不单调也不连续"><span class="nav-number">17.</span> <span class="nav-text">为什么MySQL的自增主键不单调也不连续</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Linux需要虚拟内存"><span class="nav-number">18.</span> <span class="nav-text">为什么Linux需要虚拟内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么系统调用会消耗较多资源"><span class="nav-number">19.</span> <span class="nav-text">为什么系统调用会消耗较多资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Linux默认页是4KB"><span class="nav-number">20.</span> <span class="nav-text">为什么Linux默认页是4KB</span></a></li></ol></div>
             
           </div>
         </section>
