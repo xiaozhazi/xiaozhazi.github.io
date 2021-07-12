@@ -94,7 +94,7 @@ The raliability and flow control mechanisms des">
 <meta property="og:description" content="之前也有订阅draveness的博客跟着学习，这次抽时间把为什么设计系列文章再温习总结一遍，知识点常读常新吶！
 为什么TCP需要三次握手RFC793-Trannsmission Control Protocol文档中定义的TCP连接：用于保证可靠性和流控制机制的信息，包括socket、序列号及窗口大小。
 The raliability and flow control mechanisms des">
-<meta property="og:updated_time" content="2021-07-11T16:05:44.115Z">
+<meta property="og:updated_time" content="2021-07-12T15:59:19.005Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="为什么设计系列文章学习总结">
 <meta name="twitter:description" content="之前也有订阅draveness的博客跟着学习，这次抽时间把为什么设计系列文章再温习总结一遍，知识点常读常新吶！
@@ -473,6 +473,37 @@ The raliability and flow control mechanisms des">
 <li>过大的页面会浪费内存空间，造成内存碎片，降低内存的利用率。</li>
 </ul>
 <p>除了内存利用率之外，较大的内存页也会增加内存拷贝时的额外开销，因为Linux写时复制，在多个进程共享同一块内存时，当其中一个进程修改了共享的虚拟内存会触发内存页的拷贝。这时操作系统内存页越小，写时拷贝带来的额外开销也会越小。</p>
+<h2 id="为什么CPU访问硬盘很慢"><a href="#为什么CPU访问硬盘很慢" class="headerlink" title="为什么CPU访问硬盘很慢"></a>为什么CPU访问硬盘很慢</h2><p>机械硬盘HDD和固态硬盘SSD是最常见的硬盘，SSD中随机访问4KB数据所需要的时间是访问主存的1500倍，机械硬盘的寻道时间是访问主存的100，000倍。</p>
+<ul>
+<li>CPU需要通过I/O操作访问外部存储的数据，编程IO、中断驱动IO和DMA几种方式都会带来额外开销并占用较多的CPU时间；<ul>
+<li>编程IO：CPU会负责全部的工作，向IO设备中写入数据后轮询设备状态等待完成后继续写入。占用全部CPU资源，造成计算资源的严重浪费。</li>
+<li>中断驱动IO：将一部分操作交给IO设备更高效，设备会在闲置时主动发起中断暂停当前进程并保存上下文，OS执行IO设备的中断处理程序。</li>
+<li>DMA： CPU会一次将缓冲区的数据全部堵到DMA控制器中，DMA控制器负责将数据写入IO。解放CPU并减少中断次数，执行速度比CPU更慢。    </li>
+</ul>
+</li>
+<li>机械硬盘会通过机械结构访问其中存储的数据，每一次硬盘的随机IO都需要执行队列、寻道、旋转和转移数据几个过程，大约需要消耗10ms时间。</li>
+</ul>
+<h2 id="为什么NUMA会影响程序的延迟"><a href="#为什么NUMA会影响程序的延迟" class="headerlink" title="为什么NUMA会影响程序的延迟"></a>为什么NUMA会影响程序的延迟</h2><ul>
+<li>NUMA引入本地内存和远程内存，CPU访问本地内存的延迟会小于访问远程内存；</li>
+<li>NUMA的内存分配和内存回收策略结合时会可能导致Linux的频繁交换分区SWAP，影响系统的稳定性。</li>
+</ul>
+<h2 id="为什么HugePages可以提升数据库性能"><a href="#为什么HugePages可以提升数据库性能" class="headerlink" title="为什么HugePages可以提升数据库性能"></a>为什么HugePages可以提升数据库性能</h2><p>2MB一般时HugePages的默认大小，在arm64和X86_64的架构上甚至支持1GB的大页面。</p>
+<p>虽然HugePages的申请方式和默认的内存相差不多，但是它实际上是操作系统单独管理的特殊资源，K8S页会认为大页是不同于内存的独立资源。</p>
+<ul>
+<li>HugePages可以降低内存页面的管理开销；<ul>
+<li>减少内存中的页表层级，降低页表占用；</li>
+<li>更高的缓存命中率，CPU有更高的几率直接在TLB中获取对应的物理地址；</li>
+<li>减少获取大内存的次数     </li>
+</ul>
+</li>
+<li>HugePages可以锁定内存，禁止操作系统的内存交换和释放（预先分配的资源，哪怕是内存不足时也不会被swap到磁盘）；</li>
+</ul>
+<h2 id="为什么Linux需要swapping"><a href="#为什么Linux需要swapping" class="headerlink" title="为什么Linux需要swapping"></a>为什么Linux需要swapping</h2><ul>
+<li>Swapping可以直接将进程中使用较少的页面换出内存，立刻给正在执行的进程分配内存；</li>
+<li>Swapping可以将进程中的闲置页面换出内存，为其他进程未来使用内存做好准备；</li>
+</ul>
+<p>系统内存不足时可以立即触发OOM杀掉进程，但是Swapping为系统管理者提供了另一种选择，利用磁盘交换空间避免程序直接退出。以降低服务质量的代价换取服务的部分可用性。</p>
+<p>K8S中要求禁用Swapping，该OOM的时候就kill掉，迁移到其他机器上运行。</p>
 
       
     </div>
@@ -617,7 +648,7 @@ The raliability and flow control mechanisms des">
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP需要三次握手"><span class="nav-number">1.</span> <span class="nav-text">为什么TCP需要三次握手</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#历史连接"><span class="nav-number">1.1.</span> <span class="nav-text">历史连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#初始序列号"><span class="nav-number">1.2.</span> <span class="nav-text">初始序列号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么DNS使用UDP"><span class="nav-number">2.</span> <span class="nav-text">为什么DNS使用UDP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有性能问题"><span class="nav-number">3.</span> <span class="nav-text">为什么TCP协议有性能问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么UDP头只有8个字节"><span class="nav-number">4.</span> <span class="nav-text">为什么UDP头只有8个字节</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP-IP协议会拆分数据"><span class="nav-number">5.</span> <span class="nav-text">为什么TCP/IP协议会拆分数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么流媒体直播延迟高"><span class="nav-number">6.</span> <span class="nav-text">为什么流媒体直播延迟高</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么HTTPS需要7次握手-9倍延迟"><span class="nav-number">7.</span> <span class="nav-text">为什么HTTPS需要7次握手+9倍延迟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP有粘包问题"><span class="nav-number">8.</span> <span class="nav-text">为什么TCP有粘包问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有TIME-WAIT状态"><span class="nav-number">9.</span> <span class="nav-text">为什么TCP协议有TIME_WAIT状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么MAC地址不需要全球唯一"><span class="nav-number">10.</span> <span class="nav-text">为什么MAC地址不需要全球唯一</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么IPV6难以取代IPV4"><span class="nav-number">11.</span> <span class="nav-text">为什么IPV6难以取代IPV4</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么集群需要Overlay网络"><span class="nav-number">12.</span> <span class="nav-text">为什么集群需要Overlay网络</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Redis选择单线程模型"><span class="nav-number">13.</span> <span class="nav-text">为什么Redis选择单线程模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么mysql使用B-树"><span class="nav-number">14.</span> <span class="nav-text">为什么mysql使用B+树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Redis快照需要子进程"><span class="nav-number">15.</span> <span class="nav-text">为什么Redis快照需要子进程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么数据库会丢失数据"><span class="nav-number">16.</span> <span class="nav-text">为什么数据库会丢失数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么MySQL的自增主键不单调也不连续"><span class="nav-number">17.</span> <span class="nav-text">为什么MySQL的自增主键不单调也不连续</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Linux需要虚拟内存"><span class="nav-number">18.</span> <span class="nav-text">为什么Linux需要虚拟内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么系统调用会消耗较多资源"><span class="nav-number">19.</span> <span class="nav-text">为什么系统调用会消耗较多资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Linux默认页是4KB"><span class="nav-number">20.</span> <span class="nav-text">为什么Linux默认页是4KB</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP需要三次握手"><span class="nav-number">1.</span> <span class="nav-text">为什么TCP需要三次握手</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#历史连接"><span class="nav-number">1.1.</span> <span class="nav-text">历史连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#初始序列号"><span class="nav-number">1.2.</span> <span class="nav-text">初始序列号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么DNS使用UDP"><span class="nav-number">2.</span> <span class="nav-text">为什么DNS使用UDP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有性能问题"><span class="nav-number">3.</span> <span class="nav-text">为什么TCP协议有性能问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么UDP头只有8个字节"><span class="nav-number">4.</span> <span class="nav-text">为什么UDP头只有8个字节</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP-IP协议会拆分数据"><span class="nav-number">5.</span> <span class="nav-text">为什么TCP/IP协议会拆分数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么流媒体直播延迟高"><span class="nav-number">6.</span> <span class="nav-text">为什么流媒体直播延迟高</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么HTTPS需要7次握手-9倍延迟"><span class="nav-number">7.</span> <span class="nav-text">为什么HTTPS需要7次握手+9倍延迟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP有粘包问题"><span class="nav-number">8.</span> <span class="nav-text">为什么TCP有粘包问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么TCP协议有TIME-WAIT状态"><span class="nav-number">9.</span> <span class="nav-text">为什么TCP协议有TIME_WAIT状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么MAC地址不需要全球唯一"><span class="nav-number">10.</span> <span class="nav-text">为什么MAC地址不需要全球唯一</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么IPV6难以取代IPV4"><span class="nav-number">11.</span> <span class="nav-text">为什么IPV6难以取代IPV4</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么集群需要Overlay网络"><span class="nav-number">12.</span> <span class="nav-text">为什么集群需要Overlay网络</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Redis选择单线程模型"><span class="nav-number">13.</span> <span class="nav-text">为什么Redis选择单线程模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么mysql使用B-树"><span class="nav-number">14.</span> <span class="nav-text">为什么mysql使用B+树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Redis快照需要子进程"><span class="nav-number">15.</span> <span class="nav-text">为什么Redis快照需要子进程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么数据库会丢失数据"><span class="nav-number">16.</span> <span class="nav-text">为什么数据库会丢失数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么MySQL的自增主键不单调也不连续"><span class="nav-number">17.</span> <span class="nav-text">为什么MySQL的自增主键不单调也不连续</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Linux需要虚拟内存"><span class="nav-number">18.</span> <span class="nav-text">为什么Linux需要虚拟内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么系统调用会消耗较多资源"><span class="nav-number">19.</span> <span class="nav-text">为什么系统调用会消耗较多资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Linux默认页是4KB"><span class="nav-number">20.</span> <span class="nav-text">为什么Linux默认页是4KB</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么CPU访问硬盘很慢"><span class="nav-number">21.</span> <span class="nav-text">为什么CPU访问硬盘很慢</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么NUMA会影响程序的延迟"><span class="nav-number">22.</span> <span class="nav-text">为什么NUMA会影响程序的延迟</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么HugePages可以提升数据库性能"><span class="nav-number">23.</span> <span class="nav-text">为什么HugePages可以提升数据库性能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么Linux需要swapping"><span class="nav-number">24.</span> <span class="nav-text">为什么Linux需要swapping</span></a></li></ol></div>
             
           </div>
         </section>
